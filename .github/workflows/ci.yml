@@ -1,0 +1,196 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Main test and build job
+  test-and-build:
+    name: Test and Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node-version: [20, 21]
+        package-manager: [yarn, npm]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: ${{ matrix.package-manager }}
+
+    - name: Setup Yarn (if using yarn)
+      if: matrix.package-manager == 'yarn'
+      run: |
+        corepack enable
+        corepack prepare yarn@4.6.0 --activate
+
+    - name: Install dependencies
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn install --frozen-lockfile
+        else
+          npm ci
+        fi
+
+    - name: Run linter
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn lint
+        else
+          npm run lint
+        fi
+
+    - name: Check code formatting
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn check-pretty
+        else
+          npm run check-pretty
+        fi
+
+    - name: Check spelling
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn check-spell
+        else
+          npm run check-spell
+        fi
+
+    - name: Run security audit
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn check-audit
+        else
+          npm run check-audit
+        fi
+
+    - name: Run tests (excluding system-dependent tests)
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn test --testPathIgnorePatterns="scripts/other/__tests__" --testPathIgnorePatterns="src/archive/rar.test.ts" --testPathIgnorePatterns="src/archive/seven-zip.test.ts" --testPathIgnorePatterns="src/utils/storage.test.ts"
+        else
+          npm test -- --testPathIgnorePatterns="scripts/other/__tests__" --testPathIgnorePatterns="src/archive/rar.test.ts" --testPathIgnorePatterns="src/archive/seven-zip.test.ts" --testPathIgnorePatterns="src/utils/storage.test.ts"
+        fi
+
+    - name: Run tests with coverage (excluding system-dependent tests)
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn test:coverage --testPathIgnorePatterns="scripts/other/__tests__" --testPathIgnorePatterns="src/archive/rar.test.ts" --testPathIgnorePatterns="src/archive/seven-zip.test.ts" --testPathIgnorePatterns="src/utils/storage.test.ts"
+        else
+          npm run test:coverage -- --testPathIgnorePatterns="scripts/other/__tests__" --testPathIgnorePatterns="src/archive/rar.test.ts" --testPathIgnorePatterns="src/archive/seven-zip.test.ts" --testPathIgnorePatterns="src/utils/storage.test.ts"
+        fi
+
+    - name: Build project
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn build
+        else
+          npm run build
+        fi
+
+    - name: Package project
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn package
+        else
+          npm run package
+        fi
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist-${{ matrix.os }}-${{ matrix.package-manager }}
+        path: |
+          dist/
+          dist-package/
+        retention-days: 30
+
+  # Security audit
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package-manager: [yarn, npm]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: ${{ matrix.package-manager }}
+
+    - name: Setup Yarn (if using yarn)
+      if: matrix.package-manager == 'yarn'
+      run: |
+        corepack enable
+        corepack prepare yarn@4.6.0 --activate
+
+    - name: Install dependencies
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn install --frozen-lockfile
+        else
+          npm ci
+        fi
+
+    - name: Run security audit
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn audit
+        else
+          npm audit --audit-level moderate
+        fi
+
+  # Type checking
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package-manager: [yarn, npm]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: ${{ matrix.package-manager }}
+
+    - name: Setup Yarn (if using yarn)
+      if: matrix.package-manager == 'yarn'
+      run: |
+        corepack enable
+        corepack prepare yarn@4.6.0 --activate
+
+    - name: Install dependencies
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn install --frozen-lockfile
+        else
+          npm ci
+        fi
+
+    - name: Type check
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn tsc --noEmit
+        else
+          npx tsc --noEmit
+        fi 

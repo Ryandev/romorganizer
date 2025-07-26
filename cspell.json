@@ -1,0 +1,78 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [],
+  "ignoreWords": [
+    "chdman",
+    "unrar",
+    "winrar",
+    "unecm",
+    "binmerge",
+    "createcd",
+    "extractcd",
+    "Redump",
+    "mame",
+  ],
+  "patterns": [
+    {
+      "name": "TypeScript",
+      "pattern": "**/*.{ts,tsx}",
+      "description": "TypeScript files"
+    },
+    {
+      "name": "JavaScript",
+      "pattern": "**/*.{js,jsx}",
+      "description": "JavaScript files"
+    },
+    {
+      "name": "JSON",
+      "pattern": "**/*.json",
+      "description": "JSON files"
+    },
+    {
+      "name": "Markdown",
+      "pattern": "**/*.md",
+      "description": "Markdown files"
+    }
+  ],
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    "build/**",
+    "coverage/**",
+    "*.min.js",
+    "*.min.css",
+    "package-lock.json",
+    "yarn.lock",
+    ".git/**",
+    ".vscode/**",
+    ".idea/**",
+    "*.log",
+    "*.pid",
+    "*.seed",
+    "*.pid.lock",
+    ".nyc_output/**",
+    ".npm/**",
+    ".eslintcache",
+    ".rpt2_cache/**",
+    ".rts2_cache_cjs/**",
+    ".rts2_cache_es/**",
+    ".rts2_cache_umd/**",
+    ".node_repl_history",
+    "*.tgz",
+    ".yarn-integrity",
+    ".env*",
+    ".cache/**",
+    ".parcel-cache/**",
+    ".next/**",
+    ".nuxt/**",
+    ".vuepress/dist/**",
+    ".serverless/**",
+    ".fusebox/**",
+    ".dynamodb/**",
+    ".tern-port",
+    ".vscode-test/**",
+    "tmp/**",
+    "temp/**"
+  ]
+} 

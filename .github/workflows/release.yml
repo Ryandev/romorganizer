@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'yarn'
+
+    - name: Setup Yarn
+      run: |
+        corepack enable
+        corepack prepare yarn@4.6.0 --activate
+
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+
+    - name: Run tests
+      run: yarn test
+
+    - name: Build project
+      run: yarn build
+
+    - name: Package project
+      run: yarn package
+
+    - name: Create release assets
+      run: |
+        mkdir -p release-assets
+        cp -r dist-package/* release-assets/
+        cp package.json release-assets/
+        cp README.md release-assets/
+        cd release-assets
+        tar -czf 7ztools-linux-x64.tar.gz *
+        zip -r 7ztools-linux-x64.zip *
+
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./release-assets/7ztools-linux-x64.tar.gz
+        asset_name: 7ztools-linux-x64.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload release assets (zip)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./release-assets/7ztools-linux-x64.zip
+        asset_name: 7ztools-linux-x64.zip
+        asset_content_type: application/zip 
