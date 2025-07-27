@@ -36,14 +36,9 @@ git clone <repository-url>
 cd 7ztools
 ```
 
-2. Install dependencies and initialize submodules:
+2. Install dependencies:
 ```bash
 npm install
-```
-
-**Note**: The `postinstall` script will automatically initialize all git submodules. If you need to manually initialize submodules, run:
-```bash
-npm run setup
 ```
 
 3. Build the project:
@@ -52,7 +47,6 @@ npm run build
 ```
 
 **Note**: The build process automatically:
-- Initializes git submodules (via `postinstall` script)
 - Builds ECM WASM modules (via `build:deps` script)
 - Compiles TypeScript to JavaScript (via Vite)
 

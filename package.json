@@ -8,8 +8,6 @@
         "7z-to-chd": "./dist/7z_to_chd.js"
     },
     "scripts": {
-        "setup": "git submodule update --init --recursive",
-        "postinstall": "yarn setup",
         "build": "yarn build:deps && vite build",
         "build:deps": "node deps/build.js",
         "build:debug": "vite build --config vite.debug.config.ts",

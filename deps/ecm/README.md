@@ -104,11 +104,16 @@ Verifies if the archive file is a valid ECM file.
 The WASM modules are built using Emscripten:
 
 ```bash
-cd deps/ecm
-node build.js
+yarn build:deps
 ```
 
-This compiles the C source code to WASM and generates the necessary JavaScript bindings.
+This compiles the C source code to WASM and generates the necessary JavaScript bindings. The build process:
+
+1. Compiles `src/ecm.c` to `wasm/build/ecm.js` and `wasm/build/ecm.wasm`
+2. Compiles `src/unecm.c` to `wasm/build/unecm.js` and `wasm/build/unecm.wasm`
+3. Generates TypeScript bindings in `wasm/wrappers/`
+
+**Note**: The C source files have been modified with Emscripten-specific changes and are included directly in this repository rather than as a git submodule.
 
 ## Testing
 
