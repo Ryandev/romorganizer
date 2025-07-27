@@ -22,6 +22,7 @@ export default defineConfig({
         'node:child_process',
         'node:util',
         'node:zlib',
+        'node:timers',
         'zlib',
         'crypto',
         'node:events',
@@ -30,7 +31,8 @@ export default defineConfig({
         'os',
         'child_process',
         'util',
-        'events'
+        'events',
+        'timers'
       ],
       output: {
         entryFileNames: '[name].js',
@@ -39,7 +41,7 @@ export default defineConfig({
       }
     },
     outDir: 'dist',
-    sourcemap: 'inline',
+    sourcemap: true,
     minify: false
   },
   resolve: {

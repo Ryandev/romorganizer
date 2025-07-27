@@ -20,6 +20,8 @@
     "cuefiles",
     "cuesheet",
     "cuesheets",
+    "extractraw",
+    "createraw"
   ],
   "patterns": [
     {

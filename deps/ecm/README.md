@@ -18,9 +18,9 @@ ECM is a compression format commonly used for CD-ROM images. These bindings prov
 ### Basic Usage
 
 ```typescript
-import { ECMWASM } from './deps/ecm/wasm';
+import { EcmWasm } from './deps/ecm/wasm';
 
-const ecmWasm = new ECMWASM();
+const ecmWasm = new EcmWasm();
 
 // Compress a file to ECM format
 await ecmWasm.compress('input.img', 'output.ecm');
@@ -54,11 +54,11 @@ console.log('Is valid:', isValid);
 
 ## API Reference
 
-### ECMWASM Class
+### EcmWasm Class
 
 #### Constructor
 ```typescript
-new ECMWASM()
+new EcmWasm()
 ```
 
 #### Methods

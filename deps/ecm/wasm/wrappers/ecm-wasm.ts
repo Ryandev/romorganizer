@@ -176,7 +176,7 @@ async function runUNECMCommand(module: UNECMModule, inputPath: string, outputPat
   }
 }
 
-export class ECMWASM {
+export class EcmWasm {
   private ecmModule: ECMModule | null = null;
   private unecmModule: UNECMModule | null = null;
 

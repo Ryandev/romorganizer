@@ -3,25 +3,35 @@ import createRunner from "./runner";
 import storage from "./utils/storage";
 import { log } from "./utils/logger";
 
-async function main() {
-    const args = process.argv.slice(2);
-    const launchParameters = loadArguments(args);
-    console.log(launchParameters);
-    // list files in the source directory
-    const files = await storage().list(launchParameters.SOURCE_DIR);
+async function run({ sourceDir, targetDir, removeSource }: { sourceDir: string, targetDir: string, removeSource: boolean }) {
+    const files = await storage().list(sourceDir);
     console.log(files);
     for (const file of files) {
-        const runner = createRunner(file, 'chd');
+        const runner = createRunner(file);
         if (runner instanceof Error) {
             log.error(`Error creating runner for ${file}: ${runner.message}`);
             continue;
         }
-        await runner.start();
-        if (launchParameters.REMOVE_SOURCE) {
+        const results = await runner.start();
+        console.log(results);
+        for (const result of results) {
+            await storage().move(result, targetDir);
+        }
+        if (removeSource) {
             await storage().remove(file);
             log.info(`Removed source file: ${file}`);
         }
     }
+}
+
+async function main() {
+    const inputArguments = process.argv.slice(2);
+    const launchParameters = loadArguments(inputArguments);
+    await run({ 
+        sourceDir: launchParameters.SOURCE_DIR, 
+        targetDir: launchParameters.OUTPUT_DIR, 
+        removeSource: launchParameters.REMOVE_SOURCE 
+    });
 }
 
 // ES Module equivalent of require.main === module

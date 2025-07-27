@@ -10,7 +10,7 @@
     "scripts": {
         "build": "yarn build:deps && vite build",
         "build:deps": "node deps/build.js",
-        "build:debug": "vite build --config vite.debug.config.ts",
+        "build:debug": "yarn build:deps && vite build --config vite.debug.config.ts",
         "dev": "vite",
         "dev:tsx": "tsx src/index.ts",
         "start": "node dist/index.js",
@@ -22,10 +22,11 @@
         "check-pretty": "prettier --check src/**/*.{ts,js,json}",
         "fix-pretty": "prettier --write src/**/*.{ts,js,json}",
         "check-spell": "cspell \"src/**/*.ts\"",
-        "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
-        "check-audit": "yarn npm audit --recursive --severity critical --environment production --json"
+        "check-audit": "yarn npm audit --recursive --severity critical --environment production --json",
+        "test": "NODE_OPTIONS=\"--no-inspect --no-inspect-brk\" jest",
+        "test:no-debug": "NODE_OPTIONS=\"--no-inspect --no-inspect-brk\" jest"
     },
     "keywords": [
         "7z",

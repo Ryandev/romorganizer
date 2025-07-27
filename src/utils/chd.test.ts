@@ -54,6 +54,7 @@ describe('chd', () => {
             'test.cue',
             'test.gdi',
             'test.iso',
+            'test.txt',
             'game.bin',
             'multi.cue',
             'track01.bin',
@@ -73,7 +74,7 @@ describe('chd', () => {
     });
 
     describe('create', () => {
-        it('should create CHD file with single binary file (default behavior)', async () => {
+        it('should create CHD file from cue format', async () => {
             // Create test files
             const cueFilePath = join(testDir, 'test.cue');
             const binFilePath = join(testDir, 'test.bin');
@@ -84,9 +85,9 @@ describe('chd', () => {
             await storageInstance.write(cueFilePath, new TextEncoder().encode(cueContent));
             await storageInstance.write(binFilePath, binContent);
 
-            // Create CHD file
+            // Create CHD file from cue format
             try {
-                const result = await chd.create({ cueFilePath });
+                const result = await chd.create({ inputFilePath: cueFilePath, format: 'cue' });
 
                 // Verify result is a path to a CHD file
                 expect(result).toMatch(/\.chd$/);
@@ -97,22 +98,23 @@ describe('chd', () => {
             }
         }, 30_000);
 
-        it('should create CHD file with explicitly provided single binary file', async () => {
+        it('should create CHD file from gdi format', async () => {
             // Create test files
-            const cueFilePath = join(testDir, 'test.cue');
-            const binFilePath = join(testDir, 'game.bin');
+            const gdiFilePath = join(testDir, 'test.gdi');
             
-            const cueContent = 'FILE "game.bin" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00';
+            const gdiContent = `1 0 4 2352 track01.bin 0
+2 1 0 2352 track02.bin 0`;
             const binContent = createValidBinFile(1); // Create 1 sector of valid CD-ROM data
             
-            await storageInstance.write(cueFilePath, new TextEncoder().encode(cueContent));
-            await storageInstance.write(binFilePath, binContent);
+            await storageInstance.write(gdiFilePath, new TextEncoder().encode(gdiContent));
+            await storageInstance.write(join(testDir, 'track01.bin'), binContent);
+            await storageInstance.write(join(testDir, 'track02.bin'), binContent);
 
-            // Create CHD file with explicit binary file path
+            // Create CHD file from gdi format
             try {
                 const result = await chd.create({ 
-                    cueFilePath, 
-                    binFilePaths: [binFilePath] 
+                    inputFilePath: gdiFilePath, 
+                    format: 'gdi' 
                 });
 
                 // Verify result is a path to a CHD file
@@ -124,106 +126,49 @@ describe('chd', () => {
             }
         }, 30_000);
 
-        it('should create CHD file with multiple binary files', async () => {
+        it('should create CHD file from iso format', async () => {
             // Create test files
-            const cueFilePath = join(testDir, 'multi.cue');
-            const binFile1 = join(testDir, 'track01.bin');
-            const binFile2 = join(testDir, 'track02.bin');
+            const isoFilePath = join(testDir, 'test.iso');
             
-            const cueContent = `FILE "track01.bin" BINARY
-  TRACK 01 MODE2/2352
-    INDEX 01 00:00:00
-FILE "track02.bin" BINARY
-  TRACK 02 AUDIO
-    INDEX 01 00:00:00`;
+            const isoContent = createValidBinFile(1); // Create 1 sector of valid CD-ROM data
             
-            const binContent1 = createValidBinFile(1); // Create 1 sector of valid CD-ROM data
-            const binContent2 = createValidBinFile(1); // Create 1 sector of valid CD-ROM data
-            
-            await storageInstance.write(cueFilePath, new TextEncoder().encode(cueContent));
-            await storageInstance.write(binFile1, binContent1);
-            await storageInstance.write(binFile2, binContent2);
+            await storageInstance.write(isoFilePath, isoContent);
 
-            // Create CHD file with multiple binary files
+            // Create CHD file from iso format
             try {
                 const result = await chd.create({ 
-                    cueFilePath, 
-                    binFilePaths: [binFile1, binFile2] 
+                    inputFilePath: isoFilePath, 
+                    format: 'iso' 
                 });
 
                 // Verify result is a path to a CHD file
                 expect(result).toMatch(/\.chd$/);
-                expect(result).toContain('multi.chd');
+                expect(result).toContain('test.chd');
             } catch (error) {
                 // If chdman is not installed or other errors occur, just verify it's an error
                 expect(error).toBeInstanceOf(Error);
             }
         }, 30_000);
 
-        it('should throw error if cue file does not exist', async () => {
-            const nonExistentCuePath = join(testDir, 'nonexistent.cue');
+        it('should throw error if input file does not exist', async () => {
+            const nonExistentPath = join(testDir, 'nonexistent.cue');
             
-            await expect(chd.create({ cueFilePath: nonExistentCuePath }))
-                .rejects.toThrow('Cue file does not exist: ' + nonExistentCuePath);
+            await expect(chd.create({ inputFilePath: nonExistentPath, format: 'cue' }))
+                .rejects.toThrow('Input file does not exist: ' + nonExistentPath);
         });
 
-        it('should throw error if binary file does not exist (default behavior)', async () => {
-            // Create only the cue file
-            const cueFilePath = join(testDir, 'test.cue');
-            const cueContent = 'FILE "test.bin" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00';
-            await storageInstance.write(cueFilePath, new TextEncoder().encode(cueContent));
+        it('should throw error if input file extension does not match format', async () => {
+            // Create a file with wrong extension
+            const wrongExtensionPath = join(testDir, 'test.txt');
+            const content = 'Some content';
+            await storageInstance.write(wrongExtensionPath, new TextEncoder().encode(content));
 
-            // The default bin file path would be test.bin, which doesn't exist
-            await expect(chd.create({ cueFilePath }))
-                .rejects.toThrow('Bin file does not exist: ' + join(testDir, 'test.bin'));
-        });
-
-        it('should throw error if any of the provided binary files do not exist', async () => {
-            // Create test files
-            const cueFilePath = join(testDir, 'test.cue');
-            const binFile1 = join(testDir, 'track01.bin');
-            const binFile2 = join(testDir, 'track02.bin');
-            
-            const cueContent = 'FILE "track01.bin" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00';
-            const binContent1 = createValidBinFile(1); // Create 1 sector of valid CD-ROM data
-            
-            await storageInstance.write(cueFilePath, new TextEncoder().encode(cueContent));
-            await storageInstance.write(binFile1, binContent1);
-            // Note: binFile2 is not created
-
-            // Try to create CHD with missing binary file
+            // Try to create CHD with wrong format
             await expect(chd.create({ 
-                cueFilePath, 
-                binFilePaths: [binFile1, binFile2] 
-            })).rejects.toThrow('Bin file does not exist: ' + binFile2);
+                inputFilePath: wrongExtensionPath, 
+                format: 'cue' 
+            })).rejects.toThrow('Input file extension does not match format: txt !== cue');
         });
-
-        it('should handle empty binFilePaths array by using default behavior', async () => {
-            // Create test files
-            const cueFilePath = join(testDir, 'test.cue');
-            const binFilePath = join(testDir, 'test.bin');
-            
-            const cueContent = 'FILE "test.bin" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00';
-            const binContent = createValidBinFile(1); // Create 1 sector of valid CD-ROM data
-            
-            await storageInstance.write(cueFilePath, new TextEncoder().encode(cueContent));
-            await storageInstance.write(binFilePath, binContent);
-
-            // Create CHD file with empty binFilePaths array
-            try {
-                const result = await chd.create({ 
-                    cueFilePath, 
-                    binFilePaths: [] 
-                });
-
-                // Verify result is a path to a CHD file
-                expect(result).toMatch(/\.chd$/);
-                expect(result).toContain('test.chd');
-            } catch (error) {
-                // If chdman is not installed or other errors occur, just verify it's an error
-                expect(error).toBeInstanceOf(Error);
-            }
-        }, 30_000);
     });
 
     describe('extract', () => {

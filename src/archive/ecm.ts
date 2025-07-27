@@ -2,16 +2,16 @@ import { basename, join } from 'path';
 import { log } from '../utils/logger';
 import { BaseArchive } from './base';
 import storage from '../utils/storage';
-import { ECMWASM } from '../../deps/ecm/wasm';
+import { EcmWasm } from '../../deps/ecm/wasm';
 import { guardFileExists } from '../utils/guard';
 
 export class EcmArchive extends BaseArchive {
-    private ecmWasm: ECMWASM;
+      private ecmWasm: EcmWasm;
 
-    constructor(filePath: string) {
-        super(filePath);
-        this.ecmWasm = new ECMWASM();
-    }
+  constructor(filePath: string) {
+    super(filePath);
+    this.ecmWasm = new EcmWasm();
+  }
 
     async extract(): Promise<string> {
         guardFileExists(this.filePath);

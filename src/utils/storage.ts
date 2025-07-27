@@ -10,12 +10,14 @@ import {
     mkdtemp,
     open,
     readFile,
+    rename,
     rm,
     writeFile,
 } from 'node:fs';
 import { readdir as readDirectoryAsync } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { IStorage } from './storage.interface';
 
 type FilePath = string;
 type FileDescriptor = number;
@@ -242,6 +244,7 @@ async function _listDirectory(
         | {
               recursive: boolean;
               removePrefix: boolean;
+              avoidHiddenFiles: boolean;
           }
         | undefined
 ): Promise<FilePath[]> {
@@ -250,10 +253,15 @@ async function _listDirectory(
     /* https://github.com/microsoft/TypeScript/issues/7294 */
     const fsListings = files.filter(item => typeof item === 'string');
 
+    // Filter out hidden files if avoidHiddenFiles is true
+    const filteredListings = options?.avoidHiddenFiles 
+        ? fsListings.filter(item => !item.startsWith('.'))
+        : fsListings;
+
     const nestedListings: string[][] = [];
 
     if (options?.recursive ?? false) {
-        const entryPaths = fsListings.map(item => path.join(filePath, item));
+        const entryPaths = filteredListings.map(item => path.join(filePath, item));
         const isDirectories = await Promise.all(
             entryPaths.map(entry => _isDirectory(entry))
         );
@@ -263,6 +271,7 @@ async function _listDirectory(
                     ? _listDirectory(entryPaths[index], {
                           recursive: options?.recursive ?? false,
                           removePrefix: false,
+                          avoidHiddenFiles: options?.avoidHiddenFiles ?? false,
                       })
                     : Promise.resolve([])
             )
@@ -273,7 +282,7 @@ async function _listDirectory(
 
     const items: FilePath[] = [
         /* Listings from #fs.readdir */
-        ...fsListings.map((item: string) => path.join(filePath, item)),
+        ...filteredListings.map((item: string) => path.join(filePath, item)),
 
         /* Listings recursive calls to #_listDirectory */
         ...nestedListings.flat(1),
@@ -338,7 +347,33 @@ function _copyFile(
     destinationFile: FilePath
 ): Promise<void> {
     return new Promise((resolve, reject) => {
-        copyFile(sourceFile, destinationFile, error => {
+        copyFile(sourceFile, destinationFile, (error: Error | null) => {
+            if (error) {
+                _logException(error);
+                reject(error);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+async function _move(
+    source: FilePath,
+    destination: FilePath
+): Promise<void> {
+    const exists = await _exists(source);
+
+    if (!exists) {
+        throw new Error(`Source path does not exist: ${source}`);
+    }
+
+    // Ensure destination directory exists
+    await _createDirectory(path.dirname(destination));
+
+    // Move the source (file or directory) to the destination
+    return new Promise((resolve, reject) => {
+        rename(source, destination, (error: Error | null) => {
             if (error) {
                 _logException(error);
                 reject(error);
@@ -363,6 +398,7 @@ async function _copyRecursiveSync(
         const listings = await _listDirectory(source, {
             recursive: false,
             removePrefix: false,
+            avoidHiddenFiles: false,
         });
         const copyTasks = listings.map(childItemName =>
             _copyRecursiveSync(
@@ -390,25 +426,6 @@ function _createTemporaryDirectory(prefix: FilePath): Promise<FilePath> {
     });
 }
 
-export interface IStorage {
-    identifier: string;
-    write: (filePath: string, contents: ArrayBuffer) => Promise<void>;
-    read: (filePath: string) => Promise<ArrayBuffer>;
-    list: (
-        filePath: string,
-        options?: { removePrefix?: boolean; recursive?: boolean }
-    ) => Promise<string[]>;
-    exists: (filePath: string) => Promise<boolean>;
-    isFile: (filePath: string) => Promise<boolean>;
-    isDirectory: (filePath: string) => Promise<boolean>;
-    createDirectory: (directoryPath: string) => Promise<void>;
-    remove: (filePath: string) => Promise<void>;
-    copy: (sourcePath: string, destinationPath: string) => Promise<void>;
-    size: (filePath: string) => Promise<number>;
-    createTemporaryDirectory: () => Promise<string>;
-    pathSeparator: () => string;
-}
-
 function storage(
     parameters: Partial<typeof DEFAULT_ARGS> = DEFAULT_ARGS
 ): Readonly<IStorage> {
@@ -419,12 +436,13 @@ function storage(
         read: (filePath: string) => _read(filePath),
         list: async (
             filePath: string,
-            options?: { removePrefix?: boolean; recursive?: boolean }
+            options?: { removePrefix?: boolean; recursive?: boolean; avoidHiddenFiles?: boolean }
         ) => {
             const results = await _listDirectory(filePath, {
                 recursive: options?.recursive ?? parameters.recursive ?? false,
                 removePrefix:
                     options?.removePrefix ?? parameters.removePrefix ?? false,
+                avoidHiddenFiles: options?.avoidHiddenFiles ?? false,
             });
 
             const operators: ((item: string) => string)[] = [];
@@ -451,6 +469,8 @@ function storage(
         remove: (filePath: string) => _remove(filePath),
         copy: (sourcePath: string, destinationPath: string) =>
             _copyRecursiveSync(sourcePath, destinationPath),
+        move: (sourcePath: string, destinationPath: string) =>
+            _move(sourcePath, destinationPath),
         size: (filePath: string) => _size(filePath),
         createTemporaryDirectory: () => _createTemporaryDirectory('local-temp'),
         pathSeparator: () => path.sep,

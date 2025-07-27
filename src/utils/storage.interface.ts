@@ -12,11 +12,19 @@ export interface IStorageListOptions {
      * Default: false
      */
     removePrefix?: boolean;
+    
+    /**
+     * When true, excludes hidden files and directories (those starting with '.').
+     * When false, includes all files and directories.
+     * Default: false
+     */
+    avoidHiddenFiles?: boolean;
 }
 
 export const StorageOptionListDefaults: Required<IStorageListOptions> = {
     recursive: true,
     removePrefix: false,
+    avoidHiddenFiles: false,
 };
 
 /**
@@ -124,6 +132,17 @@ export interface IStorage {
      * @throws {Error} If the source doesn't exist or cannot be copied
      */
     copy: (source: string, destination: string) => Promise<void>;
+    
+    /**
+     * Moves a file or directory from source to destination.
+     * For directories, moves the entire directory to the destination folder.
+     * Creates the destination directory if it doesn't exist.
+     * 
+     * @param source - Absolute path to the source file or directory
+     * @param destination - Absolute path where the item should be moved
+     * @throws {Error} If the source doesn't exist or cannot be moved
+     */
+    move: (source: string, destination: string) => Promise<void>;
     
     /**
      * Creates a temporary directory with a unique name.

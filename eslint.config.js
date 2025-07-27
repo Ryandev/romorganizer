@@ -125,6 +125,15 @@ export default [
     }
   },
   {
+    files: ['src/**/*.test.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      'unicorn/no-null': 'off',
+      'unicorn/prefer-number-properties': 'off',
+      'unicorn/no-useless-undefined': 'off'
+    }
+  },
+  {
     files: ['scripts/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',

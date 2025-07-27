@@ -18,4 +18,14 @@ export default {
     '!src/**/*.test.ts',
     '!src/**/*.d.ts',
   ],
+  coverageThreshold: {
+    global: {
+      statements: 63,
+      branches: 60,
+      functions: 60,
+      lines: 63,
+    },
+  },
+  coverageReporters: ['text', 'lcov', 'html'],
+  coverageDirectory: 'coverage',
 }; 

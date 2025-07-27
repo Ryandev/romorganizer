@@ -3,15 +3,15 @@ import { writeFile, readFile, rm } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { mkdtemp } from 'fs/promises';
-import { ECMWASM } from './ecm-wasm.js';
+import { EcmWasm } from './ecm-wasm.js';
 
 describe('ECM WASM Wrapper', () => {
   let tempDir: string;
-  let ecmWasm: ECMWASM;
+  let ecmWasm: EcmWasm;
 
   beforeEach(async () => {
     tempDir = await mkdtemp(join(tmpdir(), 'ecm-wasm-test-'));
-    ecmWasm = new ECMWASM();
+    ecmWasm = new EcmWasm();
   });
 
   afterEach(async () => {
