@@ -1,8 +1,8 @@
-import { BaseOperation } from './base.js';
+import { BaseOperation } from './base';
 import {
     OperationStatus,
     OperationEvent,
-} from './interface.js';
+} from './interface';
 
 // Create a concrete implementation of BaseOperation for testing
 class TestOperation extends BaseOperation {

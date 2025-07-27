@@ -283,7 +283,7 @@ async function _listDirectory(
          */
         .map(outputFilePath =>
             (options?.removePrefix ?? false)
-                ? outputFilePath.replace(filePath, '')
+                ? path.relative(filePath, outputFilePath)
                 : outputFilePath
         );
 
@@ -430,7 +430,7 @@ function storage(
             const operators: ((item: string) => string)[] = [];
 
             if (options?.removePrefix ?? DEFAULT_ARGS.removePrefix) {
-                operators.push(item => item.replace(filePath, ''));
+                operators.push(item => path.relative(filePath, item));
             }
 
             const newItems = results.map(oldValue => {

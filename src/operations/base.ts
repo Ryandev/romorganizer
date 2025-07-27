@@ -3,8 +3,8 @@ import {
     OperationStatus,
     OperationEvent,
     OperationListener,
-} from './interface.js';
-import { createCallbackManager } from './callback.js';
+} from './interface';
+import { createCallbackManager } from './callback';
 
 /**
  * Base class for implementing operations

@@ -1,7 +1,7 @@
 import { $ } from 'zx';
-import { log } from './logger.js';
-import { guardFileExists } from '../guard.js';
-import storage from './storage.js';
+import { log } from './logger';
+import { guardFileExists } from './guard';
+import storage from './storage';
 import path from 'node:path';
 
 export interface ChdManager {

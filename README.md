@@ -36,15 +36,25 @@ git clone <repository-url>
 cd 7ztools
 ```
 
-2. Install dependencies:
+2. Install dependencies and initialize submodules:
 ```bash
 npm install
+```
+
+**Note**: The `postinstall` script will automatically initialize all git submodules. If you need to manually initialize submodules, run:
+```bash
+npm run setup
 ```
 
 3. Build the project:
 ```bash
 npm run build
 ```
+
+**Note**: The build process automatically:
+- Initializes git submodules (via `postinstall` script)
+- Builds ECM WASM modules (via `build:deps` script)
+- Compiles TypeScript to JavaScript (via Vite)
 
 ## Code Quality
 
@@ -158,7 +168,10 @@ The ESLint configuration includes:
 - Custom rule overrides for project-specific needs
 
 ### Available scripts:
-- `npm run build`: Compile TypeScript to JavaScript
+- `npm run setup`: Initialize all git submodules
+- `npm run build`: Build dependencies and compile TypeScript to JavaScript
+- `npm run build:deps`: Build ECM WASM modules (automatically run before main build)
+
 - `npm run start`: Run the compiled JavaScript
 - `npm run dev`: Run TypeScript directly with tsx
 - `npm run clean`: Remove build artifacts

@@ -1,0 +1,11 @@
+---
+description: Structure
+globs: src/**/*.ts
+alwaysApply: false
+---
+
+## Project Structure
+- Any common utilities are in `src/utils`
+- Any archiving library wrappers are in `src/archive`
+- command line argument parsing in `src/cli.ts`
+- Entry point to project is `src/index.ts`

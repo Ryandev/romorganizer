@@ -1,9 +1,10 @@
-import cueSheet from './cueSheet.js';
+import cueSheet from './cueSheet';
 const { generateMergedCueSheet, generateSplitCueSheet } = cueSheet;
-import type { BinFile } from './binmerge.js';
+import type { BinFile } from './binmerge';
 import { join } from 'node:path';
-import storage from './storage.js';
-import type { IStorage } from './storage.js';
+import storage from './storage';
+import type { IStorage } from './storage';
+import { guardFileDoesNotExist } from './guard';
 
 describe('CueSheet Generation', () => {
   describe('generateMergedCueSheet', () => {
@@ -173,6 +174,11 @@ describe('createCueFile', () => {
 
     it('should throw error if BIN file does not exist', async () => {
         const nonExistentBinPath = join(testDir, 'nonexistent.bin');
+        // Remove the file if it exists
+        await storageInstance.remove(nonExistentBinPath).catch(() => {
+          /* ignore */
+        });
+        guardFileDoesNotExist(nonExistentBinPath, `Bin file should not exist: ${nonExistentBinPath}`);
         const cueFilePath = join(testDir, 'test.cue');
 
         await expect(cueSheet.createCueFile(nonExistentBinPath, cueFilePath))

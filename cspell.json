@@ -12,6 +12,14 @@
     "extractcd",
     "Redump",
     "mame",
+    "ecm",
+    "unecm",
+    "analyse",
+    "cue",
+    "cuefile",
+    "cuefiles",
+    "cuesheet",
+    "cuesheets",
   ],
   "patterns": [
     {

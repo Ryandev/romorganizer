@@ -1,5 +1,5 @@
-import { BaseOperation } from './base.js';
-import { OperationEvent } from './interface.js';
+import { BaseOperation } from './base';
+import { OperationEvent } from './interface';
 
 /**
  * Example operation that demonstrates how to extend BaseOperation

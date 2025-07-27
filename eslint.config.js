@@ -125,11 +125,49 @@ export default [
     }
   },
   {
+    files: ['scripts/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        globalThis: 'readonly',
+        abort: 'readonly',
+        require: 'readonly'
+      }
+    },
+    rules: {
+      'no-console': 'off',
+      'no-process-exit': 'off'
+    }
+  },
+  {
+    files: ['deps/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        globalThis: 'readonly',
+        abort: 'readonly',
+        require: 'readonly'
+      }
+    },
+    rules: {
+      'no-console': 'off',
+      'no-process-exit': 'off'
+    }
+  },
+  {
     ignores: [
       'dist/',
       'dist-package/',
       'node_modules/',
-      '*.js'
+      'src/**/*.js'
     ]
   }
 ]; 

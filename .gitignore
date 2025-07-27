@@ -3,6 +3,7 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
 
 # Build outputs
 dist/
@@ -52,6 +53,9 @@ coverage/
 # Temporary folders
 tmp/
 temp/ 
+
+# Emscripten SDK (local installation)
+deps/ecm/emsdk/
 
 .mailmap
 

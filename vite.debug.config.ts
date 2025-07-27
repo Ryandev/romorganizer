@@ -21,11 +21,16 @@ export default defineConfig({
         'node:os',
         'node:child_process',
         'node:util',
+        'node:zlib',
+        'zlib',
+        'crypto',
+        'node:events',
         'fs',
         'path',
         'os',
         'child_process',
-        'util'
+        'util',
+        'events'
       ],
       output: {
         entryFileNames: '[name].js',

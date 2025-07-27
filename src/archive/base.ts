@@ -1,8 +1,8 @@
 import { join } from 'path';
 import { $ } from 'zx';
-import { log } from '../utils/logger.js';
-import { guardFileExists, guardDirectoryExists } from '../guard.js';
-import storage from '../utils/storage.js';
+import { log } from '../utils/logger';
+import { guardFileExists, guardDirectoryExists } from '../utils/guard';
+import storage from '../utils/storage';
 
 export interface Archive {
     archiveFile: () => string;

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { loadArguments } from './cli.js';
-import { guardDirectoryExists } from './guard.js';
+import { loadArguments } from './cli';
+import { guardDirectoryExists } from './utils/guard';
 
 // Mock the guard module
-jest.mock('./guard.js', () => ({
+jest.mock('./utils/guard', () => ({
     guardDirectoryExists: jest.fn(),
 }));
 

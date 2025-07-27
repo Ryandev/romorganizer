@@ -1,0 +1,3 @@
+[submodule "deps/ecm/src"]
+	path = deps/ecm/src
+	url = https://github.com/kidoz/ecm

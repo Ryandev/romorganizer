@@ -1,4 +1,4 @@
-import { guardDirectoryExists } from './guard';
+import { guardDirectoryExists } from './utils/guard';
 import commandLineArgs from 'command-line-args';
 
 export interface LaunchParameters {

@@ -7,11 +7,11 @@ import {
   split,
   type BinFile
 } from './binmerge';
-import cuesheet from './cueSheet.js';
+import cuesheet from './cueSheet';
 const { generateMergedCueSheet, generateSplitCueSheet } = cuesheet;
 
 // Mock the logger
-jest.mock('./logger.js', () => ({
+jest.mock('./logger', () => ({
   log: {
     banner: jest.fn(),
     info: jest.fn(),
@@ -20,7 +20,7 @@ jest.mock('./logger.js', () => ({
   }
 }));
 
-import { log } from './logger.js';
+import { log } from './logger';
 
 beforeEach(() => {
   jest.clearAllMocks();

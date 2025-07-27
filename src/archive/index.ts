@@ -1,16 +1,16 @@
 import { extname } from 'path';
-import { Archive } from './base.js';
-import { EcmArchive } from './ecm.js';
-import { RarArchive } from './rar.js';
-import { SevenZipArchive } from './seven-zip.js';
-import { ZipArchive } from './zip.js';
+import { Archive } from './base';
+// import { EcmArchive } from './ecm';
+import { RarArchive } from './rar';
+import { SevenZipArchive } from './seven-zip';
+import { ZipArchive } from './zip';
 
-export type { Archive } from './base.js';
-export { BaseArchive } from './base.js';
-export { SevenZipArchive } from './seven-zip.js';
-export { RarArchive } from './rar.js';
-export { ZipArchive } from './zip.js';
-export { EcmArchive } from './ecm.js';
+export type { Archive } from './base';
+export { BaseArchive } from './base';
+export { SevenZipArchive } from './seven-zip';
+export { RarArchive } from './rar';
+export { ZipArchive } from './zip';
+// export { EcmArchive } from './ecm';
 
 export function createArchive(archiveFile: string): Archive {
     const fileExtension = extname(archiveFile).toLowerCase().slice(1);
@@ -22,7 +22,7 @@ export function createArchive(archiveFile: string): Archive {
         case 'zip':
             return new ZipArchive(archiveFile);
         case 'ecm':
-            return new EcmArchive(archiveFile);
+            throw new Error('ECM support is not available in the built version. Use the development version for ECM functionality.');
         default:
             abort(`Unsupported file extension: ${fileExtension}`);
     }

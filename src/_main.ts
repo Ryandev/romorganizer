@@ -2,13 +2,13 @@
 
 import { basename, join } from 'path';
 import { $ } from 'zx';
-import { log } from './utils/logger.js';
-import { createArchive } from './archive/index.js';
-import { loadArguments } from './cli.js';
-import cueSheet from './utils/cuesheet.js';
-import chd from './utils/chd.js';
-import { guardDirectoryExists, guardFileExists } from './guard.js';
-import storage from './utils/storage.js';
+import { log } from './utils/logger';
+import { createArchive } from './archive/index';
+import { loadArguments } from './cli';
+import cueSheet from './utils/cueSheet';
+import chd from './utils/chd';
+import { guardDirectoryExists, guardFileExists } from './utils/guard';
+import storage from './utils/storage';
 
 // Global temporary files array for archive operations
 globalThis.temporaryFiles = [];

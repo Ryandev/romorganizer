@@ -1,7 +1,7 @@
-import { SevenZipArchive } from './seven-zip.js';
+import { SevenZipArchive } from './seven-zip';
 import { join } from 'node:path';
-import storage from '../utils/storage.js';
-import type { IStorage } from '../utils/storage.js';
+import storage from '../utils/storage';
+import type { IStorage } from '../utils/storage';
 
 describe('SevenZipArchive', () => {
     let testDir: string;

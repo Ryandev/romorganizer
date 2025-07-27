@@ -188,9 +188,12 @@ describe('local.exists', () => {
 
         const mockAccess = jest
             .spyOn(fs, 'access')
-            .mockImplementation((path, callback) => {
-                /* eslint-disable-next-line unicorn/no-null */
-                callback(null);
+            .mockImplementation((path, modeOrCallback, callback) => {
+                const actualCallback = typeof modeOrCallback === 'function' ? modeOrCallback : callback;
+                if (typeof actualCallback === 'function') {
+                    /* eslint-disable-next-line unicorn/no-null */
+                    (actualCallback as (error: null) => void)(null);
+                }
             });
 
         /* @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access */
@@ -221,9 +224,9 @@ describe('local.size', () => {
         const mockLStat = jest
             .spyOn(fs, 'lstat')
             .mockImplementation((path, callback) => {
-                if (callback) {
+                if (typeof callback === 'function') {
                     /* eslint-disable-next-line unicorn/no-null */
-                    callback(null, {
+                    (callback as (error: null, stats: Stats) => void)(null, {
                         size,
                     } as unknown as Stats);
                 }
@@ -243,8 +246,8 @@ describe('local.size', () => {
         const error = new Error('File does not exist');
 
         jest.spyOn(fs, 'lstat').mockImplementation((path, callback) => {
-            if (callback) {
-                callback(error);
+            if (typeof callback === 'function') {
+                (callback as (error: Error) => void)(error);
             }
         });
 
@@ -268,17 +271,20 @@ describe('local.isDirectory', () => {
 
         const mockAccess = jest
             .spyOn(fs, 'access')
-            .mockImplementation((path, callback) => {
-                /* eslint-disable-next-line unicorn/no-null */
-                callback(null);
+            .mockImplementation((path, modeOrCallback, callback) => {
+                const actualCallback = typeof modeOrCallback === 'function' ? modeOrCallback : callback;
+                if (typeof actualCallback === 'function') {
+                    /* eslint-disable-next-line unicorn/no-null */
+                    (actualCallback as (error: null) => void)(null);
+                }
             });
 
         const mockLStat = jest
             .spyOn(fs, 'lstat')
             .mockImplementation((path, callback) => {
-                if (callback) {
+                if (typeof callback === 'function') {
                     /* eslint-disable-next-line unicorn/no-null */
-                    callback(null, {
+                    (callback as (error: null, stats: Stats) => void)(null, {
                         isDirectory: () => isDirectoryResult,
                     } as unknown as Stats);
                 }
@@ -303,17 +309,20 @@ describe('local.isDirectory', () => {
 
         const mockAccess = jest
             .spyOn(fs, 'access')
-            .mockImplementation((path, callback) => {
-                /* eslint-disable-next-line unicorn/no-null */
-                callback(null);
+            .mockImplementation((path, modeOrCallback, callback) => {
+                const actualCallback = typeof modeOrCallback === 'function' ? modeOrCallback : callback;
+                if (typeof actualCallback === 'function') {
+                    /* eslint-disable-next-line unicorn/no-null */
+                    (actualCallback as (error: null) => void)(null);
+                }
             });
 
         const mockLStat = jest
             .spyOn(fs, 'lstat')
             .mockImplementation((path, callback) => {
-                if (callback) {
+                if (typeof callback === 'function') {
                     /* eslint-disable-next-line unicorn/no-null */
-                    callback(null, {
+                    (callback as (error: null, stats: Stats) => void)(null, {
                         isDirectory: () => isDirectoryResult,
                     } as unknown as Stats);
                 }

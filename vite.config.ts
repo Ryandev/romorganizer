@@ -21,11 +21,19 @@ export default defineConfig({
         'node:os',
         'node:child_process',
         'node:util',
+        'node:events',
+        'node:timers',
+        'node:url',
         'fs',
         'path',
         'os',
         'child_process',
-        'util'
+        'util',
+        'events',
+        'url',
+        'deps/ecm/wasm/wrappers/ecm-wasm',
+        'deps/ecm/wasm/types',
+        'deps/ecm/wasm/index'
       ],
       output: {
         entryFileNames: '[name].js',
@@ -42,5 +50,9 @@ export default defineConfig({
   },
   esbuild: {
     target: 'ES2022'
+  },
+  assetsInclude: ['**/*.wasm'],
+  optimizeDeps: {
+    exclude: ['deps/ecm/wasm/build/*.js']
   }
 }); 

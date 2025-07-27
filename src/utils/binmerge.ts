@@ -5,12 +5,12 @@
  * generating a corrected cue sheet in the process.
  * 
  * Copyright (C) 2024 Chris Putnam (original Python version)
- * TypeScript adaptation for 7ztools project
+ * TypeScript adaptation for project
  */
 
-import { log } from './logger.js';
-import { guard } from '../guard.js';
-import cueSheet from './cueSheet.js';
+import { log } from './logger';
+import { guard } from './guard';
+import cueSheet from './cueSheet';
 
 export interface TrackIndex {
   id: number;

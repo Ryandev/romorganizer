@@ -4,10 +4,11 @@
  * Functions for generating merged and split cuesheets from parsed CUE data
  */
 
-import type { BinFile } from './binmerge.js';
+import type { BinFile } from './binmerge';
 import { writeFile } from 'node:fs/promises';
 import { basename } from 'node:path';
-import { guardFileExists } from '../guard.js';
+import { guardFileExists } from './guard';
+import { guard } from './guard';
 
 /**
  * Convert sectors to CUE timestamp format (MM:SS:FF)
@@ -85,12 +86,18 @@ function generateSplitCueSheet(basename: string, mergedFile: BinFile): string {
  * @param cueFilePath - Path where the CUE file should be created
  * @returns Promise<void> - Resolves when CUE file is created successfully
  */
-async function createCueFile(binFilePath: string, cueFilePath: string): Promise<void> {
+async function createCueFile(binFilePath: string, cueFilePath?: string): Promise<void> {
   // Check if BIN file exists
   guardFileExists(binFilePath, `Bin file does not exist: ${binFilePath}`);
+  guard(binFilePath.endsWith('.bin'), `Bin file must end with .bin: ${binFilePath}`);
 
   // Get the BIN file name (without path)
   const binFileName = basename(binFilePath);
+
+  if (!cueFilePath) {
+    const binFileNameWithoutExtension = basename(binFileName, '.bin');
+    cueFilePath = `${binFileNameWithoutExtension}.cue`;
+  }
 
   // Create the CUE content
   const cueContent = `FILE "${binFileName}" BINARY
