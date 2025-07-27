@@ -10,48 +10,6 @@ import chd from './utils/chd';
 import { guardDirectoryExists, guardFileExists } from './utils/guard';
 import storage from './utils/storage';
 
-// Global temporary files array for archive operations
-globalThis.temporaryFiles = [];
-
-async function cleanup(): Promise<void> {
-    const storageInstance = await storage();
-
-    for (const file of globalThis.temporaryFiles) {
-        try {
-            await storageInstance.remove(file);
-        } catch {
-            // Ignore errors during cleanup
-        }
-    }
-    globalThis.temporaryFiles.length = 0;
-}
-
-function abort(message: string): never {
-    log.error(message);
-    cleanup();
-    process.exit(1);
-}
-
-async function checkEnvironment(): Promise<void> {
-    const commands = [
-        { name: '7z', installCmd: 'sudo apt install p7zip-full p7zip-rar' },
-        { name: 'chdman', installCmd: 'sudo apt-get install -y mame-tools' },
-        { name: 'unrar', installCmd: 'sudo apt install unrar' },
-        { name: 'unzip', installCmd: 'sudo apt install unzip' },
-        {
-            name: 'unecm',
-            installCmd: 'see project: https://github.com/kidoz/ecm',
-        },
-    ];
-
-    for (const cmd of commands) {
-        try {
-            await $`command -v ${cmd.name}`;
-        } catch {
-            abort(`${cmd.name} is not installed, ${cmd.installCmd}`);
-        }
-    }
-}
 
 async function run(
     searchExtension: string,
@@ -300,51 +258,11 @@ async function run(
                 abort(`Failed to create CHD file ${chdFile}: ${error}`);
             }
 
-            await cleanup();
         }
         log.info(
             `Conversion completed for ${searchExtension} files in ${searchPath}`
         );
     } else {
         log.warn(`No ${searchExtension} files found in ${searchPath}`);
-    }
-}
-
-// Handle process termination
-process.on('SIGINT', () => {
-    console.log('\nReceived SIGINT, cleaning up...');
-    cleanup();
-    process.exit(1);
-});
-
-process.on('SIGTERM', () => {
-    console.log('\nReceived SIGTERM, cleaning up...');
-    cleanup();
-    process.exit(1);
-});
-
-// Main execution
-try {
-    await checkEnvironment();
-
-    const args = process.argv.slice(2);
-    const launchParameters = loadArguments(args);
-
-    log.banner('Converting zip files');
-    await run('zip', launchParameters.SOURCE_DIR, launchParameters.OUTPUT_DIR);
-
-    log.banner('Converting 7z files');
-    await run('7z', launchParameters.SOURCE_DIR, launchParameters.OUTPUT_DIR);
-
-    log.banner('Converting rar files');
-    await run('rar', launchParameters.SOURCE_DIR, launchParameters.OUTPUT_DIR);
-
-    log.banner('Conversion completed');
-    process.exit(0);
-} catch (error) {
-    if (error instanceof Error) {
-        abort(error.message);
-    } else {
-        abort(`Unexpected error: ${error}`);
     }
 }

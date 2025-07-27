@@ -26,6 +26,13 @@ const EXTRACT_OPERATIONS = new Map<string, (sourceFile: string) => Promise<strin
     ['zip', (sourceFile: string) => new ZipArchive(sourceFile).extract()]
 ]);
 
+const TO_BIN_CONVERSION_OPERATIONS = new Map<string, (sourceFile: string) => Promise<string>>([
+    ['chd', (sourceFile: string) => Promise.resolve('')],
+    ['img', (sourceFile: string) => Promise.resolve('')],
+    ['iso', (sourceFile: string) => Promise.resolve('')],
+    ['gdi', (sourceFile: string) => Promise.resolve('')],
+]);
+
 export class Runner implements IRunner {
     private readonly cleanupOperations: (() => Promise<void>)[];
     constructor(private readonly sourceFile: string, private readonly targetExtension: 'chd' | 'bin') {
