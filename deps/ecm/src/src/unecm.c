@@ -34,7 +34,7 @@
 #include <string.h>
 #include "unecm.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 #if DEBUG == 1
     #define log(fmt, ... ) fprintf(stderr, fmt, ##__VA_ARGS__)
@@ -220,6 +220,10 @@ void setcounter(unsigned n) {
 
 EXPORT int unecmify(int in_fd, int out_fd) {
     log("DEBUG: unecmify called with in_fd=%d, out_fd=%d\n", in_fd, out_fd);
+    /*
+    ** Initialize the ECC/EDC tables
+    */
+    eccedc_init();
     FILE *in = fdopen(in_fd, "rb");
     FILE *out = fdopen(out_fd, "wb");
     log("DEBUG: fdopen results - in=%p, out=%p\n", (void*)in, (void*)out);

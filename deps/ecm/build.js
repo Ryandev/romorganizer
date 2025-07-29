@@ -50,9 +50,12 @@ try {
     -s EXPORTED_FUNCTIONS="['_ecmify']" \
     -s EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap', 'getValue', 'setValue', 'FS']" \
     -s ALLOW_MEMORY_GROWTH=1 \
-    -s INITIAL_MEMORY=16777216 \
-    -s MAXIMUM_MEMORY=268435456 \
+    -s INITIAL_MEMORY=67108864 \
+    -s MAXIMUM_MEMORY=1073741824 \
     -s FILESYSTEM=1 \
+    -s EXPORT_ES6=1 \
+    -s USE_ES6_IMPORT_META=1 \
+    -s LEGACY_VM_SUPPORT=1 \
     -O3`;
 
   execSync(ecmCommand, {
@@ -76,9 +79,12 @@ try {
     -s EXPORTED_FUNCTIONS="['_unecmify']" \
     -s EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap', 'getValue', 'setValue', 'FS']" \
     -s ALLOW_MEMORY_GROWTH=1 \
-    -s INITIAL_MEMORY=16777216 \
-    -s MAXIMUM_MEMORY=268435456 \
+    -s INITIAL_MEMORY=67108864 \
+    -s MAXIMUM_MEMORY=1073741824 \
     -s FILESYSTEM=1 \
+    -s EXPORT_ES6=1 \
+    -s USE_ES6_IMPORT_META=1 \
+    -s LEGACY_VM_SUPPORT=1 \
     -O3`;
 
   execSync(unecmCommand, {

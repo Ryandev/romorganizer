@@ -1,6 +1,6 @@
 import { $ } from 'zx';
 import { log } from './logger';
-import { guardFileExists, guardValidString } from './guard';
+import { guard, guardFileExists } from './guard';
 import storage from './storage';
 import path from 'node:path';
 import { guardCommandExists } from './guard';
@@ -39,17 +39,25 @@ async function createChdFile(options: {
 
     const outputFilePath = path.join(temporaryDirectory, outputFileName);
 
-    const CREATE_COMMANDS = {
-        cue: `chdman createcd --force --input "${inputFilePath}" --output "${outputFilePath}"`,
-        gdi: `chdman createcd --force --input "${inputFilePath}" --output "${outputFilePath}"`,
-        iso: `chdman createcd --force --input "${inputFilePath}" --output "${outputFilePath}"`,
-        img: `chdman createraw --force --input "${inputFilePath}" --output "${outputFilePath}"`,
-    } as const;
-
-    const command = CREATE_COMMANDS[inputFileExtension as ChdFormat];
-    guardValidString(command, `No command found for ${inputFileExtension}`);
-
-    await $`${command}`;
+    let exitCode: number;
+    
+    switch (inputFileExtension) {
+        case 'cue':
+        case 'gdi':
+        case 'iso': {
+            const { exitCode: code } = await $`chdman createcd --force --input ${inputFilePath} --output ${outputFilePath}`;
+            exitCode = code ?? 1;
+            break;
+        }
+        case 'img': {
+            const { exitCode: code } = await $`chdman createraw --force --input ${inputFilePath} --output ${outputFilePath}`;
+            exitCode = code ?? 1;
+            break;
+        }
+        default:
+            throw new Error(`No command found for ${inputFileExtension}`);
+    }
+    guard(exitCode === 0, `Failed to create CHD file for ${inputFilePath}, status code: ${exitCode}`);
 
     guardFileExists(outputFilePath, `CHD file does not exist: ${outputFilePath}`);
 
@@ -72,14 +80,18 @@ async function extractChdFile(options: {
     const outputFileName = path.basename(chdFilePath, '.chd') + `.${options.format}`;
     const outputFilePath = path.join(temporaryDirectory, outputFileName);
 
-    const EXTRACT_COMMANDS = {
-        cue: `chdman extractcd --force --input "${chdFilePath}" --output "${outputFilePath}"`,
-        gdi: `chdman extractcd --force --input "${chdFilePath}" --output "${outputFilePath}"`,
-        iso: `chdman extractcd --force --input "${chdFilePath}" --output "${outputFilePath}"`,
-        img: `chdman extractraw --force --input "${chdFilePath}" --output "${outputFilePath}"`,
-    } as const;
-
-    await $`${EXTRACT_COMMANDS[format]}`;
+    switch (format) {
+        case 'cue':
+        case 'gdi':
+        case 'iso':
+            await $`chdman extractcd --force --input ${chdFilePath} --output ${outputFilePath}`;
+            break;
+        case 'img':
+            await $`chdman extractraw --force --input ${chdFilePath} --output ${outputFilePath}`;
+            break;
+        default:
+            throw new Error(`No command found for ${format}`);
+    }
 
     guardFileExists(outputFilePath, `Cue file does not exist: ${outputFilePath}`);
     log.info(`Successfully extracted ${chdFilePath} to ${outputFilePath}`);

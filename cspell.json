@@ -1,7 +1,12 @@
 {
   "version": "0.2",
   "language": "en",
-  "words": [],
+  "words": [
+    "romorg",
+    "Electrosphere",
+    "Logiqx",
+    "testhash"
+  ],
   "ignoreWords": [
     "chdman",
     "unrar",
@@ -21,7 +26,10 @@
     "cuesheet",
     "cuesheets",
     "extractraw",
-    "createraw"
+    "createraw",
+    "PREGAP",
+    "POSTGAP",
+    "Bincue"
   ],
   "patterns": [
     {

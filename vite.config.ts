@@ -24,6 +24,8 @@ export default defineConfig({
         'node:events',
         'node:timers',
         'node:url',
+        'node:crypto',
+        'node:zlib',
         'fs',
         'path',
         'os',
@@ -31,6 +33,8 @@ export default defineConfig({
         'util',
         'events',
         'url',
+        'crypto',
+        'zlib',
         'deps/ecm/wasm/wrappers/ecm-wasm',
         'deps/ecm/wasm/types',
         'deps/ecm/wasm/index'

@@ -5,7 +5,10 @@ interface BaseWASMModule {
     readFile: (path: string) => Uint8Array;
     unlink: (path: string) => void;
     open: (path: string, flags: string) => { fd: number; close: () => void };
+    close: (stream: { fd: number; close: () => void }) => void;
+    stat: (path: string) => { size: number };
   };
+  ccall: (funcName: string, returnType: string, argTypes: string[], args: any[]) => any;
   onRuntimeInitialized?: () => void;
 }
 

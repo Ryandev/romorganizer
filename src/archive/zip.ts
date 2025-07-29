@@ -104,7 +104,7 @@ export class ZipArchive extends BaseArchive {
                     zip.addFile(itemZipPath, Buffer.from(fileContent));
                 } catch (error) {
                     // Skip files that can't be read
-                    console.warn(`Skipping file ${item}: ${error}`);
+                    log.warn(`Skipping file ${item}: ${error}`);
                 }
             }
         }

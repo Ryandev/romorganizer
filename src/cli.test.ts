@@ -1,198 +1,156 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
 import { loadArguments } from './cli';
-import { guardDirectoryExists } from './utils/guard';
 
-// Mock the guard module
+// Mock the guard functions to prevent file existence validation in tests
 jest.mock('./utils/guard', () => ({
     guardDirectoryExists: jest.fn(),
+    guardFileExists: jest.fn(),
 }));
 
-describe('loadArguments', () => {
-    const mockGuardDirectoryExists = guardDirectoryExists as jest.MockedFunction<typeof guardDirectoryExists>;
+describe('CLI', () => {
+    describe('loadArguments', () => {
+        it('should parse compress command arguments correctly', () => {
+            const args = [
+                'compress',
+                '--source-dir', './input',
+                '--output-dir', './output'
+            ];
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
-
-    describe('valid arguments', () => {
-        it('should parse source and output directories with short flags', () => {
-            const args = ['-s', '/source/path', '-o', '/output/path'];
-            
             const result = loadArguments(args);
-            
-            expect(result).toEqual({
-                SOURCE_DIR: '/source/path',
-                OUTPUT_DIR: '/output/path',
-                REMOVE_SOURCE: false,
-            });
-            expect(mockGuardDirectoryExists).toHaveBeenCalledWith('/source/path', 'Source directory does not exist: /source/path');
-            expect(mockGuardDirectoryExists).toHaveBeenCalledWith('/output/path', 'Output directory does not exist: /output/path');
+
+            expect(result.command).toBe('compress');
+            expect(result.SOURCE_DIR).toBe('./input');
+            expect(result.OUTPUT_DIR).toBe('./output');
+            expect(result.REMOVE_SOURCE).toBe(false);
         });
 
-        it('should parse source and output directories with kebab-case flags', () => {
-            const args = ['--source-dir', '/source/path', '--output-dir', '/output/path'];
-            
+        it('should parse verify command arguments correctly', () => {
+            const args = [
+                'verify',
+                '--source-dir', './input',
+                '--dat-file', './test.dat',
+                '--cuesheets-file', './cuesheets.zip'
+            ];
+
             const result = loadArguments(args);
-            
-            expect(result).toEqual({
-                SOURCE_DIR: '/source/path',
-                OUTPUT_DIR: '/output/path',
-                REMOVE_SOURCE: false,
-            });
+
+            expect(result.command).toBe('verify');
+            expect(result.SOURCE_DIR).toBe('./input');
+            expect(result.DAT_FILE).toBe('./test.dat');
+            expect(result.CUESHEETS_FILE).toBe('./cuesheets.zip');
         });
 
-        it('should parse remove-source flag as true with various truthy values', () => {
-            const truthyValues = ['true', '1', 'yes', 'y', 't'];
-            
-            for (const value of truthyValues) {
-                const args = ['-s', '/source/path', '-o', '/output/path', '-r', value];
-                
-                const result = loadArguments(args);
-                
-                expect(result.REMOVE_SOURCE).toBe(true);
-            }
-        });
+        it('should parse short arguments correctly for compress', () => {
+            const args = [
+                'compress',
+                '-s', './input',
+                '-o', './output'
+            ];
 
-        it('should parse remove-source flag as false with falsy values', () => {
-            const falsyValues = ['false', '0', 'no', 'n', 'f', 'anything-else'];
-            
-            for (const value of falsyValues) {
-                const args = ['-s', '/source/path', '-o', '/output/path', '-r', value];
-                
-                const result = loadArguments(args);
-                
-                expect(result.REMOVE_SOURCE).toBe(false);
-            }
-        });
-
-        it('should parse remove-source flag with kebab-case', () => {
-            const args = ['-s', '/source/path', '-o', '/output/path', '--remove-source', 'true'];
-            
             const result = loadArguments(args);
-            
+
+            expect(result.command).toBe('compress');
+            expect(result.SOURCE_DIR).toBe('./input');
+            expect(result.OUTPUT_DIR).toBe('./output');
+        });
+
+        it('should parse short arguments correctly for verify', () => {
+            const args = [
+                'verify',
+                '-s', './input',
+                '-d', './test.dat',
+                '-c', './cuesheets.zip'
+            ];
+
+            const result = loadArguments(args);
+
+            expect(result.command).toBe('verify');
+            expect(result.SOURCE_DIR).toBe('./input');
+            expect(result.DAT_FILE).toBe('./test.dat');
+            expect(result.CUESHEETS_FILE).toBe('./cuesheets.zip');
+        });
+
+        it('should handle boolean flags correctly for compress', () => {
+            const args = [
+                'compress',
+                '--source-dir', './input',
+                '--output-dir', './output',
+                '--remove-source'
+            ];
+
+            const result = loadArguments(args);
+
+            expect(result.command).toBe('compress');
             expect(result.REMOVE_SOURCE).toBe(true);
         });
 
-        it('should ignore unknown flags', () => {
-            const args = ['-s', '/source/path', '-o', '/output/path', '--unknown', 'value', '--another-unknown'];
-            
+        it('should handle short boolean flags correctly for compress', () => {
+            const args = [
+                'compress',
+                '-s', './input',
+                '-o', './output',
+                '-r'
+            ];
+
             const result = loadArguments(args);
-            
-            expect(result).toEqual({
-                SOURCE_DIR: '/source/path',
-                OUTPUT_DIR: '/output/path',
-                REMOVE_SOURCE: false,
-            });
+
+            expect(result.command).toBe('compress');
+            expect(result.REMOVE_SOURCE).toBe(true);
         });
 
-        it('should handle mixed flag styles', () => {
-            const args = ['-s', '/source/path', '--output-dir', '/output/path', '--remove-source', 'yes'];
-            
-            const result = loadArguments(args);
-            
-            expect(result).toEqual({
-                SOURCE_DIR: '/source/path',
-                OUTPUT_DIR: '/output/path',
-                REMOVE_SOURCE: true,
-            });
-        });
-    });
+        it('should throw error for missing command', () => {
+            const args = [
+                '--source-dir', './input',
+                '--output-dir', './output'
+            ];
 
-    describe('validation errors', () => {
-        it('should throw error when SOURCE_DIR is missing', () => {
-            const args = ['-o', '/output/path'];
-            
-            expect(() => loadArguments(args)).toThrow('Missing arg: SOURCE_DIR');
+            expect(() => loadArguments(args)).toThrow('Missing or invalid command. Use "compress" or "verify"');
         });
 
-        it('should throw error when OUTPUT_DIR is missing', () => {
-            const args = ['-s', '/source/path'];
-            
-            expect(() => loadArguments(args)).toThrow('Missing arg: OUTPUT_DIR');
+        it('should throw error for invalid command', () => {
+            const args = [
+                'invalid-command',
+                '--source-dir', './input'
+            ];
+
+            expect(() => loadArguments(args)).toThrow('Missing or invalid command. Use "compress" or "verify"');
         });
 
-        it('should throw error when both SOURCE_DIR and OUTPUT_DIR are missing', () => {
-            const args = ['--remove-source', 'true'];
-            
-            expect(() => loadArguments(args)).toThrow('Missing arg: SOURCE_DIR');
+        it('should throw error for missing source-dir in compress', () => {
+            const args = [
+                'compress',
+                '--output-dir', './output'
+            ];
+
+            expect(() => loadArguments(args)).toThrow('Missing required argument: --source-dir (-s)');
         });
 
-        it('should throw error when source directory does not exist', () => {
-            mockGuardDirectoryExists.mockImplementation((path, message) => {
-                if (path === '/nonexistent/source') {
-                    throw new Error(message);
-                }
-            });
+        it('should throw error for missing output-dir in compress', () => {
+            const args = [
+                'compress',
+                '--source-dir', './input'
+            ];
 
-            const args = ['-s', '/nonexistent/source', '-o', '/output/path'];
-            
-            expect(() => loadArguments(args)).toThrow('Source directory does not exist: /nonexistent/source');
+            expect(() => loadArguments(args)).toThrow('Missing required argument: --output-dir (-o)');
         });
 
-        it('should throw error when output directory does not exist', () => {
-            mockGuardDirectoryExists.mockImplementation((path, message) => {
-                if (path === '/nonexistent/output') {
-                    throw new Error(message);
-                }
-            });
+        it('should throw error for missing dat-file in verify', () => {
+            const args = [
+                'verify',
+                '--source-dir', './input',
+                '--cuesheets-file', './cuesheets.zip'
+            ];
 
-            const args = ['-s', '/source/path', '-o', '/nonexistent/output'];
-            
-            expect(() => loadArguments(args)).toThrow('Output directory does not exist: /nonexistent/output');
-        });
-    });
-
-    describe('edge cases', () => {
-        it('should handle empty arguments array', () => {
-            expect(() => loadArguments([])).toThrow('Missing arg: SOURCE_DIR');
+            expect(() => loadArguments(args)).toThrow('Missing required argument: --dat-file (-d)');
         });
 
-        it('should handle arguments with only flags but no values', () => {
-            const args = ['-s', '-o', '-r'];
-            
-            expect(() => loadArguments(args)).toThrow('Missing arg: SOURCE_DIR');
-        });
+        it('should throw error for missing cuesheets-file in verify', () => {
+            const args = [
+                'verify',
+                '--source-dir', './input',
+                '--dat-file', './test.dat'
+            ];
 
-        it('should handle arguments with trailing flags', () => {
-            const args = ['-s', '/source/path', '-o', '/output/path', '-r'];
-            
-            const result = loadArguments(args);
-            
-            expect(result).toEqual({
-                SOURCE_DIR: '/source/path',
-                OUTPUT_DIR: '/output/path',
-                REMOVE_SOURCE: false,
-            });
-        });
-
-        it('should handle arguments with spaces in paths', () => {
-            const args = ['-s', '/source path/with spaces', '-o', '/output path/with spaces'];
-            
-            const result = loadArguments(args);
-            
-            expect(result).toEqual({
-                SOURCE_DIR: '/source path/with spaces',
-                OUTPUT_DIR: '/output path/with spaces',
-                REMOVE_SOURCE: false,
-            });
-        });
-
-        it('should not support camelCase naming conventions', () => {
-            const args = ['--sourceDir', '/source/path', '--outputDir', '/output/path'];
-            
-            expect(() => loadArguments(args)).toThrow('Missing arg: SOURCE_DIR');
-        });
-
-        it('should not support snake_case naming conventions', () => {
-            const args = ['--source_dir', '/source/path', '--output_dir', '/output/path'];
-            
-            expect(() => loadArguments(args)).toThrow('Missing arg: SOURCE_DIR');
-        });
-
-        it('should not support short names without aliases', () => {
-            const args = ['--source', '/source/path', '--output', '/output/path'];
-            
-            expect(() => loadArguments(args)).toThrow('Missing arg: SOURCE_DIR');
+            expect(() => loadArguments(args)).toThrow('Missing required argument: --cuesheets-file (-c)');
         });
     });
 }); 

@@ -18,6 +18,7 @@ import { readdir as readDirectoryAsync } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { IStorage } from './storage.interface';
+import { log } from './logger';
 
 type FilePath = string;
 type FileDescriptor = number;
@@ -33,7 +34,7 @@ const DEFAULT_ARGS = {
 } as const;
 
 function _logException(error: unknown) {
-    console.error('Storage error:', error);
+    log.error(`Storage error: ${error}`);
 }
 
 function _openFileDescriptor(
@@ -366,6 +367,11 @@ async function _move(
 
     if (!exists) {
         throw new Error(`Source path does not exist: ${source}`);
+    }
+
+    /* if the source is a file & the destination is a directory, rename destination to the basename of the source file in the destination directory */
+    if (await _isFile(source) && await _isDirectory(destination)) {
+        destination = path.join(destination, path.basename(source));
     }
 
     // Ensure destination directory exists

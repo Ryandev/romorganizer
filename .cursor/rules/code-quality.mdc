@@ -1,6 +1,6 @@
 ---
 description: Code Quality Guidelines
-globs: 
+globs: **/*
 ---
 # Code Quality Guidelines
 
@@ -49,3 +49,25 @@ Don't show or discuss the current implementation unless specifically requested.
 ## Commenting
 Add comments where necessary that is not already obvious by the written code. All comments should use the /* */ style syntax. 
 Do not write comments with the // syntax only /* */ style
+
+## Understand the system
+Do not write any code until you understand the existing system
+
+## Edge cases
+Identify any edge cases immediately & flag if not already addressed
+
+## Clarity
+Refine the task until the goal is clear
+
+## Challenge
+Challenge the request. Do not blindly follow. If you know a better way - Speak up!
+
+## Architecture
+Code must be modular, testable & clean
+When commenting use JSDOC comments & explain the logic
+
+## Best Practices
+Suggest best practices if the current approach is outdated
+
+## Style
+Follow existing patterns, match style structure & logic if it is the best practice
