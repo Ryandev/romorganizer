@@ -34,7 +34,7 @@ export const CuesheetMetadataSchema = z.object({
 export const MetadataFileSchema = z.object({
     game: GameMetadataSchema.optional(),
     message: z.string().optional().default(''),
-    status: z.enum(['match', 'closest', 'none']).optional().default('none'),
+    status: z.enum(['match', 'partial', 'none']).optional().default('none'),
     timestamp: z.string().optional().default(new Date().toISOString()),
 });
 

@@ -12,7 +12,8 @@ async function doesCommandExist(command: string): Promise<boolean> {
 
 async function isCommandExecutable(command: string): Promise<boolean> {
     try {
-        const exitCode = await $`test -x ${command}`.exitCode;
+        const commandPath = (await $`command -v ${command}`).stdout.toString().trim();
+        const exitCode = await $`test -x ${commandPath}`.exitCode;
         return exitCode === 0;
     } catch {
         return false

@@ -1,6 +1,6 @@
 import { Dat, Game, ROM, loadDat, VerificationException } from './dat';
 import fs from 'node:fs/promises';
-import path from 'node:path';
+
 
 const EXAMPLE_DAT_FILE = `
 <?xml version="1.0"?>

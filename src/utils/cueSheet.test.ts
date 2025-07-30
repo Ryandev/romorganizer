@@ -1,10 +1,86 @@
 import cueSheet from './cueSheet';
-const { generateMergedCueSheet, generateSplitCueSheet } = cueSheet;
+const { generateMergedCueSheet, generateSplitCueSheet, parseFromCCDFile, processDirectory } = cueSheet;
 import type { BinFile } from './binmerge';
 import { join } from 'node:path';
 import storage from './storage';
-import type { IStorage } from './storage';
+import type { IStorage } from './storage.interface';
 import { guardFileDoesNotExist } from './guard';
+
+const EXAMPLE_CCD_FILE = `
+[CloneCD]
+Version=3
+[Disc]
+TocEntries=4
+Sessions=1
+DataTracksScrambled=0
+CDTextLength=0
+[Session 1]
+PreGapMode=2
+PreGapSubC=1
+[Entry 0]
+Session=1
+Point=0xa0
+ADR=0x01
+Control=0x00
+TrackNo=0
+AMin=0
+ASec=0
+AFrame=0
+ALBA=-150
+Zero=0
+PMin=1
+PSec=32
+PFrame=0
+PLBA=6750
+[Entry 1]
+Session=1
+Point=0xa1
+ADR=0x01
+Control=0x00
+TrackNo=0
+AMin=0
+ASec=0
+AFrame=0
+ALBA=-150
+Zero=0
+PMin=1
+PSec=0
+PFrame=0
+PLBA=4350
+[Entry 2]
+Session=1
+Point=0xa2
+ADR=0x01
+Control=0x00
+TrackNo=0
+AMin=0
+ASec=0
+AFrame=0
+ALBA=-150
+Zero=0
+PMin=68
+PSec=57
+PFrame=4
+PLBA=310129
+[Entry 3]
+Session=1
+Point=0x01
+ADR=0x01
+Control=0x04
+TrackNo=0
+AMin=0
+ASec=0
+AFrame=0
+ALBA=-150
+Zero=0
+PMin=0
+PSec=2
+PFrame=0
+PLBA=0
+[TRACK 1]
+MODE=2
+INDEX 1=0
+`;
 
 describe('CueSheet Generation', () => {
   describe('generateMergedCueSheet', () => {
@@ -199,5 +275,181 @@ describe('createCueFile', () => {
         const cueContent = await storageInstance.read(cueFilePath);
         const cueText = new TextDecoder().decode(cueContent);
         expect(cueText).toContain('FILE "game.bin" BINARY');
+    });
+}); 
+
+describe('parseFromCCDFile', () => {
+    let testDir: string;
+    let storageInstance: IStorage;
+
+    beforeEach(async () => {
+        storageInstance = await storage();
+        testDir = await storageInstance.createTemporaryDirectory();
+    });
+
+    afterEach(async () => {
+        await storageInstance.remove(testDir);
+    });
+
+    it('should convert CCD file to CUE format', async () => {
+        /* Create a test CCD file */
+        const ccdFilePath = join(testDir, 'test.ccd');
+        await storageInstance.write(ccdFilePath, new TextEncoder().encode(EXAMPLE_CCD_FILE));
+
+        /* Create a dummy image file to satisfy the function */
+        const imgFilePath = join(testDir, 'test.img');
+        await storageInstance.write(imgFilePath, new TextEncoder().encode('dummy image content'));
+
+        /* Convert CCD to CUE */
+        const cueContent = await parseFromCCDFile(ccdFilePath);
+
+        /* Verify the CUE content */
+        expect(cueContent).toContain('FILE "test.img" BINARY');
+        expect(cueContent).toContain('TRACK 01 MODE1/2352');
+        expect(cueContent).toContain('INDEX 01 00:00:00');
+        
+        /* Verify the timing adjustment logic worked */
+        expect(cueContent).toContain('INDEX 01 00:00:00'); /* PLBA=0 should be 00:00:00 */
+    });
+
+    it('should throw error for non-CCD file', async () => {
+        const nonCcdPath = join(testDir, 'test.txt');
+        await storageInstance.write(nonCcdPath, new TextEncoder().encode('not a ccd file'));
+
+        await expect(parseFromCCDFile(nonCcdPath))
+            .rejects.toThrow('File must have .ccd extension: ' + nonCcdPath);
+    });
+
+    it('should throw error if CCD file does not exist', async () => {
+        const nonExistentPath = join(testDir, 'nonexistent.ccd');
+        
+        await expect(parseFromCCDFile(nonExistentPath))
+            .rejects.toThrow('CCD file does not exist: ' + nonExistentPath);
+    });
+
+    it('should throw error if no image file found', async () => {
+        /* Create CCD file without corresponding image file */
+        const ccdFilePath = join(testDir, 'test.ccd');
+        await storageInstance.write(ccdFilePath, new TextEncoder().encode(EXAMPLE_CCD_FILE));
+
+        await expect(parseFromCCDFile(ccdFilePath))
+            .rejects.toThrow('No image file found for CCD: ' + ccdFilePath);
+    });
+}); 
+
+describe('processDirectory', () => {
+    let testDir: string;
+    let storageInstance: IStorage;
+
+    beforeEach(async () => {
+        storageInstance = await storage();
+        testDir = await storageInstance.createTemporaryDirectory();
+    });
+
+    afterEach(async () => {
+        await storageInstance.remove(testDir);
+    });
+
+    it('should process CCD files in directory', async () => {
+        /* Create test CCD and image files */
+        const ccdFilePath = join(testDir, 'test.ccd');
+        const imgFilePath = join(testDir, 'test.img');
+        
+        await storageInstance.write(ccdFilePath, new TextEncoder().encode(EXAMPLE_CCD_FILE));
+        await storageInstance.write(imgFilePath, new TextEncoder().encode('dummy image content'));
+
+        /* Process directory */
+        const result = await processDirectory(testDir);
+
+        /* Verify results */
+        expect(result.status).toBe(true);
+        expect(result.result).toHaveLength(1);
+        expect(result.result[0]).toContain('test.cue');
+
+        /* Verify CUE file was created */
+        const cueFilePath = join(testDir, 'test.cue');
+        const cueExists = await storageInstance.exists(cueFilePath);
+        expect(cueExists).toBe(true);
+
+        /* Verify CUE content */
+        const cueContent = await storageInstance.read(cueFilePath);
+        const cueText = new TextDecoder().decode(cueContent);
+        expect(cueText).toContain('FILE "test.img" BINARY');
+        expect(cueText).toContain('TRACK 01 MODE1/2352');
+    });
+
+    it('should process BIN files in directory', async () => {
+        /* Create test BIN file */
+        const binFilePath = join(testDir, 'test.bin');
+        await storageInstance.write(binFilePath, new TextEncoder().encode('dummy bin content'));
+
+        /* Process directory */
+        const result = await processDirectory(testDir);
+
+        /* Verify results */
+        expect(result.status).toBe(true);
+        expect(result.result).toHaveLength(1);
+        expect(result.result[0]).toContain('test.cue');
+
+        /* Verify CUE file was created */
+        const cueFilePath = join(testDir, 'test.cue');
+        const cueExists = await storageInstance.exists(cueFilePath);
+        expect(cueExists).toBe(true);
+    });
+
+    it('should skip BIN files if CUE already exists', async () => {
+        /* Create test BIN file and existing CUE file */
+        const binFilePath = join(testDir, 'test.bin');
+        const cueFilePath = join(testDir, 'test.cue');
+        
+        await storageInstance.write(binFilePath, new TextEncoder().encode('dummy bin content'));
+        await storageInstance.write(cueFilePath, new TextEncoder().encode('existing cue content'));
+
+        /* Process directory */
+        const result = await processDirectory(testDir);
+
+        /* Should not process anything since CUE already exists */
+        expect(result.status).toBe(false);
+        expect(result.result).toHaveLength(0);
+    });
+
+    it('should process multiple file types in priority order', async () => {
+        /* Create both CCD and BIN files */
+        const ccdFilePath = join(testDir, 'test.ccd');
+        const imgFilePath = join(testDir, 'test.img');
+        const binFilePath = join(testDir, 'other.bin');
+        
+        await storageInstance.write(ccdFilePath, new TextEncoder().encode(EXAMPLE_CCD_FILE));
+        await storageInstance.write(imgFilePath, new TextEncoder().encode('dummy image content'));
+        await storageInstance.write(binFilePath, new TextEncoder().encode('dummy bin content'));
+
+        /* Process directory */
+        const result = await processDirectory(testDir);
+
+        /* Should process both CCD and BIN files */
+        expect(result.status).toBe(true);
+        expect(result.result).toHaveLength(2);
+        expect(result.result.some(path => path.includes('test.cue'))).toBe(true);
+        expect(result.result.some(path => path.includes('other.cue'))).toBe(true);
+    });
+
+    it('should return false status when no processable files found', async () => {
+        /* Create non-processable files */
+        const txtFilePath = join(testDir, 'test.txt');
+        await storageInstance.write(txtFilePath, new TextEncoder().encode('text content'));
+
+        /* Process directory */
+        const result = await processDirectory(testDir);
+
+        /* Should not process anything */
+        expect(result.status).toBe(false);
+        expect(result.result).toHaveLength(0);
+    });
+
+    it('should throw error for non-existent directory', async () => {
+        const nonExistentDir = join(testDir, 'nonexistent');
+
+        await expect(processDirectory(nonExistentDir))
+            .rejects.toThrow('Directory does not exist: ' + nonExistentDir);
     });
 }); 

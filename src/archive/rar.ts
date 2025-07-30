@@ -4,6 +4,7 @@ import { BaseArchive } from './base';
 import storage from '../utils/storage';
 import { doesCommandExist, isCommandExecutable } from '../utils/command';
 import { setTimeout } from 'node:timers';
+import { guard } from '../utils/guard';
 
 // Helper function to add timeout to zx commands
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 5000): Promise<T> {
@@ -19,17 +20,21 @@ const MAP_EXTRACT_COMMANDS = {
     'unrar': (filePath: string, outputDir: string) => withTimeout($`unrar x "${filePath}" "${outputDir}"`),
     'unrar-free': (filePath: string, outputDir: string) => withTimeout($`unrar-free x "${filePath}" "${outputDir}"`),
     'rar': (filePath: string, outputDir: string) => withTimeout($`rar x "${filePath}" "${outputDir}"`),
+    'tar': (filePath: string, outputDir: string) => withTimeout($`tar -xvf "${filePath}" -C "${outputDir}"`),
 } as const;
 
 const MAP_COMPRESS_COMMANDS = {
     'rar': (filePath: string, contentsDirectory: string) => withTimeout($`rar a "${filePath}" "${contentsDirectory}/*"`),
     'winrar': (filePath: string, contentsDirectory: string) => withTimeout($`winrar a "${filePath}" "${contentsDirectory}/*"`),
+    'tar': (filePath: string, contentsDirectory: string) => withTimeout($`tar -cvf "${filePath}" "${contentsDirectory}/*"`),
 } as const;
 
 async function _getInstalledExtractCommands(): Promise<(keyof typeof MAP_EXTRACT_COMMANDS)[]> {
     const commands: (keyof typeof MAP_EXTRACT_COMMANDS)[] = [];
     for (const name of Object.keys(MAP_EXTRACT_COMMANDS) as (keyof typeof MAP_EXTRACT_COMMANDS)[]) {
-        if (await doesCommandExist(name) && await isCommandExecutable(name)) {
+        const commandExists = await doesCommandExist(name);
+        const commandExecutable = await isCommandExecutable(name);
+        if (commandExists && commandExecutable) {
             commands.push(name);
         }
     }
@@ -39,7 +44,9 @@ async function _getInstalledExtractCommands(): Promise<(keyof typeof MAP_EXTRACT
 async function _getInstalledCompressCommands(): Promise<(keyof typeof MAP_COMPRESS_COMMANDS)[]> {
     const commands: (keyof typeof MAP_COMPRESS_COMMANDS)[] = [];
     for (const name of Object.keys(MAP_COMPRESS_COMMANDS) as (keyof typeof MAP_COMPRESS_COMMANDS)[]) {
-        if (await doesCommandExist(name) && await isCommandExecutable(name)) {
+        const commandExists = await doesCommandExist(name);
+        const commandExecutable = await isCommandExecutable(name);
+        if (commandExists && commandExecutable) {
             commands.push(name);
         }
     }
@@ -61,9 +68,7 @@ export class RarArchive extends BaseArchive {
             log.info(`Extracting ${this.filePath} to ${outputDir}`);
             const viableCommands = await _getInstalledExtractCommands();
             const primaryCommand = viableCommands[0];
-            if (!primaryCommand) {
-                throw ERROR_RAR_NOT_INSTALLED;
-            }
+            guard(primaryCommand, ERROR_RAR_NOT_INSTALLED);
             const extractCommand = MAP_EXTRACT_COMMANDS[primaryCommand];
             await extractCommand(this.filePath, outputDir);
             log.info(`✓ Successfully extracted using ${primaryCommand}`);

@@ -50,7 +50,7 @@ async function createChdFile(options: {
             break;
         }
         case 'img': {
-            const { exitCode: code } = await $`chdman createraw --force --input ${inputFilePath} --output ${outputFilePath}`;
+            const { exitCode: code } = await $`chdman createcd --force --input ${inputFilePath} --output ${outputFilePath}`;
             exitCode = code ?? 1;
             break;
         }

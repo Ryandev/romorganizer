@@ -43,6 +43,7 @@
         "adm-zip": "^0.5.16",
         "command-line-args": "^6.0.1",
         "fast-xml-parser": "^5.2.5",
+        "ini": "^5.0.0",
         "jszip": "^3.10.1",
         "zod": "^4.0.10",
         "zx": "^8.1.1"
@@ -51,6 +52,7 @@
         "@types/adm-zip": "^0",
         "@types/command-line-args": "^5.2.3",
         "@types/emscripten": "^0",
+        "@types/ini": "^4.1.1",
         "@types/jest": "^30.0.0",
         "@types/node": "^24.1.0",
         "@typescript-eslint/eslint-plugin": "^8.38.0",

@@ -6,9 +6,19 @@
 
 import type { BinFile } from './binmerge';
 import { writeFile } from 'node:fs/promises';
-import { basename } from 'node:path';
+import { basename, join } from 'node:path';
 import { guardFileExists } from './guard';
 import { guard } from './guard';
+import { parse } from 'ini';
+import storage from './storage';
+
+/**
+ * Interface for file processing results
+ */
+interface ProcessingResult {
+  status: boolean;
+  result: string[];
+}
 
 /**
  * Convert sectors to CUE timestamp format (MM:SS:FF)
@@ -78,8 +88,6 @@ function generateSplitCueSheet(basename: string, mergedFile: BinFile): string {
   return cueSheet;
 }
 
-
-
 /**
  * Create a simple CUE file for a single BIN file
  * @param binFilePath - Path to the BIN file
@@ -108,8 +116,226 @@ async function createCueFile(binFilePath: string, cueFilePath?: string): Promise
   await writeFile(cueFilePath, cueContent, 'utf8');
 }
 
+/**
+ * Convert a CCD file to a CUE file
+ * @param filePath - Path to the CCD file
+ * @returns Promise<string> - The generated CUE content
+ */
+async function parseFromCCDFile(filePath: string): Promise<string> {
+  /* Verify extension is .ccd */
+  guard(filePath.endsWith('.ccd'), `File must have .ccd extension: ${filePath}`);
+  guardFileExists(filePath, `CCD file does not exist: ${filePath}`);
+
+  /* Read and parse the CCD file content */
+  const storageInstance = await storage();
+  const ccdContentBytes = await storageInstance.read(filePath);
+  const ccdContent = new TextDecoder().decode(ccdContentBytes);
+  const sections = parse(ccdContent) as Record<string, Record<string, string>>;
+
+  /* Find the image file */
+  const dir = filePath.slice(0, filePath.lastIndexOf('/') + 1);
+  const baseName = basename(filePath, '.ccd');
+  const imageExtensions = ['.img', '.bin', '.iso'];
+  let imageFile = '';
+  
+  for (const ext of imageExtensions) {
+    const testPath = dir + baseName + ext;
+    try {
+      await guardFileExists(testPath, '');
+      imageFile = baseName + ext;
+      break;
+    } catch {
+      /* Continue to next extension */
+    }
+  }
+  
+  if (!imageFile) {
+    throw new Error(`No image file found for CCD: ${filePath}`);
+  }
+
+  /* Generate CUE content */
+  let cueContent = `FILE "${imageFile}" BINARY\n`;
+  let trackCounter = 0;
+  let begin = false;
+
+  /* Process each Entry section */
+  for (const [sectionName, sectionData] of Object.entries(sections)) {
+    if (!sectionName.startsWith('Entry')) {
+      continue;
+    }
+
+    const control = sectionData['Control'] || '0x00';
+    const session = Number.parseInt(sectionData['Session'] || '1', 10);
+    const pmin = Number.parseInt(sectionData['PMin'] || '0', 10);
+    const psec = Number.parseInt(sectionData['PSec'] || '0', 10);
+    const pframe = Number.parseInt(sectionData['PFrame'] || '0', 10);
+    const plba = Number.parseInt(sectionData['PLBA'] || '0', 10);
+
+    /* Check if this is the beginning track */
+    if (plba === 0) {
+      begin = true;
+    }
+
+    if (begin) {
+      trackCounter++;
+      
+      /* Adjust timing as per the Python script logic */
+      let adjustedMin = pmin;
+      let adjustedSec = psec;
+      const adjustedFrame = pframe;
+      
+      if (adjustedSec === 0) {
+        if (adjustedMin >= 1) {
+          adjustedMin -= 1;
+          adjustedSec = 60;
+        } else {
+          adjustedMin = 0;
+          adjustedSec = 0;
+        }
+      }
+      adjustedSec -= 2;
+      
+      /* Determine track type based on control value */
+      const trackType = control === '0x04' ? 'MODE1/2352' : 'AUDIO';
+      
+      cueContent += `  TRACK ${trackCounter.toString().padStart(2, '0')} ${trackType}\n`;
+      cueContent += `    INDEX ${session.toString().padStart(2, '0')} ${adjustedMin.toString().padStart(2, '0')}:${adjustedSec.toString().padStart(2, '0')}:${adjustedFrame.toString().padStart(2, '0')}\n`;
+    }
+  }
+
+  return cueContent;
+}
+
+/**
+ * Process CCD files in a directory and convert them to CUE files
+ * Priority: High (1) - CCD files should be processed early
+ */
+async function processCCDFiles(sourceDirectory: string): Promise<ProcessingResult> {
+  const storageInstance = await storage();
+  const files = await storageInstance.list(sourceDirectory);
+  const ccdFiles = files.filter(file => file.endsWith('.ccd'));
+  
+  if (ccdFiles.length === 0) {
+    return { status: false, result: [] };
+  }
+
+  const generatedFiles: string[] = [];
+  
+  for (const ccdFile of ccdFiles) {
+    try {
+      const ccdPath = ccdFile; /* ccdFile is already the full path */
+      const cueContent = await parseFromCCDFile(ccdPath);
+      
+      /* Generate CUE file in the same directory */
+      const baseName = basename(ccdFile, '.ccd');
+      const cueFilePath = join(sourceDirectory, `${baseName}.cue`);
+      
+      await storageInstance.write(cueFilePath, new TextEncoder().encode(cueContent));
+      generatedFiles.push(cueFilePath);
+    } catch (error) {
+      /* Log error but continue processing other files */
+      console.warn(`Failed to process CCD file ${ccdFile}:`, error);
+    }
+  }
+
+  return { 
+    status: generatedFiles.length > 0, 
+    result: generatedFiles 
+  };
+}
+
+/**
+ * Process BIN files in a directory and create basic CUE files
+ * Priority: Medium (2) - BIN files should be processed after CCD files
+ */
+async function processBINFiles(sourceDirectory: string): Promise<ProcessingResult> {
+  const storageInstance = await storage();
+  const files = await storageInstance.list(sourceDirectory);
+  const binFiles = files.filter(file => file.endsWith('.bin'));
+  
+  if (binFiles.length === 0) {
+    return { status: false, result: [] };
+  }
+
+  const generatedFiles: string[] = [];
+  
+  for (const binFile of binFiles) {
+    try {
+      const binPath = binFile; /* binFile is already the full path */
+      const baseName = basename(binFile, '.bin');
+      const cueFilePath = join(sourceDirectory, `${baseName}.cue`);
+      
+      /* Check if CUE file already exists */
+      const cueExists = await storageInstance.exists(cueFilePath);
+      if (cueExists) {
+        continue; /* Skip if CUE already exists */
+      }
+      
+      await createCueFile(binPath, cueFilePath);
+      generatedFiles.push(cueFilePath);
+    } catch (error) {
+      /* Log error but continue processing other files */
+      console.warn(`Failed to process BIN file ${binFile}:`, error);
+    }
+  }
+
+  return { 
+    status: generatedFiles.length > 0, 
+    result: generatedFiles 
+  };
+}
+
+/**
+ * Array of file processing functions ordered by priority
+ * Higher priority (lower number) functions are called first
+ */
+const fileProcessors = [
+  { priority: 1, name: 'CCD to CUE', processor: processCCDFiles },
+  { priority: 2, name: 'BIN to CUE', processor: processBINFiles },
+];
+
+/**
+ * Process all files in a directory using the ordered processor array
+ * @param sourceDirectory - Directory to scan and process
+ * @returns Promise<ProcessingResult> - Overall processing status and results
+ */
+async function processDirectory(sourceDirectory: string): Promise<ProcessingResult> {
+  const storageInstance = await storage();
+  
+  /* Verify directory exists */
+  const dirExists = await storageInstance.exists(sourceDirectory);
+  if (!dirExists) {
+    throw new Error(`Directory does not exist: ${sourceDirectory}`);
+  }
+
+  const allResults: string[] = [];
+  let anyProcessed = false;
+
+  /* Process files in priority order */
+  for (const { processor, name } of fileProcessors) {
+    try {
+      const result = await processor(sourceDirectory);
+      if (result.status) {
+        anyProcessed = true;
+        allResults.push(...result.result);
+        console.log(`${name} processor generated ${result.result.length} files`);
+      }
+    } catch (error) {
+      console.warn(`${name} processor failed:`, error);
+    }
+  }
+
+  return {
+    status: anyProcessed,
+    result: allResults
+  };
+}
+
 export default {
     generateMergedCueSheet,
     generateSplitCueSheet,
     createCueFile,
+    parseFromCCDFile,
+    processDirectory,
+    fileProcessors,
 }
