@@ -150,7 +150,7 @@ Note: When using a zip file for --dat-file, the tool will automatically extract
       from the DAT file, and metadata files will be updated accordingly.
 `;
 
-function showHelp(command?: string): void {
+function showHelp(command?: string): never {
     if (command === 'compress') {
         console.log(compressHelpText);
     } else if (command === 'verify') {
@@ -173,7 +173,7 @@ export function loadArguments(args: string[]): LaunchParameters {
     // Extract command
     const command = options['command'];
     if (!command || (command !== 'compress' && command !== 'verify')) {
-        throw new Error('Missing or invalid command. Use "compress" or "verify"');
+        showHelp(command);
     }
 
     // Extract values from parsed options

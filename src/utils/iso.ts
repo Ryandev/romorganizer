@@ -9,7 +9,7 @@ import path from 'path';
 /* 5 minutes */
 const DEFAULT_TIMEOUT_MS = 300_000;
 
-const POWERISO_PATH = '/Users/ats/.bin/poweriso';
+const POWERISO_PATH = 'poweriso';
 
 const ERROR_POWERISO_NOT_INSTALLED = `
 PowerISO operations failed. Please ensure poweriso is installed and executable:\n
