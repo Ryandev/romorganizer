@@ -1,0 +1,101 @@
+name: Native Builds
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'deps/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'vite.pkg.config.ts'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'deps/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'vite.pkg.config.ts'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  build-native:
+    name: Build Native Executables
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: macos
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'yarn'
+
+    - name: Setup Yarn
+      run: |
+        corepack enable
+        corepack prepare yarn@4.6.0 --activate
+
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+
+    - name: Run tests
+      run: yarn test --testPathIgnorePatterns="scripts/other/__tests__" --testPathIgnorePatterns="src/archive/rar.test.ts" --testPathIgnorePatterns="src/archive/seven-zip.test.ts" --testPathIgnorePatterns="src/utils/storage.test.ts"
+
+    - name: Build native executables
+      run: yarn build:native
+
+    - name: List generated executables
+      run: |
+        echo "Generated executables:"
+        ls -la romorganizer*
+        echo "File sizes:"
+        du -h romorganizer*
+
+    - name: Test native executables
+      run: |
+        echo "Testing native executables..."
+        if [ "${{ matrix.platform }}" = "linux" ]; then
+          ./romorganizer-linux-x64 --help
+        elif [ "${{ matrix.platform }}" = "macos" ]; then
+          ./romorganizer-macos-arm64 --help
+        fi
+
+    - name: Upload native build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: native-builds-${{ matrix.platform }}
+        path: |
+          romorganizer-*
+        retention-days: 30
+
+    - name: Create platform-specific archive
+      run: |
+        if [ "${{ matrix.platform }}" = "linux" ]; then
+          tar -czf romorganizer-linux.tar.gz romorganizer-linux-*
+          zip -r romorganizer-linux.zip romorganizer-linux-*
+        elif [ "${{ matrix.platform }}" = "macos" ]; then
+          tar -czf romorganizer-macos.tar.gz romorganizer-macos-*
+          zip -r romorganizer-macos.zip romorganizer-macos-*
+        fi
+
+    - name: Upload platform archives
+      uses: actions/upload-artifact@v4
+      with:
+        name: native-archives-${{ matrix.platform }}
+        path: |
+          romorganizer-${{ matrix.platform }}.tar.gz
+          romorganizer-${{ matrix.platform }}.zip
+        retention-days: 30 
