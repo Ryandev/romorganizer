@@ -108,11 +108,15 @@ export class Runner implements IRunner {
             }
         }
 
-        return {
-            status: (closestMatchSizeDiff < 1000) ? 'partial' : 'none',
+        return (closestMatchSizeDiff < 1000) ?{
+            status: 'partial',
             message: `No matching game found for ${compressedFilePath}, bytes-delta: ${closestMatchSizeDiff}, percent-delta: ${(1-(closestMatchSizeDiff / combinedBinSize)) * 100}%`,
             game: closestMatch
-        };
+        } : {
+            status: 'none',
+            message: `No match found`,
+            game: undefined
+        }
     }
 
     async start(): Promise<{
