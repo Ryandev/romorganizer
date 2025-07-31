@@ -10,7 +10,6 @@ import {
     mkdtemp,
     open,
     readFile,
-    rename,
     rm,
     writeFile,
 } from 'node:fs';
@@ -382,17 +381,9 @@ async function _move(
     // Ensure destination directory exists
     await _createDirectory(path.dirname(destination));
 
-    // Move the source (file or directory) to the destination
-    return new Promise((resolve, reject) => {
-        rename(source, destination, (error: Error | null) => {
-            if (error) {
-                _logException(error);
-                reject(error);
-            } else {
-                resolve();
-            }
-        });
-    });
+    /* If we attempt to copy across partitions, we need to use the copy command otherwise we will get EXDEV: cross-device link not permitted error */
+    await _copyFile(source, destination);
+    await _remove(source);
 }
 
 async function _copyRecursiveSync(

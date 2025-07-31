@@ -68,7 +68,7 @@ describe('ISO Utilities', () => {
             
             expect(result).toContain('.bin');
             expect(mockStorageInstance.createTemporaryDirectory).toHaveBeenCalled();
-            expect(mockZx.$).toHaveBeenCalledWith(['', ' convert "', '" -o "', '"'], '/Users/ats/.bin/poweriso', '/path/to/test.iso', expect.stringContaining('.bin'));
+            expect(mockZx.$).toHaveBeenCalledWith(['', ' convert "', '" -o "', '"'], 'poweriso', '/path/to/test.iso', expect.stringContaining('.bin'));
         });
 
         it('should throw error when poweriso is not installed', async () => {

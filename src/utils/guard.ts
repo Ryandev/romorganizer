@@ -101,9 +101,7 @@ export function guardValidString(
  * @param filePath - Path to the file
  * @param message - Optional error message
  */
-export function guardFileExists(filePath: string, message?: string): void {
-    // This is a placeholder - in a real implementation, you'd check if the file exists
-    // For now, we'll just validate the path format
+export function guardFileExists(filePath: unknown, message?: string): void {
     guard(typeof filePath === 'string', message || `Invalid file path: ${filePath}`);
     guard(filePath.length > 0, message || `Invalid file path: ${filePath}`);
     guard(fs.existsSync(filePath), message || `File does not exist: ${filePath}`);
@@ -121,11 +119,21 @@ export function guardFileDoesNotExist(filePath: string, message?: string): void 
  * @param directoryPath - Path to the directory
  * @param message - Optional error message
  */
-export function guardDirectoryExists(directoryPath: string, message?: string): void {
-    // This is a placeholder - in a real implementation, you'd check if the directory exists
-    // For now, we'll just validate the path format
-    if (!directoryPath || typeof directoryPath !== 'string') {
-        throw new Error(message || `Invalid directory path: ${directoryPath}`);
+export function guardDirectoryExists(directoryPath: unknown, message?: string): void {
+    guard(typeof directoryPath === 'string', message || `Invalid directory path: ${directoryPath}`);
+    guard(directoryPath.length > 0, message || `Invalid directory path: ${directoryPath}`);
+    
+    try {
+        const stats = fs.statSync(directoryPath);
+        guard(stats.isDirectory(), message || `Path exists but is not a directory: ${directoryPath}`);
+    } catch (error) {
+        // Only catch fs.statSync errors, not guard errors
+        if (error instanceof Error && 
+            (error.message.includes('guard condition failed') || 
+             error.message.includes('Path exists but is not a directory'))) {
+            throw error; // Re-throw guard errors as-is
+        }
+        throw new Error(message || `Directory does not exist: ${directoryPath}`);
     }
 }
 

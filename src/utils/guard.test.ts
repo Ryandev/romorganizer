@@ -24,6 +24,7 @@ jest.mock('./logger', () => ({
 // Mock fs
 jest.mock('node:fs', () => ({
     existsSync: jest.fn(),
+    statSync: jest.fn(),
 }));
 
 // Mock zx
@@ -243,6 +244,12 @@ describe('Guard Functions', () => {
     });
 
     describe('guardDirectoryExists', () => {
+        beforeEach(() => {
+            mockFs.statSync.mockReturnValue({
+                isDirectory: () => true
+            } as any);
+        });
+
         test('should not throw for valid directory path', () => {
             expect(() => guardDirectoryExists('/path/to/directory')).not.toThrow();
         });
@@ -261,6 +268,22 @@ describe('Guard Functions', () => {
 
         test('should throw for non-string directory path', () => {
             expect(() => guardDirectoryExists(123 as any)).toThrow('Invalid directory path: 123');  
+        });
+
+        test('should throw when path exists but is not a directory', () => {
+            mockFs.statSync.mockReset();
+            mockFs.statSync.mockReturnValue({
+                isDirectory: () => false
+            } as any);
+            expect(() => guardDirectoryExists('/path/to/file.txt')).toThrow('Path exists but is not a directory: /path/to/file.txt');
+        });
+
+        test('should throw when directory does not exist', () => {
+            mockFs.statSync.mockReset();
+            mockFs.statSync.mockImplementation(() => {
+                throw new Error('ENOENT: no such file or directory');
+            });
+            expect(() => guardDirectoryExists('/path/to/nonexistent')).toThrow('Directory does not exist: /path/to/nonexistent');
         });
 
         test('should throw custom message', () => {

@@ -140,7 +140,7 @@ describe('CLI', () => {
                 '--output-dir', './output'
             ];
 
-            expect(() => loadArguments(args)).toThrow('Missing or invalid command. Use "compress" or "verify"');
+            expect(() => loadArguments(args)).toThrow('Help requested');
         });
 
         it('should throw error for invalid command', () => {
@@ -149,7 +149,7 @@ describe('CLI', () => {
                 '--source-dir', './input'
             ];
 
-            expect(() => loadArguments(args)).toThrow('Missing or invalid command. Use "compress" or "verify"');
+            expect(() => loadArguments(args)).toThrow('Help requested');
         });
 
         it('should throw error for missing source-dir in compress', () => {

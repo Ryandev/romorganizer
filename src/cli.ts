@@ -158,85 +158,109 @@ function showHelp(command?: string): never {
     } else {
         console.log(helpText);
     }
+    
+    /* Don't exit in test environment */
+    if (process.env['NODE_ENV'] === 'test') {
+        throw new Error('Help requested');
+    }
+    
     process.exit(0);
 }
 
-export function loadArguments(args: string[]): LaunchParameters {
-    // Parse command line arguments
+/**
+ * Parses command line arguments and applies default values
+ * @param args - Array of command line arguments
+ * @returns Parsed options with fallbacks and default values applied
+ */
+function _commandLineArguments(args: string[]) {
     const options = commandLineArgs(optionDefinitions, { argv: args, partial: true });
+    
+    /* Apply fallbacks and default values */
+    return {
+        command: String(options['command']),
+        'source-dir': String(options['source-dir'] ?? ''),
+        'output-dir': String(options['output-dir'] ?? ''),
+        'dat-file': String(options['dat-file'] ?? ''),
+        'cuesheets-file': String(options['cuesheets-file'] ?? ''),
+        'remove-source': Boolean(options['remove-source']),
+        'use-dat-file-name': Boolean(options['use-dat-file-name']),
+        'rename': Boolean(options['rename']),
+        'overwrite': Boolean(options['overwrite']),
+        'help': Boolean(options['help'])
+    };
+}
+
+const _VALIDATE_ARGUMENTS = {
+    compress: (options: Record<string, string | boolean>) => {
+        const sourceDir = options['source-dir'];
+        const outputDir = options['output-dir'];
+        if (!sourceDir) {
+            throw new Error('Missing required argument: --source-dir (-s)');
+        }
+        if (!outputDir) {
+            throw new Error('Missing required argument: --output-dir (-o)');
+        }
+        guardDirectoryExists(
+            sourceDir,
+            `Source directory does not exist: ${sourceDir}`
+        );
+        guardDirectoryExists(
+            outputDir,
+            `Output directory does not exist: ${outputDir}`
+        );
+    },
+    verify: (options: Record<string, string | boolean>) => {
+        const sourceDir = options['source-dir'];
+        const datFile = options['dat-file'];
+        const cuesheetsFile = options['cuesheets-file'];
+        if (!sourceDir) {
+            throw new Error('Missing required argument: --source-dir (-s)');
+        }
+        if (!datFile) {
+            throw new Error('Missing required argument: --dat-file (-d)');
+        }
+        if (!cuesheetsFile) {
+            throw new Error('Missing required argument: --cuesheets-file (-c)');
+        }
+        guardDirectoryExists(
+            sourceDir,
+            `Source directory does not exist: ${sourceDir}`
+        );
+        guardFileExists(
+            datFile,
+            `DAT file does not exist: ${datFile}`
+        );
+        guardFileExists(
+            cuesheetsFile,
+            `Cuesheets file does not exist: ${cuesheetsFile}`
+        );
+    }
+} as const
+
+export function loadArguments(args: string[]): LaunchParameters {
+    const options = _commandLineArguments(args);
 
     // Check for help option first
     if (options['help']) {
         showHelp(options['command']);
     }
 
-    // Extract command
-    const command = options['command'];
-    if (!command || (command !== 'compress' && command !== 'verify')) {
+    const command = options['command'] as 'compress' | 'verify';
+    if ( !Object.keys(_VALIDATE_ARGUMENTS).includes(command) ) {
         showHelp(command);
     }
 
-    // Extract values from parsed options
-    const sourceDir = options['source-dir'];
-    const outputDir = options['output-dir'];
-    const datFile = options['dat-file'];
-    const cuesheetsFile = options['cuesheets-file'];
-    const removeSource = options['remove-source'] || false;
-    const useDatFileName = options['use-dat-file-name'] || false;
-    const rename = options['rename'] || false;
-    const overwrite = options['overwrite'] || false;
-
-    // Validate source directory (required for both commands)
-    if (!sourceDir) {
-        throw new Error('Missing required argument: --source-dir (-s)');
-    }
-    guardDirectoryExists(
-        sourceDir,
-        `Source directory does not exist: ${sourceDir}`
-    );
-
-    // Command-specific validation
-    if (command === 'compress') {
-        if (!sourceDir) {
-            throw new Error('Missing required argument: --source-dir (-s)');
-        }
-        guardDirectoryExists(
-            sourceDir,
-            `Source directory does not exist: ${sourceDir}`
-        );
-        if (!outputDir) {
-            throw new Error('Missing required argument: --output-dir (-o)');
-        }
-        guardDirectoryExists(
-            outputDir,
-            `Output directory does not exist: ${outputDir}`
-        );
-    } else if (command === 'verify') {
-        if (!datFile) {
-            throw new Error('Missing required argument: --dat-file (-d)');
-        }
-        guardFileExists(
-            datFile,
-            `DAT file does not exist: ${datFile}`
-        );
-        if (!cuesheetsFile) {
-            throw new Error('Missing required argument: --cuesheets-file (-c)');
-        }
-        guardFileExists(
-            cuesheetsFile,
-            `Cuesheets file does not exist: ${cuesheetsFile}`
-        );
-    }
+    _VALIDATE_ARGUMENTS[command](options);
 
     return {
         command,
-        SOURCE_DIR: sourceDir,
-        OUTPUT_DIR: outputDir,
-        DAT_FILE: datFile,
-        CUESHEETS_FILE: cuesheetsFile,
-        REMOVE_SOURCE: removeSource,
-        USE_DAT_FILE_NAME: useDatFileName,
-        RENAME: rename,
-        OVERWRITE: overwrite,
+        SOURCE_DIR: options['source-dir'],
+        OUTPUT_DIR: options['output-dir'],
+        DAT_FILE: options['dat-file'],
+        CUESHEETS_FILE: options['cuesheets-file'],
+        REMOVE_SOURCE: options['remove-source'],
+        USE_DAT_FILE_NAME: options['use-dat-file-name'],
+        RENAME: options['rename'],
+        OVERWRITE: options['overwrite'],
     };
 }
