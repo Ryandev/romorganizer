@@ -28,11 +28,13 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: ${{ matrix.package-manager }}
 
+    - name: Enable Corepack (if using yarn)
+      if: matrix.package-manager == 'yarn'
+      run: corepack enable
+
     - name: Setup Yarn (if using yarn)
       if: matrix.package-manager == 'yarn'
-      run: |
-        corepack enable
-        corepack prepare yarn@4.6.0 --activate
+      run: corepack prepare yarn@4.6.0 --activate
 
     - name: Install dependencies
       run: |
@@ -133,11 +135,13 @@ jobs:
         node-version: '20'
         cache: ${{ matrix.package-manager }}
 
+    - name: Enable Corepack (if using yarn)
+      if: matrix.package-manager == 'yarn'
+      run: corepack enable
+
     - name: Setup Yarn (if using yarn)
       if: matrix.package-manager == 'yarn'
-      run: |
-        corepack enable
-        corepack prepare yarn@4.6.0 --activate
+      run: corepack prepare yarn@4.6.0 --activate
 
     - name: Install dependencies
       run: |
@@ -173,11 +177,13 @@ jobs:
         node-version: '20'
         cache: ${{ matrix.package-manager }}
 
+    - name: Enable Corepack (if using yarn)
+      if: matrix.package-manager == 'yarn'
+      run: corepack enable
+
     - name: Setup Yarn (if using yarn)
       if: matrix.package-manager == 'yarn'
-      run: |
-        corepack enable
-        corepack prepare yarn@4.6.0 --activate
+      run: corepack prepare yarn@4.6.0 --activate
 
     - name: Install dependencies
       run: |
