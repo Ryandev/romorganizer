@@ -53,11 +53,11 @@ describe('RarArchive', () => {
             // this test will be skipped if no RAR file is available
 
             const rarPath = join(testDir, 'test.rar');
-            const rarArchive = new RarArchive(rarPath);
+            const testRarArchive = new RarArchive(rarPath);
 
             // This test might fail if no RAR file exists, which is expected
             try {
-                const extractedDir = await rarArchive.extract();
+                const extractedDir = await testRarArchive.extract();
 
                 // Verify the extracted directory exists
                 const exists = await storageInstance.exists(extractedDir);
@@ -76,11 +76,11 @@ describe('RarArchive', () => {
         it('should verify a valid RAR file', async () => {
             // Note: This test requires a valid RAR file to be present
             const rarPath = join(testDir, 'test.rar');
-            const rarArchive = new RarArchive(rarPath);
+            const testRarArchive = new RarArchive(rarPath);
 
             // This test might fail if no RAR file exists, which is expected
             try {
-                const isValid = await rarArchive.verify();
+                const isValid = await testRarArchive.verify();
                 expect(isValid).toBe(true);
             } catch (error) {
                 // If no RAR file exists or other errors occur, just verify it's an error
@@ -95,8 +95,6 @@ describe('RarArchive', () => {
 
             const invalidRarPath = join(testDir, 'invalid.rar');
             await storageInstance.write(invalidRarPath, testBuffer);
-
-            const rarArchive = new RarArchive(invalidRarPath);
 
             // Mock the verification to avoid hanging on invalid files
             // Since this test is about invalid files, we'll just verify the file exists

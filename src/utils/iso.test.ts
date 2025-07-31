@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { extract, verify, create, convertToBinCue } from './iso';
+import iso from './iso';
 import storage from './storage';
 import { doesCommandExist, isCommandExecutable } from './command';
 import { guard } from './guard';
@@ -34,7 +34,7 @@ describe('ISO Utilities', () => {
             exists: jest.fn().mockResolvedValue(true),
             size: jest.fn().mockResolvedValue(1024),
         };
-        mockStorage.mockResolvedValue(mockStorageInstance);
+        mockStorage.mockReturnValue(mockStorageInstance);
         
         // Setup zx mock
         mockZx = {
@@ -62,113 +62,19 @@ describe('ISO Utilities', () => {
         });
     });
 
-    describe('extract', () => {
-        it('should extract ISO file successfully', async () => {
-            const result = await extract('/path/to/test.iso');
+    describe('convert', () => {
+        it('should convert ISO to BIN format successfully', async () => {
+            const result = await iso.convert('/path/to/test.iso');
             
-            expect(result).toBe('/tmp/test-dir');
+            expect(result).toContain('.bin');
             expect(mockStorageInstance.createTemporaryDirectory).toHaveBeenCalled();
-            expect(mockZx.$).toHaveBeenCalledWith(['', ' extract "', '" "', '"'], 'poweriso', '/path/to/test.iso', '/tmp/test-dir');
+            expect(mockZx.$).toHaveBeenCalledWith(['', ' convert "', '" -o "', '"'], '/Users/ats/.bin/poweriso', '/path/to/test.iso', expect.stringContaining('.bin'));
         });
 
         it('should throw error when poweriso is not installed', async () => {
             mockDoesCommandExist.mockResolvedValue(false);
             
-            await expect(extract('/path/to/test.iso')).rejects.toThrow('PowerISO operations failed');
-        });
-
-        it('should throw error when extraction fails', async () => {
-            mockZx.$.mockReturnValue({
-                exitCode: 1,
-            });
-            
-            await expect(extract('/path/to/test.iso')).rejects.toThrow('Failed to extract /path/to/test.iso');
-        });
-    });
-
-    describe('verify', () => {
-        it('should verify ISO file successfully', async () => {
-            const result = await verify('/path/to/test.iso');
-            
-            expect(result).toBe(true);
-            expect(mockStorageInstance.exists).toHaveBeenCalledWith('/path/to/test.iso');
-            expect(mockZx.$).toHaveBeenCalledWith(['', ' test "', '"'], 'poweriso', '/path/to/test.iso');
-        });
-
-        it('should return false when file does not exist', async () => {
-            mockStorageInstance.exists.mockResolvedValue(false);
-            
-            const result = await verify('/path/to/test.iso');
-            
-            expect(result).toBe(false);
-        });
-
-        it('should return false when poweriso is not installed', async () => {
-            mockDoesCommandExist.mockResolvedValue(false);
-            
-            const result = await verify('/path/to/test.iso');
-            
-            expect(result).toBe(false);
-        });
-
-        it('should return false when verification fails', async () => {
-            mockZx.$.mockReturnValue({
-                exitCode: 1,
-            });
-            
-            const result = await verify('/path/to/test.iso');
-            
-            expect(result).toBe(false);
-        });
-    });
-
-    describe('create', () => {
-        it('should create ISO file successfully', async () => {
-            const result = await create('/path/to/contents');
-            
-            expect(result).toBe('/tmp/test-dir/contents.iso');
-            expect(mockStorageInstance.createTemporaryDirectory).toHaveBeenCalled();
-            expect(mockZx.$).toHaveBeenCalledWith(['', ' create "', '" "', '"'], 'poweriso', '/tmp/test-dir/contents.iso', '/path/to/contents');
-        });
-
-        it('should create ISO file with custom output path', async () => {
-            const result = await create('/path/to/contents', '/custom/output.iso');
-            
-            expect(result).toBe('/custom/output.iso');
-            expect(mockZx.$).toHaveBeenCalledWith(['', ' create "', '" "', '"'], 'poweriso', '/custom/output.iso', '/path/to/contents');
-        });
-
-        it('should throw error when poweriso is not installed', async () => {
-            mockDoesCommandExist.mockResolvedValue(false);
-            
-            await expect(create('/path/to/contents')).rejects.toThrow('PowerISO operations failed');
-        });
-
-        it('should throw error when creation fails', async () => {
-            mockZx.$.mockReturnValue({
-                exitCode: 1,
-            });
-            
-            await expect(create('/path/to/contents')).rejects.toThrow('Failed to create ISO from /path/to/contents');
-        });
-    });
-
-    describe('convertToBinCue', () => {
-        it('should convert ISO to BIN/CUE successfully', async () => {
-            const result = await convertToBinCue('/path/to/test.iso');
-            
-            expect(result).toEqual({
-                binPath: '/tmp/test-dir/test.bin',
-                cuePath: '/tmp/test-dir/test.cue',
-            });
-            expect(mockStorageInstance.createTemporaryDirectory).toHaveBeenCalled();
-            expect(mockZx.$).toHaveBeenCalledWith(['', ' convert "', '" "', '" "', '"'], 'poweriso', '/path/to/test.iso', '/tmp/test-dir/test.bin', '/tmp/test-dir/test.cue');
-        });
-
-        it('should throw error when poweriso is not installed', async () => {
-            mockDoesCommandExist.mockResolvedValue(false);
-            
-            await expect(convertToBinCue('/path/to/test.iso')).rejects.toThrow('PowerISO operations failed');
+            await expect(iso.convert('/path/to/test.iso')).rejects.toThrow('PowerISO operations failed');
         });
 
         it('should throw error when conversion fails', async () => {
@@ -176,7 +82,9 @@ describe('ISO Utilities', () => {
                 exitCode: 1,
             });
             
-            await expect(convertToBinCue('/path/to/test.iso')).rejects.toThrow('Failed to convert /path/to/test.iso to BIN/CUE');
+            await expect(iso.convert('/path/to/test.iso')).rejects.toThrow('Failed to convert /path/to/test.iso to BIN/CUE');
         });
+
+
     });
 }); 

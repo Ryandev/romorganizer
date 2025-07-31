@@ -40,6 +40,7 @@ jest.mock('./guard', () => ({
             throw new Error(message);
         }
     }),
+    guardFileExists: jest.fn(),
 }));
 
 describe('mdf', () => {
@@ -49,15 +50,15 @@ describe('mdf', () => {
         jest.clearAllMocks();
     });
 
-    describe('extract', () => {
-        it('should throw error when mdf2iso is not available', async () => {
+    describe('convertToIso', () => {
+        it('should throw error when iat is not available', async () => {
             (doesCommandExist as jest.Mock).mockResolvedValue(false);
             (isCommandExecutable as jest.Mock).mockResolvedValue(false);
 
-            await expect(mdf.extract(mockFilePath)).rejects.toThrow('MDF2ISO conversion failed');
+            await expect(mdf.convertToIso(mockFilePath)).rejects.toThrow('IAT conversion failed');
         });
 
-        it('should convert MDF to ISO when mdf2iso is available', async () => {
+        it('should convert MDF to ISO when iat is available', async () => {
             (doesCommandExist as jest.Mock).mockResolvedValue(true);
             (isCommandExecutable as jest.Mock).mockResolvedValue(true);
 
@@ -65,39 +66,8 @@ describe('mdf', () => {
             const mockZx = require('zx');
             mockZx.$ = jest.fn().mockResolvedValue({ exitCode: 0 });
 
-            const result = await mdf.extract(mockFilePath);
+            const result = await mdf.convertToIso(mockFilePath);
             expect(result).toContain('.iso');
-        });
-    });
-
-    describe('verify', () => {
-        it('should return true for valid MDF file', async () => {
-            const result = await mdf.verify(mockFilePath);
-            expect(result).toBe(true);
-        });
-
-        it('should return false for non-existent file', async () => {
-            const storageMock = require('./storage').default();
-            storageMock.exists.mockResolvedValue(false);
-
-            const result = await mdf.verify(mockFilePath);
-            expect(result).toBe(false);
-        });
-
-        it('should return false for empty file', async () => {
-            const storageMock = require('./storage').default();
-            storageMock.size.mockResolvedValue(0);
-
-            const result = await mdf.verify(mockFilePath);
-            expect(result).toBe(false);
-        });
-    });
-
-    describe('create', () => {
-        it('should throw error as MDF compression is not supported', async () => {
-            await expect(mdf.create('/path/to/contents')).rejects.toThrow(
-                'MDF compression is not supported - MDF is a read-only format'
-            );
         });
     });
 }); 

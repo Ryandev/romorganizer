@@ -5,7 +5,7 @@ import { ZipArchive } from "../archive/zip"
 import { EcmArchive } from "../archive/ecm";
 import { SevenZipArchive } from "../archive/seven-zip"
 import * as mdf from "../utils/mdf"
-import { guard, guardFileExists, guardValidString } from "../utils/guard";
+import { guard, guardFileExists } from "../utils/guard";
 import storage from "../utils/storage";
 import { loadCuesheetFromFile } from "../utils/cuesheetLoader";
 import path from "path";

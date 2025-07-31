@@ -1,6 +1,5 @@
 import storage from './storage';
 import storageDecorator from './storage.decorator';
-import path from 'path';
 
 describe('storage.decorator', () => {
     describe('withCleanup', () => {
@@ -16,7 +15,7 @@ describe('storage.decorator', () => {
             expect(await decoratedStorage.exists(tempDir2)).toBe(true);
             
             /* Clean up */
-            await decoratedStorage.cleanup();
+            await (decoratedStorage as any).cleanup();
             
             /* Verify directories are removed */
             expect(await decoratedStorage.exists(tempDir1)).toBe(false);
@@ -33,7 +32,7 @@ describe('storage.decorator', () => {
             await storage().remove(tempDir);
             
             /* Cleanup should not throw an error */
-            await expect(decoratedStorage.cleanup()).resolves.not.toThrow();
+            await expect((decoratedStorage as any).cleanup()).resolves.not.toThrow();
         });
         
         it('should support Symbol.dispose for automatic cleanup', async () => {
@@ -46,7 +45,7 @@ describe('storage.decorator', () => {
             expect(await decoratedStorage.exists(tempDir)).toBe(true);
             
             /* Use Symbol.dispose for cleanup */
-            await decoratedStorage[Symbol.dispose]();
+            await (decoratedStorage as any)[Symbol.dispose]();
             
             /* Verify directory is removed */
             expect(await decoratedStorage.exists(tempDir)).toBe(false);
@@ -56,17 +55,17 @@ describe('storage.decorator', () => {
             const decoratedStorage = storageDecorator.withCleanup(storage());
             
             /* Create temporary directories */
-            const tempDir1 = await decoratedStorage.createTemporaryDirectory();
-            const tempDir2 = await decoratedStorage.createTemporaryDirectory();
+            await decoratedStorage.createTemporaryDirectory();
+            await decoratedStorage.createTemporaryDirectory();
             
             /* Clean up */
-            await decoratedStorage.cleanup();
+            await (decoratedStorage as any).cleanup();
             
             /* Create another temporary directory */
             const tempDir3 = await decoratedStorage.createTemporaryDirectory();
             
             /* Clean up again - should only clean up tempDir3 */
-            await decoratedStorage.cleanup();
+            await (decoratedStorage as any).cleanup();
             
             /* Verify only tempDir3 was cleaned up */
             expect(await decoratedStorage.exists(tempDir3)).toBe(false);

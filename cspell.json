@@ -5,7 +5,12 @@
     "romorg",
     "Electrosphere",
     "Logiqx",
-    "testhash"
+    "testhash",
+    "PLBA",
+    "plba",
+    "pmin",
+    "psec",
+    "pframe"
   ],
   "ignoreWords": [
     "chdman",
