@@ -18,9 +18,7 @@ jobs:
       with:
         node-version: '20'
         cache: 'yarn'
-
-    - name: Enable Corepack
-      run: corepack enable
+        corepack: true
 
     - name: Setup Yarn
       run: corepack prepare yarn@4.6.0 --activate
