@@ -29,7 +29,8 @@
     "createraw",
     "PREGAP",
     "POSTGAP",
-    "Bincue"
+    "Bincue",
+    "poweriso"
   ],
   "patterns": [
     {

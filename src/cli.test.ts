@@ -37,6 +37,43 @@ describe('CLI', () => {
             expect(result.SOURCE_DIR).toBe('./input');
             expect(result.DAT_FILE).toBe('./test.dat');
             expect(result.CUESHEETS_FILE).toBe('./cuesheets.zip');
+            expect(result.RENAME).toBe(false);
+        });
+
+        it('should parse verify command with rename flag correctly', () => {
+            const args = [
+                'verify',
+                '--source-dir', './input',
+                '--dat-file', './test.dat',
+                '--cuesheets-file', './cuesheets.zip',
+                '--rename'
+            ];
+
+            const result = loadArguments(args);
+
+            expect(result.command).toBe('verify');
+            expect(result.SOURCE_DIR).toBe('./input');
+            expect(result.DAT_FILE).toBe('./test.dat');
+            expect(result.CUESHEETS_FILE).toBe('./cuesheets.zip');
+            expect(result.RENAME).toBe(true);
+        });
+
+        it('should parse verify command with short rename flag correctly', () => {
+            const args = [
+                'verify',
+                '--source-dir', './input',
+                '--dat-file', './test.dat',
+                '--cuesheets-file', './cuesheets.zip',
+                '-n'
+            ];
+
+            const result = loadArguments(args);
+
+            expect(result.command).toBe('verify');
+            expect(result.SOURCE_DIR).toBe('./input');
+            expect(result.DAT_FILE).toBe('./test.dat');
+            expect(result.CUESHEETS_FILE).toBe('./cuesheets.zip');
+            expect(result.RENAME).toBe(true);
         });
 
         it('should parse short arguments correctly for compress', () => {

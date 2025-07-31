@@ -1,9 +1,8 @@
 import { $ } from 'zx';
 import { log } from './logger';
-import { guard, guardFileExists } from './guard';
+import { guard, guardFileExists, guardCommandExists } from './guard';
 import storage from './storage';
-import path from 'node:path';
-import { guardCommandExists } from './guard';
+import path from 'path';
 
 const CHD_FORMATS = ['cue', 'gdi', 'iso', 'img'] as const;
 type ChdFormat = (typeof CHD_FORMATS)[number];
@@ -120,4 +119,4 @@ export default {
     create: createChdFile,
     extract: extractChdFile,
     verify: verifyChdFile,
-}
+} as ChdManager;

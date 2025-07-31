@@ -1,15 +1,11 @@
-import { log } from "../utils/logger";
+
 import chd from "../utils/chd"
-import { RarArchive } from "../archive/rar"
-import { ZipArchive } from "../archive/zip"
-import { EcmArchive } from "../archive/ecm";
-import { SevenZipArchive } from "../archive/seven-zip"
-import { guard, guardNotFalsy, guardValidString } from "../utils/guard";
+import { guardValidString } from "../utils/guard";
 import storage from "../utils/storage";
-import { loadCuesheetFromFile } from "../utils/cuesheetLoader";
 import path from "path";
-import { Dat, Game, ROM } from "../utils/dat";
+import { Dat, Game } from "../utils/dat";
 import { CuesheetEntry } from "../utils/cuesheetLoader";
+import hash from "../utils/hash";
 
 export interface IRunner {
     start(): Promise<{
@@ -21,42 +17,6 @@ export interface IRunner {
 
 const _fileExtension = (filePath: string): string => {
     return filePath.split('.').pop() ?? '';
-}
-
-
-const _findMatchingRom = (dat: Dat, fileName: string): { game: Game, rom: ROM } | undefined => {
-    for (const game of dat.games) {
-        const matchingRom = game.roms.find((rom) => rom.name === fileName);
-        if (matchingRom) {
-            return { game, rom: matchingRom };
-        }
-    }
-    return undefined;
-}
-
-const _verifyFile = async (filePath: string, dat: Dat): Promise<Game | undefined> => {
-    const fileName = path.basename(filePath);
-    const matchingRom = _findMatchingRom(dat, fileName);
-    
-    if (!matchingRom) {
-        log.warn(`No matching ROM found for ${fileName}`);
-        return undefined;
-    }
-
-    /* Verify file size */
-    const fileSize = await storage().size(filePath);
-    if (fileSize !== matchingRom.rom.size) {
-        log.warn(`File size mismatch for ${fileName}: expected ${matchingRom.rom.size}, got ${fileSize}`);
-        return undefined;
-    }
-
-    /* Note: CRC verification is not implemented yet - would need CRC32 utility function */
-    if (matchingRom.rom.crc) {
-        log.info(`CRC verification skipped for ${fileName} - not implemented`);
-    }
-
-    log.info(`File ${fileName} verified successfully`);
-    return matchingRom.game;
 }
 
 export class Runner implements IRunner {
@@ -93,14 +53,21 @@ export class Runner implements IRunner {
         const outputDirectory = path.dirname(filePathCue);
         const fileListings = await storage().list(outputDirectory);
 
-        const verifyResults = await Promise.all(fileListings.map((filePath) => _verifyFile(filePath, this.dat)));
-        const matchResults = verifyResults.filter((result) => result !== undefined);
+        /* Attempt to search dat file for all fileListings by sha1 */
+        const matchingGames: Game[] = [];
+        for ( const filePath of fileListings) {
+            const sha1 = await hash.calculateFileSha1(filePath);
+            const matchingGame = this.dat.games.find((game) => game.roms.some((rom) => rom.sha1hex === sha1));
+            if (matchingGame && !matchingGames.includes(matchingGame)) {
+                matchingGames.push(matchingGame);
+            }
+        }
 
-        if ( matchResults.length > 0) {
+        if ( matchingGames.length > 0) {
             return {
-                status: matchResults.length === 1 ? 'match' : 'partial',
-                message: `Found matching game for ${compressedFilePath}`,
-                game: matchResults[0],
+                status: matchingGames.length === 1 ? 'match' : 'partial',
+                message: `Match via sha1 hash`,
+                game: matchingGames[0]
             };
         }
 
@@ -113,7 +80,8 @@ export class Runner implements IRunner {
 
         /* Attempt to find match by combined bin size */
         for ( const game of this.dat.games) {
-            const romSize = game.roms.reduce((acc, rom) => acc + rom.size, 0);
+            const roms = game.roms.filter(rom => rom.name.endsWith('.bin'));
+            const romSize = roms.reduce((acc, rom) => acc + rom.size, 0);
             if ( romSize === combinedBinSize) {
                 sizeMatches.push(game);
             }
@@ -122,15 +90,17 @@ export class Runner implements IRunner {
         if ( sizeMatches.length > 0) {
             return {
                 status: sizeMatches.length === 1 ? 'match' : 'partial',
-                message: `Found matching game for ${compressedFilePath}`,
+                message: `Match via combined bin size`,
                 game: sizeMatches[0]
             };
         }
 
         let closestMatch: Game | undefined = undefined;
         let closestMatchSizeDiff = Number.MAX_SAFE_INTEGER;
+
         for ( const game of this.dat.games) {
-            const romSize = game.roms.reduce((acc, rom) => acc + rom.size, 0);
+            const roms = game.roms.filter(rom => rom.name.endsWith('.bin'));
+            const romSize = roms.reduce((acc, rom) => acc + rom.size, 0);
             const sizeDiff = Math.abs(romSize - combinedBinSize);
             if ( sizeDiff < closestMatchSizeDiff || closestMatch === undefined) {
                 closestMatch = game;
@@ -139,7 +109,7 @@ export class Runner implements IRunner {
         }
 
         return {
-            status: closestMatch ? 'partial' : 'none',
+            status: (closestMatchSizeDiff < 1000) ? 'partial' : 'none',
             message: `No matching game found for ${compressedFilePath}, bytes-delta: ${closestMatchSizeDiff}, percent-delta: ${(1-(closestMatchSizeDiff / combinedBinSize)) * 100}%`,
             game: closestMatch
         };

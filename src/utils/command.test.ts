@@ -48,9 +48,9 @@ describe('Command Utilities', () => {
         });
 
         test('should return false when which command times out', async () => {
-            mockZx.$.mockReturnValue({
-                exitCode: Promise.reject(new Error('Timeout')),
-            } as any);
+            mockZx.$.mockImplementation(() => {
+                throw new Error('Timeout');
+            });
 
             const result = await doesCommandExist('slowCommand');
             
@@ -116,108 +116,130 @@ describe('Command Utilities', () => {
 
     describe('isCommandExecutable', () => {
         test('should return true when command is executable', async () => {
-            mockZx.$.mockReturnValue({
+            mockZx.$.mockReturnValueOnce({
+                stdout: '/usr/bin/ls',
+            } as any).mockReturnValueOnce({
                 exitCode: Promise.resolve(0),
             } as any);
 
             const result = await isCommandExecutable('/usr/bin/ls');
             
             expect(result).toBe(true);
-            expect(mockZx.$).toHaveBeenCalled();
+            expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
 
         test('should return false when command is not executable', async () => {
-            mockZx.$.mockReturnValue({
+            mockZx.$.mockReturnValueOnce({
+                stdout: '/usr/bin/readonlyFile',
+            } as any).mockReturnValueOnce({
                 exitCode: Promise.resolve(1),
             } as any);
 
             const result = await isCommandExecutable('/usr/bin/readonlyFile');
             
             expect(result).toBe(false);
-            expect(mockZx.$).toHaveBeenCalled();
+            expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
 
         test('should return false when test command throws an error', async () => {
-            mockZx.$.mockImplementation(() => {
+            mockZx.$.mockReturnValueOnce({
+                stdout: '/usr/bin/protected',
+            } as any).mockImplementation(() => {
                 throw new Error('Permission denied');
             });
 
             const result = await isCommandExecutable('/usr/bin/protected');
             
             expect(result).toBe(false);
-            expect(mockZx.$).toHaveBeenCalled();
+            expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
 
         test('should return false when test command times out', async () => {
-            mockZx.$.mockReturnValue({
-                exitCode: Promise.reject(new Error('Timeout')),
-            } as any);
+            mockZx.$.mockReturnValueOnce({
+                stdout: '/usr/bin/slowCommand',
+            } as any).mockImplementation(() => {
+                throw new Error('Timeout');
+            });
 
             const result = await isCommandExecutable('/usr/bin/slowCommand');
             
             expect(result).toBe(false);
-            expect(mockZx.$).toHaveBeenCalled();
+            expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
 
         test('should handle empty command path', async () => {
-            mockZx.$.mockReturnValue({
+            mockZx.$.mockReturnValueOnce({
+                stdout: '',
+            } as any).mockReturnValueOnce({
                 exitCode: Promise.resolve(0),
             } as any);
 
             const result = await isCommandExecutable('');
             
             expect(result).toBe(true);
-            expect(mockZx.$).toHaveBeenCalled();
+            expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
 
         test('should handle command path with spaces', async () => {
-            mockZx.$.mockReturnValue({
+            mockZx.$.mockReturnValueOnce({
+                stdout: '/usr/local/bin/my script',
+            } as any).mockReturnValueOnce({
                 exitCode: Promise.resolve(0),
             } as any);
 
             const result = await isCommandExecutable('/usr/local/bin/my script');
             
             expect(result).toBe(true);
-            expect(mockZx.$).toHaveBeenCalled();
+            expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
 
         test('should handle command path with special characters', async () => {
-            mockZx.$.mockReturnValue({
+            mockZx.$.mockReturnValueOnce({
+                stdout: '/usr/bin/node-v16.14.0',
+            } as any).mockReturnValueOnce({
                 exitCode: Promise.resolve(0),
             } as any);
 
             const result = await isCommandExecutable('/usr/bin/node-v16.14.0');
             
             expect(result).toBe(true);
-            expect(mockZx.$).toHaveBeenCalled();
+            expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
 
         test('should handle relative paths', async () => {
-            mockZx.$.mockReturnValue({
+            mockZx.$.mockReturnValueOnce({
+                stdout: './my-script.sh',
+            } as any).mockReturnValueOnce({
                 exitCode: Promise.resolve(0),
             } as any);
 
             const result = await isCommandExecutable('./my-script.sh');
             
             expect(result).toBe(true);
-            expect(mockZx.$).toHaveBeenCalled();
+            expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
 
         test('should handle home directory paths', async () => {
-            mockZx.$.mockReturnValue({
+            mockZx.$.mockReturnValueOnce({
+                stdout: '~/bin/custom-command',
+            } as any).mockReturnValueOnce({
                 exitCode: Promise.resolve(0),
             } as any);
 
             const result = await isCommandExecutable('~/bin/custom-command');
             
             expect(result).toBe(true);
-            expect(mockZx.$).toHaveBeenCalled();
+            expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
     });
 
     describe('Integration scenarios', () => {
         test('should handle both functions with same command', async () => {
-            mockZx.$.mockReturnValue({
+            mockZx.$.mockReturnValueOnce({
+                exitCode: Promise.resolve(0),
+            } as any).mockReturnValueOnce({
+                stdout: '/usr/bin/git',
+            } as any).mockReturnValueOnce({
                 exitCode: Promise.resolve(0),
             } as any);
 
@@ -226,7 +248,7 @@ describe('Command Utilities', () => {
             
             expect(exists).toBe(true);
             expect(executable).toBe(true);
-            expect(mockZx.$).toHaveBeenCalledTimes(2);
+            expect(mockZx.$).toHaveBeenCalledTimes(3);
         });
 
         test('should handle command that exists but is not executable', async () => {
@@ -256,9 +278,9 @@ describe('Command Utilities', () => {
         });
 
         test('should handle network timeout scenarios', async () => {
-            mockZx.$.mockReturnValue({
-                exitCode: Promise.reject(new Error('Network timeout')),
-            } as any);
+            mockZx.$.mockImplementation(() => {
+                throw new Error('Network timeout');
+            });
 
             /* Cspell:disable-next-line */
             const exists = await doesCommandExist('networkcommand');

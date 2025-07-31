@@ -1,4 +1,4 @@
-import { calculateFileSha1 } from './hash';
+import hash from './hash';
 import fs from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 
@@ -13,7 +13,7 @@ describe('Hash Utilities', () => {
             
             try {
                 // Calculate SHA1 using our function
-                const calculatedSha1 = await calculateFileSha1(testFileName);
+                const calculatedSha1 = await hash.calculateFileSha1(testFileName);
                 
                 // Calculate expected SHA1 using Node.js crypto directly
                 const expectedSha1 = createHash('sha1').update(testContent, 'utf8').digest('hex');
@@ -48,7 +48,7 @@ describe('Hash Utilities', () => {
             
             try {
                 // Calculate SHA1 using our function
-                const calculatedSha1 = await calculateFileSha1(testFileName);
+                const calculatedSha1 = await hash.calculateFileSha1(testFileName);
                 
                 // Calculate expected SHA1 using Node.js crypto directly
                 const expectedSha1 = createHash('sha1').update(testContent).digest('hex');
@@ -82,7 +82,7 @@ describe('Hash Utilities', () => {
             
             try {
                 // Calculate SHA1 using our function
-                const calculatedSha1 = await calculateFileSha1(testFileName);
+                const calculatedSha1 = await hash.calculateFileSha1(testFileName);
                 
                 // Calculate expected SHA1 using Node.js crypto directly
                 const expectedSha1 = createHash('sha1').update(testContent).digest('hex');
@@ -115,7 +115,7 @@ describe('Hash Utilities', () => {
             
             try {
                 // Calculate SHA1 using our function
-                const calculatedSha1 = await calculateFileSha1(testFileName);
+                const calculatedSha1 = await hash.calculateFileSha1(testFileName);
                 
                 // Calculate expected SHA1 for empty content
                 const expectedSha1 = createHash('sha1').update('').digest('hex');
@@ -139,7 +139,7 @@ describe('Hash Utilities', () => {
         it('should throw error for non-existent files', async () => {
             const nonExistentFile = 'non-existent-file.txt';
             
-            await expect(calculateFileSha1(nonExistentFile)).rejects.toThrow();
+            await expect(hash.calculateFileSha1(nonExistentFile)).rejects.toThrow();
         });
 
         it('should calculate correct SHA1 for real South Park BIN file', async () => {
@@ -148,7 +148,7 @@ describe('Hash Utilities', () => {
             
             try {
                 // Calculate SHA1 using our function
-                const calculatedSha1 = await calculateFileSha1(realFilePath);
+                const calculatedSha1 = await hash.calculateFileSha1(realFilePath);
                 
                 // Verify the hash matches the expected value
                 expect(calculatedSha1).toBe(expectedSha1);

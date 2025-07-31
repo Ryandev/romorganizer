@@ -363,6 +363,11 @@ async function _move(
     source: FilePath,
     destination: FilePath
 ): Promise<void> {
+    if (source === destination) {
+        /* Nothing to do */
+        return;
+    }
+
     const exists = await _exists(source);
 
     if (!exists) {

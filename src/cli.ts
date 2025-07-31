@@ -9,6 +9,8 @@ export interface LaunchParameters {
     CUESHEETS_FILE: string;
     REMOVE_SOURCE: boolean;
     USE_DAT_FILE_NAME: boolean;
+    RENAME: boolean;
+    OVERWRITE: boolean;
 }
 
 // Define the command line option definitions with kebab-case naming
@@ -57,6 +59,20 @@ const optionDefinitions: commandLineArgs.OptionDefinition[] = [
         multiple: false,
         defaultValue: false
     },
+    { 
+        name: 'rename', 
+        alias: 'n', 
+        type: Boolean, 
+        multiple: false,
+        defaultValue: false
+    },
+    { 
+        name: 'overwrite', 
+        alias: 'w', 
+        type: Boolean, 
+        multiple: false,
+        defaultValue: false
+    },
     {
         name: 'help',
         alias: 'h',
@@ -99,11 +115,13 @@ Required Options:
 
 Optional Options:
   -r, --remove-source         Remove source files after processing
+  -w, --overwrite             Overwrite existing files in output directory
   -h, --help                  Show this help message
 
 Examples:
   ${COMMAND_NAME} compress -s ./input -o ./output
   ${COMMAND_NAME} compress --source-dir ./input --output-dir ./output --remove-source
+  ${COMMAND_NAME} compress --source-dir ./input --output-dir ./output --overwrite
 `;
 
 const verifyHelpText = `
@@ -117,16 +135,19 @@ Required Options:
   -c, --cuesheets-file <path> Cuesheets zip file containing master .cue files
 
 Optional Options:
+  -n, --rename                Rename source files to game name from DAT file
   -h, --help                  Show this help message
 
 Examples:
   ${COMMAND_NAME} verify -s ./input -d ./datfile.dat -c ./cuesheets.zip
-  ${COMMAND_NAME} verify --source-dir ./input --dat-file ./datfile.zip --cuesheets-file ./cuesheets.zip
+  ${COMMAND_NAME} verify --source-dir ./input --dat-file ./datfile.zip --cuesheets-file ./cuesheets.zip --rename
 
 Note: When using a zip file for --dat-file, the tool will automatically extract
       the zip and find the .dat file inside to use for validation.
       The --cuesheets-file is required for verification as it provides
       master .cue files for enhanced validation and metadata generation.
+      When --rename is used, source files will be renamed to match the game name
+      from the DAT file, and metadata files will be updated accordingly.
 `;
 
 function showHelp(command?: string): void {
@@ -162,6 +183,8 @@ export function loadArguments(args: string[]): LaunchParameters {
     const cuesheetsFile = options['cuesheets-file'];
     const removeSource = options['remove-source'] || false;
     const useDatFileName = options['use-dat-file-name'] || false;
+    const rename = options['rename'] || false;
+    const overwrite = options['overwrite'] || false;
 
     // Validate source directory (required for both commands)
     if (!sourceDir) {
@@ -213,5 +236,7 @@ export function loadArguments(args: string[]): LaunchParameters {
         CUESHEETS_FILE: cuesheetsFile,
         REMOVE_SOURCE: removeSource,
         USE_DAT_FILE_NAME: useDatFileName,
+        RENAME: rename,
+        OVERWRITE: overwrite,
     };
 }

@@ -4,7 +4,7 @@ import { XMLParser } from 'fast-xml-parser';
 import storage from './storage';
 import { log } from './logger';
 import { guardNotFalsy } from './guard';
-import { calculateFileSha1 } from './hash';
+import hash from './hash';
 
 export class DatParsingException extends Error {
     constructor(message: string) {
@@ -220,7 +220,7 @@ export async function verifyBinCueAgainstDat(
     for (const binFile of binFiles) {
         const fileName = path.basename(binFile);
         const fileSize = await storage().size(binFile);
-        const fileSha1 = await calculateFileSha1(binFile);
+        const fileSha1 = await hash.calculateFileSha1(binFile);
 
         // Find matching ROM in DAT
         const matchingRoms = dat.romsBySha1hex.get(fileSha1) || [];
@@ -259,7 +259,7 @@ export async function verifyBinCueAgainstDat(
             const matchingCueRom = game.roms.find(rom => rom.name === cueFileName);
         
         if (matchingCueRom) {
-            const cueSha1 = await calculateFileSha1(cueFile);
+            const cueSha1 = await hash.calculateFileSha1(cueFile);
             if (cueSha1 !== matchingCueRom.sha1hex) {
                 const message = `"${game.name}" .bin files verified and complete, but .cue does not match Datfile`;
                 

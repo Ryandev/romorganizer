@@ -4,16 +4,21 @@ import { RarArchive } from "../archive/rar"
 import { ZipArchive } from "../archive/zip"
 import { EcmArchive } from "../archive/ecm";
 import { SevenZipArchive } from "../archive/seven-zip"
+import * as mdf from "../utils/mdf"
 import { guard, guardFileExists, guardValidString } from "../utils/guard";
 import storage from "../utils/storage";
 import { loadCuesheetFromFile } from "../utils/cuesheetLoader";
 import path from "path";
 import cueSheet from "../utils/cueSheet";
+import iso from "../utils/iso";
+import { IStorage } from "../utils/storage.interface";
+import storageDecorator from "../utils/storage.decorator";
 
 
 
 export interface IRunner {
     start(): Promise<string[]>;
+    outputFile(): string;
 }
 
 const _fileExtension = (filePath: string): string => {
@@ -85,17 +90,35 @@ const EXTRACT_OPERATIONS = new Map<string, (sourceFile: string, allFiles?: strin
         await storageInstance.write(cueFilePath, new TextEncoder().encode(cueContent));
         return [cueFilePath];
     }],
-    // ['img', async (sourceFile: string) => {
-    //     if ( !sourceFile.endsWith('.img')) {
-    //         return [];
-    //     }
-    //     /* rename IMG to BIN */
-    //     const binFileName = path.basename(sourceFile, '.img') + '.bin'
-    //     const binFilePath = path.join(path.dirname(sourceFile), binFileName);
-    //     await storage().move(sourceFile, binFilePath);
-    //     guardFileExists(binFilePath);
-    //     return [binFilePath];
-    // }]
+    ['mdf', async (sourceFile: string) => {
+        if ( !sourceFile.endsWith('.mdf')) {
+            return [];
+        }
+        /* Convert MDF to ISO first, then extract ISO to get BIN/CUE */
+        const isoFile = await mdf.convertToIso(sourceFile);
+        return [isoFile];
+    }],
+    ['iso', async (sourceFile: string) => {
+        if ( !sourceFile.endsWith('.iso')) {
+            return [];
+        }
+        // Convert ISO to bin/cue using poweriso
+        const binFile = await iso.convert(sourceFile, 'bin');
+        /* Generate CUE file */
+        const cueFilePath = path.join(path.dirname(binFile), `${path.basename(binFile, '.bin')}.cue`);
+        await cueSheet.createCueFile(binFile, cueFilePath);
+        guardFileExists(binFile, `Bin file missing, does not exist: ${binFile}`);
+        guardFileExists(cueFilePath, `CUE file missing, does not exist: ${cueFilePath}`);
+        return [binFile, cueFilePath];
+    }],
+    ['nrg', async (sourceFile: string) => {
+        if ( !sourceFile.endsWith('.nrg')) {
+            return [];
+        }
+        // Convert ISO to bin/cue using poweriso
+        const binFile = await iso.convert(sourceFile, 'bin');
+        return [binFile];
+    }],
 ]);
 
 const _findMatchingFiles = (fileListings: string[], extension: string): string[] => {
@@ -103,38 +126,24 @@ const _findMatchingFiles = (fileListings: string[], extension: string): string[]
 }
 
 export class Runner implements IRunner {
-    private readonly temporaryFiles: string[] = [];
-    constructor(private readonly sourceFile: string) {
-        this.sourceFile = sourceFile;
+    private readonly storage: IStorage;
+
+    constructor(private readonly sourceFiles: string[], private readonly outputFilePath: string) {
+        this.sourceFiles = sourceFiles;
+        this.outputFilePath = outputFilePath;
+        /* Decorate storage to automatically cleanup temporary files when the runner is disposed */
+        this.storage = storageDecorator.withCleanup(storage());
     }
 
-    /* Cleanup the temporary files when the runner is disposed */
-    async [Symbol.dispose]() {
-        await this._cleanup();
-    }
-
-    private async _cleanup(): Promise<void> {
-        for (const file of this.temporaryFiles) {
-            await storage().remove(file).catch(() => {
-                /* ignore errors */
-            });
-        }
-    }
-
-    private async _work(fileListings: string[]): Promise<string[]> {
-        /* First, check if we already have CHD files */
-        const matchingTargetExtensionFiles = _findMatchingFiles(fileListings, 'chd');
-        if (matchingTargetExtensionFiles.length > 0) {
-            return matchingTargetExtensionFiles;
-        }
-
+    /* Extract all files that can be extracted into the same directory */
+    private async _performAllExtractionOperations(workingDirectory: string): Promise<string[]> {
+        const fileListings = await this.storage.list(workingDirectory);
         /* Keep extracting until no more extraction is possible */
-        let currentFiles = [...fileListings];
+        const currentFiles = [...fileListings];
         let extractionOccurred = true;
         
         while (extractionOccurred) {
             extractionOccurred = false;
-            const extractionResults: string[] = [];
             
             /* Try to extract each file */
             for (const filePath of currentFiles) {
@@ -142,23 +151,42 @@ export class Runner implements IRunner {
                     const extension = _fileExtension(filePath);
                     const extractOperation = EXTRACT_OPERATIONS.get(extension);
                     
-                    if (extractOperation) {
-                        const extractedFiles = await extractOperation(filePath, currentFiles);
-                        extractionResults.push(...extractedFiles);
-                        extractionOccurred = true;
-                    } else {
-                        /* Keep files that can't be extracted */
-                        extractionResults.push(filePath);
+                    if (!extractOperation) {
+                        continue
                     }
+
+                    const extractedFiles = await extractOperation(filePath, currentFiles);
+                    /* Move extracted files back to current directory */
+                    for (const extractedFile of extractedFiles) {
+                        const newFilePath = path.join(workingDirectory, path.basename(extractedFile));
+                        await this.storage.move(extractedFile, newFilePath);
+                        currentFiles.push(newFilePath);
+                    }
+                    /* Make sure we don't try to extract the same file again */
+                    currentFiles.splice(currentFiles.indexOf(filePath), 1);
+
+                    extractionOccurred = true;
                 } catch (error) {
                     log.warn(`Failed to extract file ${filePath}: ${error}`);
-                    /* Keep files that fail to extract */
-                    extractionResults.push(filePath);
                 }
             }
-            
-            currentFiles = extractionResults;
         }
+
+        /* Re-grab all the files in the working directory */
+        return await this.storage.list(workingDirectory);
+    }
+
+    outputFile(): string {
+        return this.outputFilePath;
+    }
+
+    async start(): Promise<string[]> {
+        const workingDirectory = await this.storage.createTemporaryDirectory();
+        for ( const sourceFile of this.sourceFiles) {
+            const destinationFile = path.join(workingDirectory, path.basename(sourceFile));
+            await this.storage.copy(sourceFile, destinationFile);
+        }
+        const currentFiles = await this._performAllExtractionOperations(workingDirectory);
 
         /* Now attempt compression on the remaining files */
         const compressionResults: string[] = [];
@@ -185,36 +213,36 @@ export class Runner implements IRunner {
         }
 
         /* If no compression occurred and no extraction occurred, we're stuck */
-        guard(currentFiles.length > 0, `No matching files found in ${fileListings.join(', ')} for ${this.sourceFile}`);
+        guard(currentFiles.length > 0, `No matching files found in ${currentFiles.join(', ')} for ${this.sourceFiles.join(', ')}`);
         
+        /* First, check if we already have CHD files */
+        const matchingTargetExtensionFiles = _findMatchingFiles(currentFiles, 'chd');
+        if (matchingTargetExtensionFiles.length > 0) {
+            return matchingTargetExtensionFiles;
+        }
+
         /* Return the remaining files that couldn't be processed */
         return currentFiles;
     }
-
-    async start(): Promise<string[]> {
-        /* check if the source matches the extension */
-        if ( _fileExtension(this.sourceFile) === 'chd') {
-            log.info(`Source file ${this.sourceFile} already matches the target extension ${'chd'}`);
-            return [this.sourceFile];
-        }
-
-        try {
-            const result = await this._work([this.sourceFile]);
-            guardValidString(result);
-            return result;
-        } finally {
-            await this._cleanup();
-        }
-    }
 }
 
-export default function createCHDRunner(sourceFile: string): IRunner|Error {
-    const fileExtension = _fileExtension(sourceFile);
-    const supportedExtensions = ['cue', 'gdi', 'iso', 'ccd', 'img', 'ecm', '7z', 'chd', 'rar', 'zip'];
-    const canOperateOnFile = supportedExtensions.includes(fileExtension);
-    if (!canOperateOnFile) {
-        return new Error(`No matching extensions found for ${sourceFile}`);
+export default function createCHDRunner(sourceFiles: string[]): IRunner|Error {
+    const fileExtensions = new Set(sourceFiles.map(file => _fileExtension(file)));
+    const supportedExtensions = new Set(EXTRACT_OPERATIONS.keys());
+    const compressibleExtensions = new Set(['cue', 'gdi']); /* Files that can be directly compressed to CHD */
+    
+    /* Check if any file can be extracted or directly compressed */
+    const canExtract = [...supportedExtensions].some(extension => fileExtensions.has(extension));
+    const canCompress = [...compressibleExtensions].some(extension => fileExtensions.has(extension));
+    
+    if (!canExtract && !canCompress) {
+        return new Error(`No matching extensions found for ${sourceFiles.join(', ')}`);
     }
 
-    return new Runner(sourceFile);
+    
+    const outputFileName = `${path.basename(sourceFiles[0] ?? '')}.chd`; /* Grab basename & append .chd */
+    const outputDirectory = path.dirname(sourceFiles[0] ?? '');
+    const outputFilePath = path.join(outputDirectory, outputFileName);
+
+    return new Runner(sourceFiles, outputFilePath);
 } 

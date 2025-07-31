@@ -80,11 +80,11 @@ describe('createVerifyRunner', () => {
     it('should return an Error for unsupported file extension', () => {
         const result = createVerifyRunner('/path/to/test.txt', mockDat, []);
         expect(result).toBeInstanceOf(Error);
-        expect((result as Error).message).toContain('No matching extensions found');
+        expect((result as Error).message).toContain('Unsupported file extension: txt');
     });
 
     it('should handle different file extensions', () => {
-        const extensions = ['chd', '7z', 'rar', 'zip', 'ecm'];
+        const extensions = ['chd'];
         
         for (const ext of extensions) {
             const result = createVerifyRunner(`/path/to/test.${ext}`, mockDat, []);

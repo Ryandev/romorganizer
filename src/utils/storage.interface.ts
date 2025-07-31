@@ -64,6 +64,7 @@ export interface IStorage {
      * @param options - Optional configuration for listing behavior
      * @param options.recursive - When true, includes all subdirectories and their contents
      * @param options.removePrefix - When true, returns relative paths from the specified directory; when false, returns absolute paths
+     * @param options.avoidHiddenFiles - When true, excludes hidden files and directories (those starting with '.')
      * @returns Promise resolving to array of file/directory paths
      * @throws {Error} If the path doesn't exist or cannot be accessed
      */
