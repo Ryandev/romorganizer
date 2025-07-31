@@ -50,6 +50,9 @@ jobs:
     - name: Install dependencies
       run: yarn install --frozen-lockfile
 
+    - name: Setup development environment
+      run: yarn setup
+
     - name: Run tests
       run: yarn test --testPathIgnorePatterns="scripts/other/__tests__" --testPathIgnorePatterns="src/archive/rar.test.ts" --testPathIgnorePatterns="src/archive/seven-zip.test.ts" --testPathIgnorePatterns="src/utils/storage.test.ts"
 

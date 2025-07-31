@@ -41,6 +41,14 @@ jobs:
           npm ci
         fi
 
+    - name: Setup development environment
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn setup
+        else
+          npm run setup
+        fi
+
     - name: Run linter
       run: |
         if [ "${{ matrix.package-manager }}" = "yarn" ]; then
@@ -145,6 +153,14 @@ jobs:
           npm ci
         fi
 
+    - name: Setup development environment
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn setup
+        else
+          npm run setup
+        fi
+
     - name: Run security audit
       run: |
         if [ "${{ matrix.package-manager }}" = "yarn" ]; then
@@ -182,6 +198,14 @@ jobs:
           yarn install --frozen-lockfile
         else
           npm ci
+        fi
+
+    - name: Setup development environment
+      run: |
+        if [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn setup
+        else
+          npm run setup
         fi
 
     - name: Type check

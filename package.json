@@ -6,6 +6,7 @@
     "type": "module",
     "bin": "./dist/romorganizer.js",
     "scripts": {
+        "setup": "node scripts/setup.js",
         "build": "yarn build:deps && vite build",
         "build:deps": "node deps/build.js",
         "build:debug": "yarn build:deps && vite build --config vite.debug.config.ts",
@@ -16,8 +17,8 @@
         "prebuild": "npm run clean",
         "package": "yarn build && ncc build dist/index.js -o dist-package && node scripts/fix-package.js && mv dist-package/index.js dist-package/index.mjs && chmod +x dist-package/index.mjs",
         "build:pkg": "yarn build:deps && vite build --config vite.pkg.config.ts",
-        "package:native": "npx @yao-pkg/pkg -t node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64 -o romorganizer dist-pkg/index.js",
-        "build:native": "yarn build:pkg && npx @yao-pkg/pkg -t node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64 -o romorganizer dist-pkg/index.js",
+        "package:native": "npx @yao-pkg/pkg -t node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64,node20-win-x64 -o romorganizer dist-pkg/index.js",
+        "build:native": "yarn build:pkg && npx @yao-pkg/pkg -t node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64,node20-win-x64 -o romorganizer dist-pkg/index.js",
         "lint": "eslint src/**/*.ts",
         "lint:fix": "eslint src/**/*.ts --fix",
         "check-pretty": "prettier --check src/**/*.{ts,js,json}",
@@ -36,7 +37,8 @@
             "node20-macos-arm64",
             "node20-macos-x64",
             "node20-linux-arm64",
-            "node20-linux-x64"
+            "node20-linux-x64",
+            "node20-win-x64"
         ],
         "ignore": [
             "**/*.test.ts",
