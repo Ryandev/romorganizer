@@ -21,10 +21,8 @@ export function guard(condition: boolean, message?: string): asserts condition {
  * @param message - Optional error message
  */
 export function guardNotFalsy<T>(value: T | null | undefined, message?: string): asserts value is T {
-    if (value === null || value === undefined) {
-        throw new Error(message || 'Value is null or undefined');
-    }
-    return value;
+    guard(value !== null && value !== undefined, message || 'Value is null or undefined');
+    guard(!!value, message || 'Value is falsy');
 }
 
 /**

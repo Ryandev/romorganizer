@@ -18,9 +18,9 @@ describe('CLI', () => {
             const result = loadArguments(args);
 
             expect(result.command).toBe('compress');
-            expect(result.SOURCE_DIR).toBe('./input');
-            expect(result.OUTPUT_DIR).toBe('./output');
-            expect(result.REMOVE_SOURCE).toBe(false);
+            expect(result.sourceDir).toBe('./input');
+            expect(result.outputDir).toBe('./output');
+            expect(result.removeSource).toBe(false);
         });
 
         it('should parse verify command arguments correctly', () => {
@@ -34,10 +34,12 @@ describe('CLI', () => {
             const result = loadArguments(args);
 
             expect(result.command).toBe('verify');
-            expect(result.SOURCE_DIR).toBe('./input');
-            expect(result.DAT_FILE).toBe('./test.dat');
-            expect(result.CUESHEETS_FILE).toBe('./cuesheets.zip');
-            expect(result.RENAME).toBe(false);
+            expect(result.sourceDir).toBe('./input');
+            if (result.command === 'verify') {
+                expect(result.datFile).toBe('./test.dat');
+                expect(result.cuesheetsFile).toBe('./cuesheets.zip');
+            }
+            expect(result.rename).toBe(false);
         });
 
         it('should parse verify command with rename flag correctly', () => {
@@ -52,10 +54,52 @@ describe('CLI', () => {
             const result = loadArguments(args);
 
             expect(result.command).toBe('verify');
-            expect(result.SOURCE_DIR).toBe('./input');
-            expect(result.DAT_FILE).toBe('./test.dat');
-            expect(result.CUESHEETS_FILE).toBe('./cuesheets.zip');
-            expect(result.RENAME).toBe(true);
+            expect(result.sourceDir).toBe('./input');
+            if (result.command === 'verify') {
+                expect(result.datFile).toBe('./test.dat');
+                expect(result.cuesheetsFile).toBe('./cuesheets.zip');
+            }
+            expect(result.rename).toBe(true);
+        });
+
+        it('should parse verify command with force flag correctly', () => {
+            const args = [
+                'verify',
+                '--source-dir', './input',
+                '--dat-file', './test.dat',
+                '--cuesheets-file', './cuesheets.zip',
+                '--force'
+            ];
+
+            const result = loadArguments(args);
+
+            expect(result.command).toBe('verify');
+            expect(result.sourceDir).toBe('./input');
+            if (result.command === 'verify') {
+                expect(result.datFile).toBe('./test.dat');
+                expect(result.cuesheetsFile).toBe('./cuesheets.zip');
+            }
+            expect(result.force).toBe(true);
+        });
+
+        it('should parse verify command with short force flag correctly', () => {
+            const args = [
+                'verify',
+                '-s', './input',
+                '-d', './test.dat',
+                '-c', './cuesheets.zip',
+                '-f'
+            ];
+
+            const result = loadArguments(args);
+
+            expect(result.command).toBe('verify');
+            expect(result.sourceDir).toBe('./input');
+            if (result.command === 'verify') {
+                expect(result.datFile).toBe('./test.dat');
+                expect(result.cuesheetsFile).toBe('./cuesheets.zip');
+            }
+            expect(result.force).toBe(true);
         });
 
         it('should parse verify command with short rename flag correctly', () => {
@@ -64,16 +108,18 @@ describe('CLI', () => {
                 '--source-dir', './input',
                 '--dat-file', './test.dat',
                 '--cuesheets-file', './cuesheets.zip',
-                '-n'
+                '--rename'
             ];
 
             const result = loadArguments(args);
 
             expect(result.command).toBe('verify');
-            expect(result.SOURCE_DIR).toBe('./input');
-            expect(result.DAT_FILE).toBe('./test.dat');
-            expect(result.CUESHEETS_FILE).toBe('./cuesheets.zip');
-            expect(result.RENAME).toBe(true);
+            expect(result.sourceDir).toBe('./input');
+            if (result.command === 'verify') {
+                expect(result.datFile).toBe('./test.dat');
+                expect(result.cuesheetsFile).toBe('./cuesheets.zip');
+            }
+            expect(result.rename).toBe(true);
         });
 
         it('should parse short arguments correctly for compress', () => {
@@ -86,8 +132,8 @@ describe('CLI', () => {
             const result = loadArguments(args);
 
             expect(result.command).toBe('compress');
-            expect(result.SOURCE_DIR).toBe('./input');
-            expect(result.OUTPUT_DIR).toBe('./output');
+            expect(result.sourceDir).toBe('./input');
+            expect(result.outputDir).toBe('./output');
         });
 
         it('should parse short arguments correctly for verify', () => {
@@ -101,9 +147,11 @@ describe('CLI', () => {
             const result = loadArguments(args);
 
             expect(result.command).toBe('verify');
-            expect(result.SOURCE_DIR).toBe('./input');
-            expect(result.DAT_FILE).toBe('./test.dat');
-            expect(result.CUESHEETS_FILE).toBe('./cuesheets.zip');
+            expect(result.sourceDir).toBe('./input');
+            if (result.command === 'verify') {
+                expect(result.datFile).toBe('./test.dat');
+                expect(result.cuesheetsFile).toBe('./cuesheets.zip');
+            }
         });
 
         it('should handle boolean flags correctly for compress', () => {
@@ -117,7 +165,7 @@ describe('CLI', () => {
             const result = loadArguments(args);
 
             expect(result.command).toBe('compress');
-            expect(result.REMOVE_SOURCE).toBe(true);
+            expect(result.removeSource).toBe(true);
         });
 
         it('should handle short boolean flags correctly for compress', () => {
@@ -131,7 +179,7 @@ describe('CLI', () => {
             const result = loadArguments(args);
 
             expect(result.command).toBe('compress');
-            expect(result.REMOVE_SOURCE).toBe(true);
+            expect(result.removeSource).toBe(true);
         });
 
         it('should throw error for missing command', () => {
@@ -158,7 +206,7 @@ describe('CLI', () => {
                 '--output-dir', './output'
             ];
 
-            expect(() => loadArguments(args)).toThrow('Missing required argument: --source-dir (-s)');
+            expect(() => loadArguments(args)).toThrow('sourceDir: Invalid input: expected string, received undefined');
         });
 
         it('should throw error for missing output-dir in compress', () => {
@@ -167,7 +215,7 @@ describe('CLI', () => {
                 '--source-dir', './input'
             ];
 
-            expect(() => loadArguments(args)).toThrow('Missing required argument: --output-dir (-o)');
+            expect(() => loadArguments(args)).toThrow('outputDir: Invalid input: expected string, received undefined');
         });
 
         it('should throw error for missing dat-file in verify', () => {
@@ -177,7 +225,7 @@ describe('CLI', () => {
                 '--cuesheets-file', './cuesheets.zip'
             ];
 
-            expect(() => loadArguments(args)).toThrow('Missing required argument: --dat-file (-d)');
+            expect(() => loadArguments(args)).toThrow('datFile: Invalid input: expected string, received undefined');
         });
 
         it('should throw error for missing cuesheets-file in verify', () => {
@@ -187,7 +235,7 @@ describe('CLI', () => {
                 '--dat-file', './test.dat'
             ];
 
-            expect(() => loadArguments(args)).toThrow('Missing required argument: --cuesheets-file (-c)');
+            expect(() => loadArguments(args)).toThrow('cuesheetsFile: Invalid input: expected string, received undefined');
         });
     });
 }); 

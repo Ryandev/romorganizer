@@ -56,7 +56,7 @@ async function compress({ sourceDir, targetDir, removeSource, overwrite }: { sou
     return outputFiles;
 }
 
-async function verify({ sourceDir, datFile, cuesheetsFile, rename }: { sourceDir: string, datFile: string, cuesheetsFile: string, rename: boolean }) {
+async function verify({ sourceDir, datFile, cuesheetsFile, rename, force }: { sourceDir: string, datFile: string, cuesheetsFile: string, rename: boolean, force: boolean }) {
     const outputFiles: string[] = [];
     const files = await storage().list(sourceDir, { avoidHiddenFiles: true, recursive: true });
     log.info(`Found ${files.length} files in source directory`);
@@ -72,6 +72,17 @@ async function verify({ sourceDir, datFile, cuesheetsFile, rename }: { sourceDir
     log.info(`Loaded ${cuesheetEntries.length} cuesheet entries`);
     
     for (const file of files) {
+        // Check if metadata.json already exists for this file
+        const baseFileName = path.basename(file, path.extname(file));
+        const metadataFileName = `${baseFileName}.metadata.json`;
+        const metadataFilePath = path.join(sourceDir, metadataFileName);
+        
+        const metadataExists = await storage().exists(metadataFilePath);
+        if (metadataExists && !force) {
+            log.info(`Skipping ${file} - metadata.json already exists (use --force to re-verify)`);
+            continue;
+        }
+        
         const runner = createVerifyRunner(file, dat, cuesheetEntries);
         if (runner instanceof Error) {
             log.error(`Error creating verify runner for ${file}: ${runner.message}`);
@@ -97,7 +108,7 @@ async function verify({ sourceDir, datFile, cuesheetsFile, rename }: { sourceDir
             finalMetadataFileName = `${gameName}.metadata.json`;
         }
 
-        const metadataFilePath = path.join(sourceDir, finalMetadataFileName);
+        const finalMetadataFilePath = path.join(sourceDir, finalMetadataFileName);
         await metadata.writeFile({
             game: result.game ? {
                 name: result.game.name,
@@ -114,7 +125,9 @@ async function verify({ sourceDir, datFile, cuesheetsFile, rename }: { sourceDir
             message: result.message,
             status: result.status,
             timestamp: new Date().toISOString()
-        }, metadataFilePath);
+        }, finalMetadataFilePath);
+        
+        outputFiles.push(file);
     }
     
     return outputFiles;
@@ -127,20 +140,21 @@ async function main() {
     switch (launchParameters.command) {
         case 'compress': {
             const outputFiles = await compress({ 
-                sourceDir: launchParameters.SOURCE_DIR, 
-                targetDir: launchParameters.OUTPUT_DIR, 
-                removeSource: launchParameters.REMOVE_SOURCE,
-                overwrite: launchParameters.OVERWRITE,
+                sourceDir: launchParameters.sourceDir, 
+                targetDir: launchParameters.outputDir, 
+                removeSource: launchParameters.removeSource,
+                overwrite: launchParameters.overwrite,
             });
             log.info(`Compression completed successfully, compressed files:\n ${outputFiles.join('\n ')}`);
             break;
         }
         case 'verify': {
             const outputFiles = await verify({ 
-                sourceDir: launchParameters.SOURCE_DIR, 
-                datFile: launchParameters.DAT_FILE,
-                cuesheetsFile: launchParameters.CUESHEETS_FILE,
-                rename: launchParameters.RENAME
+                sourceDir: launchParameters.sourceDir, 
+                datFile: launchParameters.datFile,
+                cuesheetsFile: launchParameters.cuesheetsFile,
+                rename: launchParameters.rename,
+                force: launchParameters.force
             });
             log.info(`Verification completed successfully, verified files:\n ${outputFiles.join('\n ')}`);
             break;

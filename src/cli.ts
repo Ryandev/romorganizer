@@ -1,19 +1,10 @@
-import { guardDirectoryExists, guardFileExists } from './utils/guard';
+import { z } from 'zod';
 import commandLineArgs from 'command-line-args';
+import { guardDirectoryExists } from './utils/guard.js';
 
-export interface LaunchParameters {
-    command: 'compress' | 'verify';
-    SOURCE_DIR: string;
-    OUTPUT_DIR: string;
-    DAT_FILE: string;
-    CUESHEETS_FILE: string;
-    REMOVE_SOURCE: boolean;
-    USE_DAT_FILE_NAME: boolean;
-    RENAME: boolean;
-    OVERWRITE: boolean;
-}
+const COMMAND_NAME = 'romorganizer';
 
-// Define the command line option definitions with kebab-case naming
+/* Define command line option definitions */
 const optionDefinitions: commandLineArgs.OptionDefinition[] = [
     { 
         name: 'command',
@@ -74,17 +65,126 @@ const optionDefinitions: commandLineArgs.OptionDefinition[] = [
         defaultValue: false
     },
     {
+        name: 'force',
+        alias: 'f',
+        type: Boolean,
+        multiple: false,
+        defaultValue: false
+    },
+    {
         name: 'help',
         alias: 'h',
         type: Boolean,
-        multiple: false
+        multiple: false,
+        defaultValue: false
     }
 ];
 
-const COMMAND_NAME = 'romorganizer';
+/* Zod schema for command line arguments */
+const CompressSchema = z.object({
+    command: z.literal('compress'),
+    sourceDir: z.string().min(1, 'Source directory is required').refine(
+        (dir) => {
+            try {
+                guardDirectoryExists(dir);
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        { message: 'Source directory does not exist or is not accessible' }
+    ),
+    outputDir: z.string().min(1, 'Output directory is required').refine(
+        (dir) => {
+            try {
+                guardDirectoryExists(dir);
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        { message: 'Output directory does not exist or is not accessible' }
+    ),
+    removeSource: z.boolean().default(false),
+    useDatFileName: z.boolean().default(false),
+    rename: z.boolean().default(false),
+    overwrite: z.boolean().default(false),
+    force: z.boolean().default(false),
+    help: z.boolean().default(false),
+});
 
-// Help text for the CLI
-const helpText = `
+const VerifySchema = z.object({
+    command: z.literal('verify'),
+    sourceDir: z.string().min(1, 'Source directory is required').refine(
+        (dir) => {
+            try {
+                guardDirectoryExists(dir);
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        { message: 'Source directory does not exist or is not accessible' }
+    ),
+    outputDir: z.string().optional(),
+    datFile: z.string().min(1, 'DAT file is required'),
+    cuesheetsFile: z.string().min(1, 'Cuesheets file is required'),
+    removeSource: z.boolean().default(false),
+    useDatFileName: z.boolean().default(false),
+    rename: z.boolean().default(false),
+    overwrite: z.boolean().default(false),
+    force: z.boolean().default(false),
+    help: z.boolean().default(false),
+});
+
+const CommandSchema = z.discriminatedUnion('command', [CompressSchema, VerifySchema]);
+
+export type LaunchParameters = z.infer<typeof CommandSchema>;
+
+/* Help text for commands */
+const HELP_TEXT_MAP = {
+    compress: `
+${COMMAND_NAME} compress - Convert archive files to CHD format
+
+Usage: ${COMMAND_NAME} compress [options]
+
+Required Options:
+  -s, --source-dir <path>     Source directory containing files to compress
+  -o, --output-dir <path>     Output directory for compressed CHD files
+
+Optional Options:
+  -r, --remove-source         Remove source files after successful compression
+  -u, --use-dat-file-name     Use DAT file name for output files
+  -n, --rename                Rename source files to game name from DAT file
+  -w, --overwrite             Overwrite existing output files
+  -h, --help                  Show this help message
+
+Examples:
+  ${COMMAND_NAME} compress -s ./input -o ./output
+  ${COMMAND_NAME} compress --source-dir ./input --output-dir ./output --remove-source
+  ${COMMAND_NAME} compress --source-dir ./input --output-dir ./output --overwrite
+`,
+    verify: `
+${COMMAND_NAME} verify - Verify CHD files against DAT file
+
+Usage: ${COMMAND_NAME} verify [options]
+
+Required Options:
+  -s, --source-dir <path>     Source directory containing CHD files to verify
+  -d, --dat-file <path>       DAT file for validation (supports .dat and .zip files)
+  -c, --cuesheets-file <path> Cuesheets zip file containing master .cue files
+
+Optional Options:
+  -n, --rename                Rename source files to game name from DAT file
+  -f, --force                 Force re-verification even if metadata.json exists
+  -h, --help                  Show this help message
+
+Examples:
+  ${COMMAND_NAME} verify -s ./input -d ./datfile.dat -c ./cuesheets.zip
+  ${COMMAND_NAME} verify --source-dir ./input --dat-file ./datfile.zip --cuesheets-file ./cuesheets.zip --rename
+  ${COMMAND_NAME} verify --source-dir ./input --dat-file ./datfile.dat --cuesheets-file ./cuesheets.zip --force
+`,
+    global: `
 ${COMMAND_NAME} - Convert archive files to CHD format with DAT validation
 
 Usage: ${COMMAND_NAME} <command> [options]
@@ -102,62 +202,18 @@ Examples:
   ${COMMAND_NAME} compress --source-dir ./input --output-dir ./output --remove-source
 
 Use '${COMMAND_NAME} <command> --help' for command-specific help.
-`;
+`
+} as const;
 
-const compressHelpText = `
-${COMMAND_NAME} compress - Convert archive files to CHD format
-
-Usage: ${COMMAND_NAME} compress [options]
-
-Required Options:
-  -s, --source-dir <path>     Source directory containing files to process
-  -o, --output-dir <path>     Output directory for processed files
-
-Optional Options:
-  -r, --remove-source         Remove source files after processing
-  -w, --overwrite             Overwrite existing files in output directory
-  -h, --help                  Show this help message
-
-Examples:
-  ${COMMAND_NAME} compress -s ./input -o ./output
-  ${COMMAND_NAME} compress --source-dir ./input --output-dir ./output --remove-source
-  ${COMMAND_NAME} compress --source-dir ./input --output-dir ./output --overwrite
-`;
-
-const verifyHelpText = `
-${COMMAND_NAME} verify - Verify CHD files against DAT file
-
-Usage: ${COMMAND_NAME} verify [options]
-
-Required Options:
-  -s, --source-dir <path>     Source directory containing CHD files to verify
-  -d, --dat-file <path>       DAT file for validation (supports .dat and .zip files)
-  -c, --cuesheets-file <path> Cuesheets zip file containing master .cue files
-
-Optional Options:
-  -n, --rename                Rename source files to game name from DAT file
-  -h, --help                  Show this help message
-
-Examples:
-  ${COMMAND_NAME} verify -s ./input -d ./datfile.dat -c ./cuesheets.zip
-  ${COMMAND_NAME} verify --source-dir ./input --dat-file ./datfile.zip --cuesheets-file ./cuesheets.zip --rename
-
-Note: When using a zip file for --dat-file, the tool will automatically extract
-      the zip and find the .dat file inside to use for validation.
-      The --cuesheets-file is required for verification as it provides
-      master .cue files for enhanced validation and metadata generation.
-      When --rename is used, source files will be renamed to match the game name
-      from the DAT file, and metadata files will be updated accordingly.
-`;
-
+/**
+ * Shows help text for the specified command or global help
+ */
 function showHelp(command?: string): never {
-    if (command === 'compress') {
-        console.log(compressHelpText);
-    } else if (command === 'verify') {
-        console.log(verifyHelpText);
-    } else {
-        console.log(helpText);
-    }
+    const helpText = command && command in HELP_TEXT_MAP 
+        ? HELP_TEXT_MAP[command as keyof typeof HELP_TEXT_MAP]
+        : HELP_TEXT_MAP.global;
+    
+    console.log(helpText);
     
     /* Don't exit in test environment */
     if (process.env['NODE_ENV'] === 'test') {
@@ -168,99 +224,59 @@ function showHelp(command?: string): never {
 }
 
 /**
- * Parses command line arguments and applies default values
- * @param args - Array of command line arguments
- * @returns Parsed options with fallbacks and default values applied
+ * Parses command line arguments using command-line-args and validates them using Zod
  */
-function _commandLineArguments(args: string[]) {
-    const options = commandLineArgs(optionDefinitions, { argv: args, partial: true });
-    
-    /* Apply fallbacks and default values */
-    return {
-        command: String(options['command']),
-        'source-dir': String(options['source-dir'] ?? ''),
-        'output-dir': String(options['output-dir'] ?? ''),
-        'dat-file': String(options['dat-file'] ?? ''),
-        'cuesheets-file': String(options['cuesheets-file'] ?? ''),
-        'remove-source': Boolean(options['remove-source']),
-        'use-dat-file-name': Boolean(options['use-dat-file-name']),
-        'rename': Boolean(options['rename']),
-        'overwrite': Boolean(options['overwrite']),
-        'help': Boolean(options['help'])
-    };
+function _parseCommandLineArguments(args: string[]): LaunchParameters {
+    // Check for empty args first
+    if (args.length === 0) {
+        showHelp();
+    }
+
+    // Check if first argument is a valid command
+    const command = args[0];
+    if (command === '--help' || command === '-h') {
+        showHelp();
+    }
+
+    if (!command || !Object.keys(HELP_TEXT_MAP).includes(command)) {
+        // If first arg is not a valid command, show help
+        showHelp();
+    }
+
+    try {
+        // Parse arguments using command-line-args
+        const parsedOptions = commandLineArgs(optionDefinitions, { argv: args, partial: true });
+
+        // Transform parsed options to match our schema
+        const transformedArgs = {
+            command,
+            sourceDir: parsedOptions['source-dir'],
+            outputDir: parsedOptions['output-dir'],
+            datFile: parsedOptions['dat-file'],
+            cuesheetsFile: parsedOptions['cuesheets-file'],
+            removeSource: parsedOptions['remove-source'] || false,
+            useDatFileName: parsedOptions['use-dat-file-name'] || false,
+            rename: parsedOptions['rename'] || false,
+            overwrite: parsedOptions['overwrite'] || false,
+            force: parsedOptions['force'] || false,
+            help: parsedOptions['help'] || false,
+        };
+
+        // Validate with Zod schema
+        return CommandSchema.parse(transformedArgs);
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            const zodError = error as z.ZodError<unknown>;
+            const messages = zodError.issues.map((err: z.ZodIssue) => `${err.path.join('.')}: ${err.message}`).join('\n');
+            throw new Error(`Validation error:\n${messages}`);
+        }
+        throw error;
+    }
 }
 
-const _VALIDATE_ARGUMENTS = {
-    compress: (options: Record<string, string | boolean>) => {
-        const sourceDir = options['source-dir'];
-        const outputDir = options['output-dir'];
-        if (!sourceDir) {
-            throw new Error('Missing required argument: --source-dir (-s)');
-        }
-        if (!outputDir) {
-            throw new Error('Missing required argument: --output-dir (-o)');
-        }
-        guardDirectoryExists(
-            sourceDir,
-            `Source directory does not exist: ${sourceDir}`
-        );
-        guardDirectoryExists(
-            outputDir,
-            `Output directory does not exist: ${outputDir}`
-        );
-    },
-    verify: (options: Record<string, string | boolean>) => {
-        const sourceDir = options['source-dir'];
-        const datFile = options['dat-file'];
-        const cuesheetsFile = options['cuesheets-file'];
-        if (!sourceDir) {
-            throw new Error('Missing required argument: --source-dir (-s)');
-        }
-        if (!datFile) {
-            throw new Error('Missing required argument: --dat-file (-d)');
-        }
-        if (!cuesheetsFile) {
-            throw new Error('Missing required argument: --cuesheets-file (-c)');
-        }
-        guardDirectoryExists(
-            sourceDir,
-            `Source directory does not exist: ${sourceDir}`
-        );
-        guardFileExists(
-            datFile,
-            `DAT file does not exist: ${datFile}`
-        );
-        guardFileExists(
-            cuesheetsFile,
-            `Cuesheets file does not exist: ${cuesheetsFile}`
-        );
-    }
-} as const
-
+/**
+ * Loads and validates command line arguments
+ */
 export function loadArguments(args: string[]): LaunchParameters {
-    const options = _commandLineArguments(args);
-
-    // Check for help option first
-    if (options['help']) {
-        showHelp(options['command']);
-    }
-
-    const command = options['command'] as 'compress' | 'verify';
-    if ( !Object.keys(_VALIDATE_ARGUMENTS).includes(command) ) {
-        showHelp(command);
-    }
-
-    _VALIDATE_ARGUMENTS[command](options);
-
-    return {
-        command,
-        SOURCE_DIR: options['source-dir'],
-        OUTPUT_DIR: options['output-dir'],
-        DAT_FILE: options['dat-file'],
-        CUESHEETS_FILE: options['cuesheets-file'],
-        REMOVE_SOURCE: options['remove-source'],
-        USE_DAT_FILE_NAME: options['use-dat-file-name'],
-        RENAME: options['rename'],
-        OVERWRITE: options['overwrite'],
-    };
+    return _parseCommandLineArguments(args);
 }

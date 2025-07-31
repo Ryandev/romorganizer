@@ -64,8 +64,12 @@ describe('Guard Functions', () => {
             expect(() => guardNotFalsy(123)).not.toThrow();
             expect(() => guardNotFalsy({})).not.toThrow();
             expect(() => guardNotFalsy([])).not.toThrow();
-            expect(() => guardNotFalsy(0)).not.toThrow();
-            expect(() => guardNotFalsy(false)).not.toThrow();
+        });
+
+        test('should throw for falsy values', () => {
+            expect(() => guardNotFalsy(0)).toThrow('Value is falsy');
+            expect(() => guardNotFalsy(false)).toThrow('Value is falsy');
+            expect(() => guardNotFalsy('')).toThrow('Value is falsy');
         });
 
         test('should throw for null', () => {
