@@ -99,4 +99,3 @@ jobs:
         path: |
           romorganizer-${{ matrix.platform }}.tar.gz
           romorganizer-${{ matrix.platform }}.zip
-        retention-days: 30 # Test comment
