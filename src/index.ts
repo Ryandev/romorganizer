@@ -152,11 +152,14 @@ async function main() {
 
 // ES Module equivalent of require.main === module
 if (import.meta.url === `file://${process.argv[1]}`) {
-    try {
-        await main();
-    } catch (error) {
-        log.error('An error occurred');
-        log.error(`Unexpected error: ${error instanceof Error ? error.message : String(error)}`);
-        process.exit(1);
-    }
+    // eslint-disable-next-line unicorn/prefer-top-level-await
+    (async () => {
+        try {
+            await main();
+        } catch (error) {
+            log.error('An error occurred');
+            log.error(`Unexpected error: ${error instanceof Error ? error.message : String(error)}`);
+            process.exit(1);
+        }
+    })();
 }

@@ -81,7 +81,7 @@ const optionDefinitions: commandLineArgs.OptionDefinition[] = [
     }
 ];
 
-const COMMAND_NAME = 'romorg';
+const COMMAND_NAME = 'romorganizer';
 
 // Help text for the CLI
 const helpText = `

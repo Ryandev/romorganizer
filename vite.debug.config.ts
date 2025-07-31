@@ -32,7 +32,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: '7zTools',
+      name: 'RomOrganizer',
       fileName: 'index',
       formats: ['es']
     },

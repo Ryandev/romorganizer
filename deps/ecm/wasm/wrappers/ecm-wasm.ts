@@ -28,6 +28,22 @@ function getWasmDir(): string {
     // Ignore errors
   }
   
+  // Check if we're running from a packaged executable
+  try {
+    const { dirname } = require('path');
+    const { fileURLToPath } = require('url');
+    const executablePath = process.execPath;
+    const executableDir = dirname(executablePath);
+    const packagedPath = join(executableDir, 'deps', 'ecm', 'wasm', 'build');
+    
+    if (existsSync(join(packagedPath, 'unecm.js')) && existsSync(join(packagedPath, 'unecm.wasm'))) {
+      console.log('Using packaged path');
+      return packagedPath;
+    }
+  } catch (e) {
+    // Ignore errors
+  }
+  
   console.log('Using source path');
   return sourcePath;
 }

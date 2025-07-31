@@ -1,12 +1,10 @@
 {
-    "name": "7ztools",
+    "name": "romorganizer",
     "version": "1.0.0",
     "description": "A tool to convert archive files (7z, rar, zip) to CHD format",
-    "main": "dist/7z_to_chd.js",
+    "main": "dist/romorganizer.js",
     "type": "module",
-    "bin": {
-        "7z-to-chd": "./dist/7z_to_chd.js"
-    },
+    "bin": "./dist/romorganizer.js",
     "scripts": {
         "build": "yarn build:deps && vite build",
         "build:deps": "node deps/build.js",
@@ -14,9 +12,12 @@
         "dev": "vite",
         "dev:tsx": "tsx src/index.ts",
         "start": "node dist/index.js",
-        "clean": "rm -rf dist dist-package",
+        "clean": "rm -rf dist dist-package dist-pkg",
         "prebuild": "npm run clean",
         "package": "yarn build && ncc build dist/index.js -o dist-package && node scripts/fix-package.js && mv dist-package/index.js dist-package/index.mjs && chmod +x dist-package/index.mjs",
+        "build:pkg": "yarn build:deps && vite build --config vite.pkg.config.ts",
+        "package:native": "npx @yao-pkg/pkg -t node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64 -o romorganizer dist-pkg/index.js",
+        "build:native": "yarn build:pkg && npx @yao-pkg/pkg -t node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64 -o romorganizer dist-pkg/index.js",
         "lint": "eslint src/**/*.ts",
         "lint:fix": "eslint src/**/*.ts --fix",
         "check-pretty": "prettier --check src/**/*.{ts,js,json}",
@@ -27,6 +28,28 @@
         "check-audit": "yarn npm audit --recursive --severity critical --environment production --json",
         "test": "NODE_OPTIONS=\"--no-inspect --no-inspect-brk\" jest",
         "test:no-debug": "NODE_OPTIONS=\"--no-inspect --no-inspect-brk\" jest"
+    },
+    "yao-pkg": {
+        "entry": "dist/index.js",
+        "output": "romorganizer",
+        "targets": [
+            "node20-macos-arm64",
+            "node20-macos-x64",
+            "node20-linux-arm64",
+            "node20-linux-x64"
+        ],
+        "ignore": [
+            "**/*.test.ts",
+            "**/*.test.js",
+            "**/*.test.json",
+            "**/*.test.md",
+            "**/*.test.txt",
+            "dist/bin"
+        ],
+        "assets": [
+            "deps/ecm/wasm/build/*.wasm",
+            "deps/ecm/wasm/build/*.js"
+        ]
     },
     "keywords": [
         "7z",
@@ -40,7 +63,6 @@
     "author": "",
     "license": "MIT",
     "dependencies": {
-        "@yao-pkg/pkg": "^6.6.0",
         "adm-zip": "^0.5.16",
         "command-line-args": "^6.0.1",
         "fast-xml-parser": "^5.2.5",

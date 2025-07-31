@@ -36,15 +36,19 @@ jobs:
     - name: Package project
       run: yarn package
 
+    - name: Build native executables
+      run: yarn build:native
+
     - name: Create release assets
       run: |
         mkdir -p release-assets
         cp -r dist-package/* release-assets/
         cp package.json release-assets/
         cp README.md release-assets/
+        cp NATIVE_BUILDS.md release-assets/
         cd release-assets
-        tar -czf 7ztools-linux-x64.tar.gz *
-        zip -r 7ztools-linux-x64.zip *
+        tar -czf romorganizer-linux-x64.tar.gz *
+        zip -r romorganizer-linux-x64.zip *
 
     - name: Upload release assets
       uses: actions/upload-release-asset@v1
@@ -52,8 +56,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./release-assets/7ztools-linux-x64.tar.gz
-        asset_name: 7ztools-linux-x64.tar.gz
+        asset_path: ./release-assets/romorganizer-linux-x64.tar.gz
+        asset_name: romorganizer-linux-x64.tar.gz
         asset_content_type: application/gzip
 
     - name: Upload release assets (zip)
@@ -62,6 +66,44 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./release-assets/7ztools-linux-x64.zip
-        asset_name: 7ztools-linux-x64.zip
-        asset_content_type: application/zip 
+        asset_path: ./release-assets/romorganizer-linux-x64.zip
+        asset_name: romorganizer-linux-x64.zip
+        asset_content_type: application/zip
+
+    - name: Create native executables archive
+      run: |
+        tar -czf romorganizer-native-all.tar.gz romorganizer-*
+        zip -r romorganizer-native-all.zip romorganizer-*
+
+    - name: Upload all native executables
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./romorganizer-native-all.tar.gz
+        asset_name: romorganizer-native-all.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload all native executables (zip)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./romorganizer-native-all.zip
+        asset_name: romorganizer-native-all.zip
+        asset_content_type: application/zip
+
+    - name: Upload individual native executables
+      run: |
+        for file in romorganizer-*; do
+          if [ -f "$file" ] && [ ! -f "${file}.tar.gz" ] && [ ! -f "${file}.zip" ]; then
+            echo "Uploading $file..."
+            curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary "@$file" \
+              "${{ github.event.release.upload_url }}?name=$file"
+          fi
+        done 

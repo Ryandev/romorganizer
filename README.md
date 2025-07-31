@@ -1,4 +1,4 @@
-# 7zTools
+# RomOrganizer
 
 A Node.js tool to convert archive files (7z, rar, zip) containing game ROMs to CHD format for use with MAME and other emulators.
 
@@ -33,7 +33,7 @@ You'll need to install the ECM tools from: https://github.com/kidoz/ecm
 1. Clone this repository:
 ```bash
 git clone <repository-url>
-cd 7ztools
+cd romorganizer
 ```
 
 2. Install dependencies:
@@ -70,11 +70,34 @@ To create a single executable file that includes all dependencies:
 npm run package
 ```
 
-This will create a `dist-package/7z-to-chd.mjs` file that can be run directly:
+This will create a `dist-package/romorganizer.mjs` file that can be run directly:
 
 ```bash
-node dist-package/7z-to-chd.mjs -s /path/to/source -o /path/to/output
+node dist-package/romorganizer.mjs -s /path/to/source -o /path/to/output
 ```
+
+## Native Executables
+
+For even easier distribution, you can build native executables that don't require Node.js:
+
+```bash
+yarn build:native
+```
+
+This creates platform-specific executables:
+- `romorganizer-macos-arm64` (48MB) - macOS ARM64 (Apple Silicon)
+- `romorganizer-macos-x64` (54MB) - macOS x64 (Intel)
+- `romorganizer-linux-arm64` (53MB) - Linux ARM64
+- `romorganizer-linux-x64` (55MB) - Linux x64
+
+Usage:
+```bash
+./romorganizer-macos-arm64 -s /path/to/source -o /path/to/output
+```
+
+See [NATIVE_BUILDS.md](NATIVE_BUILDS.md) for more details.
+
+For information about the CI/CD pipeline and automated builds, see [CI_CD.md](CI_CD.md).
 
 ## Usage
 
@@ -201,7 +224,7 @@ The coverage configuration ensures that new code maintains the current quality s
 ```
 7ztools/
 ├── src/              # TypeScript source files
-│   ├── 7z_to_chd.ts  # Main application
+│   ├── romorganizer.ts  # Main application
 │   ├── logger.ts     # Logger module
 │   ├── guard.ts      # Guard functions for validation
 │   ├── cli.ts        # Command line interface module
