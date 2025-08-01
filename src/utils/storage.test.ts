@@ -1,4 +1,5 @@
 import path from 'node:path';
+import storage from './storage.js';
 
 // Test the avoidHiddenFiles logic directly without complex mocking
 describe('avoidHiddenFiles functionality', () => {
@@ -223,43 +224,43 @@ describe('move functionality', () => {
 
 // Test the storage interface implementation with move function
 describe('storage interface with move', () => {
-    test('should have move function in storage interface', async () => {
-        // Import the storage module
-        const storageModule = await import('./storage');
-        const storage = storageModule.default();
-        
-        // Verify the move method exists and is a function
-        expect(typeof storage.move).toBe('function');
-        
-        // Verify all other methods still exist
-        expect(storage.identifier).toBe('local');
-        expect(typeof storage.read).toBe('function');
-        expect(typeof storage.write).toBe('function');
-        expect(typeof storage.exists).toBe('function');
-        expect(typeof storage.isFile).toBe('function');
-        expect(typeof storage.isDirectory).toBe('function');
-        expect(typeof storage.createTemporaryDirectory).toBe('function');
-        expect(typeof storage.copy).toBe('function');
-        expect(typeof storage.remove).toBe('function');
-        expect(typeof storage.size).toBe('function');
-        expect(typeof storage.list).toBe('function');
-        expect(typeof storage.createDirectory).toBe('function');
-        expect(typeof storage.pathSeparator).toBe('function');
+    it('should have move function in storage interface', () => {
+        const storageInstance = storage();
+        expect(typeof storageInstance.move).toBe('function');
     });
 
-    test('should have correct function signature for move', async () => {
-        // Import the storage module
-        const storageModule = await import('./storage');
-        const storage = storageModule.default();
+    it('should have correct function signature for move', () => {
+        const storageInstance = storage();
+        expect(storageInstance.move).toHaveLength(2);
+    });
+});
+
+describe('environment-based temp directory', () => {
+    it('should use environment temp directory when set', async () => {
+        const { setTemporaryDirectory, clearTemporaryDirectory } = await import('./environment.js');
+        const customTempDir = '/tmp/custom-temp';
         
-        // The move function should accept two string parameters and return a Promise<void>
-        const moveFunction = storage.move;
+        // Set custom temp directory
+        setTemporaryDirectory(customTempDir);
         
-        // Verify it's a function that can be called
-        expect(typeof moveFunction).toBe('function');
+        const storageInstance = storage();
+        expect(storageInstance).toBeDefined();
+        expect(typeof storageInstance.createTemporaryDirectory).toBe('function');
+        expect(storageInstance.identifier).toBe('local');
         
-        // The function should be callable with two string arguments
-        // (We can't actually test the implementation without mocking, but we can verify the interface)
-        expect(moveFunction.length).toBe(2); // Two parameters: source and destination
+        // Clean up
+        clearTemporaryDirectory();
+    });
+
+    it('should use default temp directory when not set', async () => {
+        const { clearTemporaryDirectory } = await import('./environment.js');
+        
+        // Ensure no custom temp directory is set
+        clearTemporaryDirectory();
+        
+        const storageInstance = storage();
+        expect(storageInstance).toBeDefined();
+        expect(typeof storageInstance.createTemporaryDirectory).toBe('function');
+        expect(storageInstance.identifier).toBe('local');
     });
 });

@@ -147,7 +147,7 @@ export interface IStorage {
     
     /**
      * Creates a temporary directory with a unique name.
-     * The directory is created in the system's temporary directory location.
+     * The directory is created in the system's temporary directory location or the specified base directory.
      * 
      * @returns Promise resolving to the absolute path of the created temporary directory
      * @throws {Error} If a temporary directory cannot be created

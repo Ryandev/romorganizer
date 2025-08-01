@@ -18,6 +18,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { IStorage } from './storage.interface';
 import { log } from './logger';
+import { getTemporaryDirectory } from './environment.js';
 
 type FilePath = string;
 type FileDescriptor = number;
@@ -417,7 +418,8 @@ async function _copyRecursiveSync(
 
 function _createTemporaryDirectory(prefix: FilePath): Promise<FilePath> {
     return new Promise((resolve, reject) => {
-        mkdtemp(path.join(tmpdir(), prefix), (error, directoryPath) => {
+        const tempBase = getTemporaryDirectory() || tmpdir();
+        mkdtemp(path.join(tempBase, prefix), (error, directoryPath) => {
             if (error) {
                 _logException(error);
                 reject(error);

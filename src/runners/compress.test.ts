@@ -148,6 +148,51 @@ describe('createCHDRunner', () => {
         expect(result).toBeInstanceOf(Runner);
     });
 
+    it('should return a Runner instance for valid CUE file with uppercase extension', () => {
+        const result = createCHDRunner(['/path/to/test.CUE']);
+        expect(result).toBeInstanceOf(Runner);
+    });
+
+    it('should return a Runner instance for valid GDI file with uppercase extension', () => {
+        const result = createCHDRunner(['/path/to/test.GDI']);
+        expect(result).toBeInstanceOf(Runner);
+    });
+
+    it('should return a Runner instance for valid ISO file with uppercase extension', () => {
+        const result = createCHDRunner(['/path/to/test.ISO']);
+        expect(result).toBeInstanceOf(Runner);
+    });
+
+    it('should return a Runner instance for valid MDF file with uppercase extension', () => {
+        const result = createCHDRunner(['/path/to/test.MDF']);
+        expect(result).toBeInstanceOf(Runner);
+    });
+
+    it('should return a Runner instance for valid ECM file with uppercase extension', () => {
+        const result = createCHDRunner(['/path/to/test.ECM']);
+        expect(result).toBeInstanceOf(Runner);
+    });
+
+    it('should return a Runner instance for valid 7Z file with uppercase extension', () => {
+        const result = createCHDRunner(['/path/to/test.7Z']);
+        expect(result).toBeInstanceOf(Runner);
+    });
+
+    it('should return a Runner instance for valid CHD file with uppercase extension', () => {
+        const result = createCHDRunner(['/path/to/test.CHD']);
+        expect(result).toBeInstanceOf(Runner);
+    });
+
+    it('should return a Runner instance for valid RAR file with uppercase extension', () => {
+        const result = createCHDRunner(['/path/to/test.RAR']);
+        expect(result).toBeInstanceOf(Runner);
+    });
+
+    it('should return a Runner instance for valid ZIP file with uppercase extension', () => {
+        const result = createCHDRunner(['/path/to/test.ZIP']);
+        expect(result).toBeInstanceOf(Runner);
+    });
+
     it('should return an Error for unsupported file extension', () => {
         const result = createCHDRunner(['/path/to/test.txt']);
         expect(result).toBeInstanceOf(Error);

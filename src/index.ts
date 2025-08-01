@@ -4,6 +4,7 @@ import createVerifyRunner from "./runners/verify.js";
 import { loadDatFromPath } from "./utils/datLoader.js";
 import { loadCuesheetsFromZip } from "./utils/cuesheetLoader.js";
 import storage from "./utils/storage.js";
+import { setTemporaryDirectory } from "./utils/environment.js";
 import { log } from "./utils/logger.js";
 import path from "node:path";
 import metadata from "./types/metadata.js";
@@ -137,6 +138,11 @@ async function main() {
     const inputArguments = process.argv.slice(2);
     const launchParameters = loadArguments(inputArguments);
     
+    // Set temporary directory from CLI if provided
+    if (launchParameters.tempDir) {
+        setTemporaryDirectory(launchParameters.tempDir);
+    }
+    
     switch (launchParameters.command) {
         case 'compress': {
             const outputFiles = await compress({ 
@@ -154,7 +160,7 @@ async function main() {
                 datFile: launchParameters.datFile,
                 cuesheetsFile: launchParameters.cuesheetsFile,
                 rename: launchParameters.rename,
-                force: launchParameters.force
+                force: launchParameters.force,
             });
             log.info(`Verification completed successfully, verified files:\n ${outputFiles.join('\n ')}`);
             break;

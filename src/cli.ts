@@ -77,6 +77,12 @@ const optionDefinitions: commandLineArgs.OptionDefinition[] = [
         type: Boolean,
         multiple: false,
         defaultValue: false
+    },
+    {
+        name: 'temp-dir',
+        alias: 't',
+        type: String,
+        multiple: false
     }
 ];
 
@@ -105,6 +111,7 @@ const CompressSchema = z.object({
         },
         { message: 'Output directory does not exist or is not accessible' }
     ),
+    tempDir: z.string().optional(),
     removeSource: z.boolean().default(false),
     useDatFileName: z.boolean().default(false),
     rename: z.boolean().default(false),
@@ -127,6 +134,7 @@ const VerifySchema = z.object({
         { message: 'Source directory does not exist or is not accessible' }
     ),
     outputDir: z.string().optional(),
+    tempDir: z.string().optional(),
     datFile: z.string().min(1, 'DAT file is required'),
     cuesheetsFile: z.string().min(1, 'Cuesheets file is required'),
     removeSource: z.boolean().default(false),
@@ -153,6 +161,7 @@ Required Options:
   -o, --output-dir <path>     Output directory for compressed CHD files
 
 Optional Options:
+  -t, --temp-dir <path>       Temporary directory for processing (default: system temp)
   -r, --remove-source         Remove source files after successful compression
   -u, --use-dat-file-name     Use DAT file name for output files
   -n, --rename                Rename source files to game name from DAT file
@@ -175,6 +184,7 @@ Required Options:
   -c, --cuesheets-file <path> Cuesheets zip file containing master .cue files
 
 Optional Options:
+  -t, --temp-dir <path>       Temporary directory for processing (default: system temp)
   -n, --rename                Rename source files to game name from DAT file
   -f, --force                 Force re-verification even if metadata.json exists
   -h, --help                  Show this help message
@@ -234,7 +244,7 @@ function _parseCommandLineArguments(args: string[]): LaunchParameters {
 
     // Check if first argument is a valid command
     const command = args[0];
-    if (command === '--help' || command === '-h') {
+    if (command === 'help' || command === '--help' || command === '-h') {
         showHelp();
     }
 
@@ -247,11 +257,17 @@ function _parseCommandLineArguments(args: string[]): LaunchParameters {
         // Parse arguments using command-line-args
         const parsedOptions = commandLineArgs(optionDefinitions, { argv: args, partial: true });
 
+        // Check for help flag before validation
+        if (parsedOptions['help'] || parsedOptions['h']) {
+            showHelp(command);
+        }
+
         // Transform parsed options to match our schema
         const transformedArgs = {
             command,
             sourceDir: parsedOptions['source-dir'],
             outputDir: parsedOptions['output-dir'],
+            tempDir: parsedOptions['temp-dir'],
             datFile: parsedOptions['dat-file'],
             cuesheetsFile: parsedOptions['cuesheets-file'],
             removeSource: parsedOptions['remove-source'] || false,
