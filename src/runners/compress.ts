@@ -183,7 +183,11 @@ export class Runner implements IRunner {
     async start(): Promise<string[]> {
         const workingDirectory = await this.storage.createTemporaryDirectory();
         for ( const sourceFile of this.sourceFiles) {
-            const destinationFile = path.join(workingDirectory, path.basename(sourceFile));
+            const basename = path.basename(sourceFile);
+            const extension = _fileExtension(basename);
+            const nameWithoutExt = basename.slice(0, -(extension.length + 1)); /* Remove extension including the dot */
+            const lowercaseBasename = `${nameWithoutExt}.${extension.toLowerCase()}`;
+            const destinationFile = path.join(workingDirectory, lowercaseBasename);
             await this.storage.copy(sourceFile, destinationFile);
         }
         const currentFiles = await this._performAllExtractionOperations(workingDirectory);
@@ -227,8 +231,8 @@ export class Runner implements IRunner {
 }
 
 export default function createCHDRunner(sourceFiles: string[]): IRunner|Error {
-    const fileExtensions = new Set(sourceFiles.map(file => _fileExtension(file)));
-    const supportedExtensions = new Set(EXTRACT_OPERATIONS.keys());
+    const fileExtensions = new Set(sourceFiles.map(file => _fileExtension(file).toLowerCase()));
+    const supportedExtensions = new Set([...EXTRACT_OPERATIONS.keys()].map(ext => ext.toLowerCase()));
     const compressibleExtensions = new Set(['cue', 'gdi']); /* Files that can be directly compressed to CHD */
     
     /* Check if any file can be extracted or directly compressed */
