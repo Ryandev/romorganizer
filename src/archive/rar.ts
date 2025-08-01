@@ -11,9 +11,9 @@ const DEFAULT_TIMEOUT_MS = 300_000;
 
 /* Resolve in this order of preference */
 const MAP_EXTRACT_COMMANDS = [
-    { name: 'tar', command: (filePath: string, outputDir: string, timeoutMs: number = DEFAULT_TIMEOUT_MS) => withTimeout($`tar -xvf ${filePath} -C ${outputDir}`, timeoutMs) },
     { name: 'unrar', command: (filePath: string, outputDir: string, timeoutMs: number = DEFAULT_TIMEOUT_MS) => withTimeout($`unrar x ${filePath} ${outputDir}`, timeoutMs) },
     { name: 'unrar-free', command: (filePath: string, outputDir: string, timeoutMs: number = DEFAULT_TIMEOUT_MS) => withTimeout($`unrar-free x ${filePath} ${outputDir}`, timeoutMs) },
+    { name: 'tar', command: (filePath: string, outputDir: string, timeoutMs: number = DEFAULT_TIMEOUT_MS) => withTimeout($`tar -xvf ${filePath} -C ${outputDir}`, timeoutMs) },
     { name: 'rar', command: (filePath: string, outputDir: string, timeoutMs: number = DEFAULT_TIMEOUT_MS) => withTimeout($`rar x ${filePath} ${outputDir}`, timeoutMs) },
 ] as const;
 

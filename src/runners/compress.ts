@@ -149,7 +149,7 @@ export class Runner implements IRunner {
             for (const filePath of currentFiles) {
                 try {
                     const extension = _fileExtension(filePath);
-                    const extractOperation = EXTRACT_OPERATIONS.get(extension);
+                    const extractOperation = EXTRACT_OPERATIONS.get(extension.toLowerCase());
                     
                     if (!extractOperation) {
                         continue
@@ -183,11 +183,7 @@ export class Runner implements IRunner {
     async start(): Promise<string[]> {
         const workingDirectory = await this.storage.createTemporaryDirectory();
         for ( const sourceFile of this.sourceFiles) {
-            const basename = path.basename(sourceFile);
-            const extension = _fileExtension(basename);
-            const nameWithoutExt = basename.slice(0, -(extension.length + 1)); /* Remove extension including the dot */
-            const lowercaseBasename = `${nameWithoutExt}.${extension.toLowerCase()}`;
-            const destinationFile = path.join(workingDirectory, lowercaseBasename);
+            const destinationFile = path.join(workingDirectory, path.basename(sourceFile));
             await this.storage.copy(sourceFile, destinationFile);
         }
         const currentFiles = await this._performAllExtractionOperations(workingDirectory);
