@@ -60,25 +60,25 @@ jobs:
     - name: Check code formatting
       run: |
         if [ "${{ matrix.package-manager }}" = "yarn" ]; then
-          yarn check-pretty
+          yarn pretty:check
         else
-          npm run check-pretty
+          npm run pretty:check
         fi
 
     - name: Check spelling
       run: |
         if [ "${{ matrix.package-manager }}" = "yarn" ]; then
-          yarn check-spell
+          yarn spell:check
         else
-          npm run check-spell
+          npm run spell:check
         fi
 
     - name: Run security audit
       run: |
         if [ "${{ matrix.package-manager }}" = "yarn" ]; then
-          yarn check-audit
+          yarn audit:check
         else
-          npm run check-audit
+          npm run audit:check
         fi
 
     - name: Run tests (excluding system-dependent tests)
@@ -92,9 +92,9 @@ jobs:
     - name: Run tests with coverage (excluding system-dependent tests)
       run: |
         if [ "${{ matrix.package-manager }}" = "yarn" ]; then
-          yarn test:coverage --testPathIgnorePatterns="scripts/other/__tests__" --testPathIgnorePatterns="src/archive/rar.test.ts" --testPathIgnorePatterns="src/archive/seven-zip.test.ts" --testPathIgnorePatterns="src/utils/storage.test.ts"
+          yarn test --coverage --testPathIgnorePatterns="scripts/other/__tests__" --testPathIgnorePatterns="src/archive/rar.test.ts" --testPathIgnorePatterns="src/archive/seven-zip.test.ts" --testPathIgnorePatterns="src/utils/storage.test.ts"
         else
-          npm run test:coverage -- --testPathIgnorePatterns="scripts/other/__tests__" --testPathIgnorePatterns="src/archive/rar.test.ts" --testPathIgnorePatterns="src/archive/seven-zip.test.ts" --testPathIgnorePatterns="src/utils/storage.test.ts"
+          npm test -- --coverage --testPathIgnorePatterns="scripts/other/__tests__" --testPathIgnorePatterns="src/archive/rar.test.ts" --testPathIgnorePatterns="src/archive/seven-zip.test.ts" --testPathIgnorePatterns="src/utils/storage.test.ts"
         fi
 
     - name: Build project

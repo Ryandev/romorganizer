@@ -197,7 +197,7 @@ The ESLint configuration includes:
 - `npm run lint:fix`: Fix automatically fixable ESLint issues
 - `npm run test`: Run Jest tests
 - `npm run test:watch`: Run tests in watch mode
-- `npm run test:coverage`: Run tests with coverage reporting
+- `npm test -- --coverage`: Run tests with coverage reporting
 - `npm run test -- --coverage`: Run tests with coverage (alternative syntax)
 
 ### Test Coverage
@@ -214,10 +214,10 @@ Coverage reports are generated in multiple formats:
 - **Console**: Summary output in the terminal
 
 The coverage configuration ensures that new code maintains the current quality standards and helps identify untested areas of the codebase.
-- `npm run check-pretty`: Check code formatting with Prettier
-- `npm run fix-pretty`: Fix code formatting with Prettier
-- `npm run check-spell`: Check spelling with cspell
-- `npm run audit`: Run security audit on dependencies
+- `npm run pretty:check`: Check code formatting with Prettier
+- `npm run pretty:fix`: Fix code formatting with Prettier
+- `npm run spell:check`: Check spelling with cspell
+- `npm run audit:check`: Run security audit on dependencies
 - `npm run audit:fix`: Run security audit and attempt to fix issues
 
 ### Project structure:

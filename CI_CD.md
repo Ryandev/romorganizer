@@ -14,9 +14,9 @@ This project uses GitHub Actions for continuous integration and deployment.
 - **test-and-build**: Runs on Ubuntu and macOS with Node.js 20/21 and yarn/npm
   - Installs dependencies
   - Runs linting (`yarn lint`)
-  - Checks code formatting (`yarn check-pretty`)
-  - Checks spelling (`yarn check-spell`)
-  - Runs security audit (`yarn check-audit`)
+  - Checks code formatting (`yarn pretty:check`)
+- Checks spelling (`yarn spell:check`)
+- Runs security audit (`yarn audit:check`)
   - Runs tests (excluding system-dependent tests)
   - Builds the project (`yarn build`)
   - Creates package (`yarn package`)
