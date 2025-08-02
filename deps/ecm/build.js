@@ -13,11 +13,11 @@ const projectRoot = join(ecmRoot, '..', '..');
 
 console.log('Building ECM WASM modules...');
 
-// Setup Emscripten environment
+/* Setup Emscripten environment */
 const emsdkPath = join(ecmRoot, 'emsdk');
 const emccPath = join(emsdkPath, 'upstream', 'emscripten', 'emcc');
 
-// Check if Emscripten is available
+/* Check if Emscripten is available */
 try {
   execSync(`"${emccPath}" --version`, {
     stdio: 'pipe',
@@ -33,7 +33,7 @@ try {
 const wasmBuildDir = join(ecmRoot, 'wasm', 'build');
 const ecmSrcDir = join(ecmRoot, 'src', 'src');
 
-// Ensure build directory exists
+/* Ensure build directory exists */
 try {
   execSync(`mkdir -p "${wasmBuildDir}"`, { stdio: 'inherit' });
 } catch (error) {
@@ -41,7 +41,7 @@ try {
   process.exit(1);
 }
 
-// Build ecm.wasm
+/* Build ecm.wasm */
 console.log('Building ecm.wasm...');
 try {
   const ecmCommand = `"${emccPath}" "${join(ecmSrcDir, 'ecm.c')}" -o "${join(wasmBuildDir, 'ecm.js')}" \
@@ -69,7 +69,7 @@ try {
   process.exit(1);
 }
 
-// Build unecm.wasm
+/* Build unecm.wasm */
 console.log('Building unecm.wasm...');
 try {
   const unecmCommand = `"${emccPath}" "${join(ecmSrcDir, 'unecm.c')}" -o "${join(wasmBuildDir, 'unecm.js')}" \

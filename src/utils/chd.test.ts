@@ -4,22 +4,20 @@ import storage, { IStorage } from './storage';
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Helper function to create a valid CD-ROM binary file
+/* Helper function to create a valid CD-ROM binary file */
 function createValidBinFile(sizeInSectors: number = 1): Uint8Array {
-    // CD-ROM sector size is 2352 bytes
+    /* CD-ROM sector size is 2352 bytes */
     const sectorSize = 2352;
     const totalSize = sizeInSectors * sectorSize;
     const buffer = new Uint8Array(totalSize);
-    
-    // Fill with some pattern (zeros for simplicity, but could be more realistic)
+
+    /* Fill with some pattern (zeros for simplicity, but could be more realistic) */
     for (let i = 0; i < totalSize; i++) {
-        buffer[i] = i % 256; // Simple pattern
+        buffer[i] = i % 256; /* Simple pattern */
     }
-    
+
     return buffer;
 }
-
-
 
 describe('chd', () => {
     let testDir: string;
@@ -33,21 +31,21 @@ describe('chd', () => {
     });
 
     afterEach(async () => {
-        // Clean up temporary test directory
+        /* Clean up temporary test directory */
         await storageInstance.remove(testDir);
-        
-        // Clean up any files that might have been created in the current directory
+
+        /* Clean up any files that might have been created in the current directory */
         for (const filePath of filesToCleanup) {
             try {
                 if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
                 }
             } catch {
-                // Ignore cleanup errors
+                /* Ignore cleanup errors */
             }
         }
-        
-        // Also clean up common test files that might be created in the current directory
+
+        /* Also clean up common test files that might be created in the current directory */
         const commonTestFiles = [
             'test.bin',
             'test.chd',
@@ -58,9 +56,9 @@ describe('chd', () => {
             'game.bin',
             'multi.cue',
             'track01.bin',
-            'track02.bin'
+            'track02.bin',
         ];
-        
+
         for (const fileName of commonTestFiles) {
             try {
                 const filePath = path.join(process.cwd(), fileName);
@@ -68,196 +66,242 @@ describe('chd', () => {
                     fs.unlinkSync(filePath);
                 }
             } catch {
-                // Ignore cleanup errors
+                /* Ignore cleanup errors */
             }
         }
     });
 
     describe('create', () => {
         it('should create CHD file from cue format', async () => {
-            // Create test files
+            /* Create test files */
             const cueFilePath = join(testDir, 'test.cue');
             const binFilePath = join(testDir, 'test.bin');
-            
-            const cueContent = 'FILE "test.bin" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00';
-            const binContent = createValidBinFile(1); // Create 1 sector of valid CD-ROM data
 
-            await storageInstance.write(cueFilePath, new TextEncoder().encode(cueContent));
+            const cueContent =
+                'FILE "test.bin" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00';
+            const binContent =
+                createValidBinFile(
+                    1
+                ); /* Create 1 sector of valid CD-ROM data */
+
+            await storageInstance.write(
+                cueFilePath,
+                new TextEncoder().encode(cueContent)
+            );
             await storageInstance.write(binFilePath, binContent);
 
-            // Create CHD file from cue format
+            /* Create CHD file from cue format */
             try {
-                const result = await chd.create({ inputFilePath: cueFilePath, format: 'cue' });
+                const result = await chd.create({
+                    inputFilePath: cueFilePath,
+                    format: 'cue',
+                });
 
-                // Verify result is a path to a CHD file
+                /* Verify result is a path to a CHD file */
                 expect(result).toMatch(/\.chd$/);
                 expect(result).toContain('test.chd');
             } catch (error) {
-                // If chdman is not installed or other errors occur, just verify it's an error
+                /* If chdman is not installed or other errors occur, just verify it's an error */
                 expect(error).toBeInstanceOf(Error);
             }
         }, 30_000);
 
         it('should create CHD file from gdi format', async () => {
-            // Create test files
+            /* Create test files */
             const gdiFilePath = join(testDir, 'test.gdi');
-            
+
             const gdiContent = `1 0 4 2352 track01.bin 0
 2 1 0 2352 track02.bin 0`;
-            const binContent = createValidBinFile(1); // Create 1 sector of valid CD-ROM data
-            
-            await storageInstance.write(gdiFilePath, new TextEncoder().encode(gdiContent));
-            await storageInstance.write(join(testDir, 'track01.bin'), binContent);
-            await storageInstance.write(join(testDir, 'track02.bin'), binContent);
+            const binContent =
+                createValidBinFile(
+                    1
+                ); /* Create 1 sector of valid CD-ROM data */
 
-            // Create CHD file from gdi format
+            await storageInstance.write(
+                gdiFilePath,
+                new TextEncoder().encode(gdiContent)
+            );
+            await storageInstance.write(
+                join(testDir, 'track01.bin'),
+                binContent
+            );
+            await storageInstance.write(
+                join(testDir, 'track02.bin'),
+                binContent
+            );
+
+            /* Create CHD file from gdi format */
             try {
-                const result = await chd.create({ 
-                    inputFilePath: gdiFilePath, 
-                    format: 'gdi' 
+                const result = await chd.create({
+                    inputFilePath: gdiFilePath,
+                    format: 'gdi',
                 });
 
-                // Verify result is a path to a CHD file
+                /* Verify result is a path to a CHD file */
                 expect(result).toMatch(/\.chd$/);
                 expect(result).toContain('test.chd');
             } catch (error) {
-                // If chdman is not installed or other errors occur, just verify it's an error
+                /* If chdman is not installed or other errors occur, just verify it's an error */
                 expect(error).toBeInstanceOf(Error);
             }
         }, 30_000);
 
         it('should create CHD file from iso format', async () => {
-            // Create test files
+            /* Create test files */
             const isoFilePath = join(testDir, 'test.iso');
-            
-            const isoContent = createValidBinFile(1); // Create 1 sector of valid CD-ROM data
-            
+
+            const isoContent =
+                createValidBinFile(
+                    1
+                ); /* Create 1 sector of valid CD-ROM data */
+
             await storageInstance.write(isoFilePath, isoContent);
 
-            // Create CHD file from iso format
+            /* Create CHD file from iso format */
             try {
-                const result = await chd.create({ 
-                    inputFilePath: isoFilePath, 
-                    format: 'iso' 
+                const result = await chd.create({
+                    inputFilePath: isoFilePath,
+                    format: 'iso',
                 });
 
-                // Verify result is a path to a CHD file
+                /* Verify result is a path to a CHD file */
                 expect(result).toMatch(/\.chd$/);
                 expect(result).toContain('test.chd');
             } catch (error) {
-                // If chdman is not installed or other errors occur, just verify it's an error
+                /* If chdman is not installed or other errors occur, just verify it's an error */
                 expect(error).toBeInstanceOf(Error);
             }
         }, 30_000);
 
         it('should throw error if input file does not exist', async () => {
             const nonExistentPath = join(testDir, 'nonexistent.cue');
-            
-            await expect(chd.create({ inputFilePath: nonExistentPath, format: 'cue' }))
-                .rejects.toThrow('Input file does not exist: ' + nonExistentPath);
+
+            await expect(
+                chd.create({ inputFilePath: nonExistentPath, format: 'cue' })
+            ).rejects.toThrow('Input file does not exist: ' + nonExistentPath);
         });
 
         it('should throw error if input file extension does not match format', async () => {
-            // Create a file with wrong extension
+            /* Create a file with wrong extension */
             const wrongExtensionPath = join(testDir, 'test.txt');
             const content = 'Some content';
-            await storageInstance.write(wrongExtensionPath, new TextEncoder().encode(content));
+            await storageInstance.write(
+                wrongExtensionPath,
+                new TextEncoder().encode(content)
+            );
 
-            // Try to create CHD with wrong format
-            await expect(chd.create({ 
-                inputFilePath: wrongExtensionPath, 
-                format: 'cue' 
-            })).rejects.toThrow('Input file extension does not match format: txt !== cue');
+            /* Try to create CHD with wrong format */
+            await expect(
+                chd.create({
+                    inputFilePath: wrongExtensionPath,
+                    format: 'cue',
+                })
+            ).rejects.toThrow(
+                'Input file extension does not match format: txt !== cue'
+            );
         });
     });
 
     describe('extract', () => {
         it('should extract CHD file to cue format', async () => {
-            // Create a mock CHD file
+            /* Create a mock CHD file */
             const chdFilePath = join(testDir, 'test.chd');
             const chdContent = new TextEncoder().encode('Mock CHD content');
             await storageInstance.write(chdFilePath, chdContent);
 
-            // Extract CHD file to cue format
+            /* Extract CHD file to cue format */
             try {
-                const result = await chd.extract({ chdFilePath, format: 'cue' });
+                const result = await chd.extract({
+                    chdFilePath,
+                    format: 'cue',
+                });
 
-                // Verify result is a path to a cue file
+                /* Verify result is a path to a cue file */
                 expect(result).toMatch(/\.cue$/);
                 expect(result).toContain('test.cue');
             } catch (error) {
-                // If chdman is not installed or other errors occur, just verify it's an error
+                /* If chdman is not installed or other errors occur, just verify it's an error */
                 expect(error).toBeInstanceOf(Error);
             }
         }, 30_000);
 
         it('should extract CHD file to gdi format', async () => {
-            // Create a mock CHD file
+            /* Create a mock CHD file */
             const chdFilePath = join(testDir, 'test.chd');
             const chdContent = new TextEncoder().encode('Mock CHD content');
             await storageInstance.write(chdFilePath, chdContent);
 
-            // Extract CHD file to gdi format
+            /* Extract CHD file to gdi format */
             try {
-                const result = await chd.extract({ chdFilePath, format: 'gdi' });
+                const result = await chd.extract({
+                    chdFilePath,
+                    format: 'gdi',
+                });
 
-                // Verify result is a path to a gdi file
+                /* Verify result is a path to a gdi file */
                 expect(result).toMatch(/\.gdi$/);
                 expect(result).toContain('test.gdi');
             } catch (error) {
-                // If chdman is not installed or other errors occur, just verify it's an error
+                /* If chdman is not installed or other errors occur, just verify it's an error */
                 expect(error).toBeInstanceOf(Error);
             }
         }, 30_000);
 
         it('should extract CHD file to iso format', async () => {
-            // Create a mock CHD file
+            /* Create a mock CHD file */
             const chdFilePath = join(testDir, 'test.chd');
             const chdContent = new TextEncoder().encode('Mock CHD content');
             await storageInstance.write(chdFilePath, chdContent);
 
-            // Extract CHD file to iso format
+            /* Extract CHD file to iso format */
             try {
-                const result = await chd.extract({ chdFilePath, format: 'iso' });
+                const result = await chd.extract({
+                    chdFilePath,
+                    format: 'iso',
+                });
 
-                // Verify result is a path to an iso file
+                /* Verify result is a path to an iso file */
                 expect(result).toMatch(/\.iso$/);
                 expect(result).toContain('test.iso');
             } catch (error) {
-                // If chdman is not installed or other errors occur, just verify it's an error
+                /* If chdman is not installed or other errors occur, just verify it's an error */
                 expect(error).toBeInstanceOf(Error);
             }
         }, 30_000);
 
         it('should throw error if CHD file does not exist', async () => {
             const nonExistentChdPath = join(testDir, 'nonexistent.chd');
-            
-            await expect(chd.extract({ chdFilePath: nonExistentChdPath, format: 'cue' }))
-                .rejects.toThrow('CHD file does not exist: ' + nonExistentChdPath);
+
+            await expect(
+                chd.extract({ chdFilePath: nonExistentChdPath, format: 'cue' })
+            ).rejects.toThrow('CHD file does not exist: ' + nonExistentChdPath);
         });
     });
 
     describe('verify', () => {
         it('should verify CHD file', async () => {
-            // Create a mock CHD file
+            /* Create a mock CHD file */
             const chdFilePath = join(testDir, 'test.chd');
             const chdContent = new TextEncoder().encode('Mock CHD content');
             await storageInstance.write(chdFilePath, chdContent);
 
-            // Verify CHD file (should not throw)
+            /* Verify CHD file (should not throw) */
             try {
-                await expect(chd.verify({ chdFilePath })).resolves.toBeUndefined();
+                await expect(
+                    chd.verify({ chdFilePath })
+                ).resolves.toBeUndefined();
             } catch (error) {
-                // If chdman is not installed or other errors occur, just verify it's an error
+                /* If chdman is not installed or other errors occur, just verify it's an error */
                 expect(error).toBeInstanceOf(Error);
             }
         }, 30_000);
 
         it('should throw error if CHD file does not exist', async () => {
             const nonExistentChdPath = join(testDir, 'nonexistent.chd');
-            
-            await expect(chd.verify({ chdFilePath: nonExistentChdPath }))
-                .rejects.toThrow('CHD file does not exist: ' + nonExistentChdPath);
+
+            await expect(
+                chd.verify({ chdFilePath: nonExistentChdPath })
+            ).rejects.toThrow('CHD file does not exist: ' + nonExistentChdPath);
         });
     });
-}); 
+});

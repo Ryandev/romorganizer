@@ -8,16 +8,16 @@ function guard(condition: boolean, message: string): asserts condition {
 }
 
 function getWasmDir(): string {
-  // Check if we're running from the built version (dist directory)
+  /* Check if we're running from the built version (dist directory) */
   const distPath = join(process.cwd(), 'dist', 'deps', 'ecm', 'wasm', 'build');
   const sourcePath = join(process.cwd(), 'deps', 'ecm', 'wasm', 'build');
   
-  // For debugging, let's check both paths
+  /* For debugging, let's check both paths */
   console.log('Checking paths:');
   console.log('  distPath:', distPath);
   console.log('  sourcePath:', sourcePath);
   
-  // Try to use dist path if it exists and has the files
+  /* Try to use dist path if it exists and has the files */
   try {
     const { existsSync } = require('fs');
     if (existsSync(join(distPath, 'unecm.js')) && existsSync(join(distPath, 'unecm.wasm'))) {
@@ -25,10 +25,10 @@ function getWasmDir(): string {
       return distPath;
     }
   } catch (e) {
-    // Ignore errors
+    /* Ignore errors */
   }
   
-  // Check if we're running from a packaged executable
+  /* Check if we're running from a packaged executable */
   try {
     const { dirname } = require('path');
     const { fileURLToPath } = require('url');
@@ -41,7 +41,7 @@ function getWasmDir(): string {
       return packagedPath;
     }
   } catch (e) {
-    // Ignore errors
+    /* Ignore errors */
   }
   
   console.log('Using source path');
@@ -58,7 +58,7 @@ function debugModule(module: any): void {
     }
   }
   
-  // Check for specific functions we need
+  /* Check for specific functions we need */
   console.log('Checking for specific functions:');
   console.log('  _ecmify:', typeof module._ecmify);
   console.log('  _unecmify:', typeof module._unecmify);
@@ -73,11 +73,11 @@ async function loadECMModule(): Promise<ECMModule> {
     const wasmPath = join(getWasmDir(), 'ecm.js');
     console.log('Loading ECM WASM from:', wasmPath);
     
-    // Try different import strategies for compatibility
+    /* Try different import strategies for compatibility */
     let importedModule;
     let createECMModule;
     
-    // Import the ES module directly
+    /* Import the ES module directly */
     importedModule = await import(wasmPath);
     createECMModule = importedModule.default;
     
@@ -91,7 +91,7 @@ async function loadECMModule(): Promise<ECMModule> {
     const module = await createECMModule();
     console.log('ECM module instance created');
     
-    // Wait for the module to be fully initialized
+    /* Wait for the module to be fully initialized */
     if (module.onRuntimeInitialized) {
       await new Promise<void>((resolve) => {
         module.onRuntimeInitialized = () => resolve();
@@ -112,11 +112,11 @@ async function loadUNECMModule(): Promise<UNECMModule> {
     const wasmPath = join(getWasmDir(), 'unecm.js');
     console.log('Loading UNECM WASM from:', wasmPath);
     
-    // Try different import strategies for compatibility
+    /* Try different import strategies for compatibility */
     let importedModule;
     let createUNECMModule;
     
-    // Import the ES module directly
+    /* Import the ES module directly */
     importedModule = await import(wasmPath);
     createUNECMModule = importedModule.default;
     
@@ -130,7 +130,7 @@ async function loadUNECMModule(): Promise<UNECMModule> {
     const module = await createUNECMModule();
     console.log('UNECM module instance created');
     
-    // Wait for the module to be fully initialized
+    /* Wait for the module to be fully initialized */
     if (module.onRuntimeInitialized) {
       await new Promise<void>((resolve) => {
         module.onRuntimeInitialized = () => resolve();
@@ -148,47 +148,47 @@ async function loadUNECMModule(): Promise<UNECMModule> {
 
 async function runECMCommand(module: ECMModule, inputPath: string, outputPath: string): Promise<void> {
   try {
-    // Read the input file
+    /* Read the input file */
     const { readFile } = await import('fs/promises');
     const inputData = await readFile(inputPath);
     guard(inputData.length > 0, `ECM command failed to read input file: ${inputPath}`);
 
-    // Write input file to WASM virtual filesystem
+    /* Write input file to WASM virtual filesystem */
     const inputFileName = 'input.bin';
     const outputFileName = 'output.ecm';
 
-    // Write to virtual filesystem
+    /* Write to virtual filesystem */
     module.FS.writeFile(inputFileName, inputData);
 
-    // Open files in WASM filesystem
+    /* Open files in WASM filesystem */
     const inStream = module.FS.open(inputFileName, 'r');
     const outStream = module.FS.open(outputFileName, 'w');
 
-    // Call ecmify function using ccall for better compatibility
+    /* Call ecmify function using ccall for better compatibility */
     const result = module.ccall('ecmify', 'number', ['number', 'number'], [inStream.fd, outStream.fd]);
 
-    // Don't close files here - the C code already closes them with fclose()
-    // module.FS.close(inStream);
-    // module.FS.close(outStream);
+    /* Don't close files here - the C code already closes them with fclose() */
+    /* module.FS.close(inStream); */
+    /* module.FS.close(outStream); */
 
     if (result !== 0) {
       throw new Error(`ECM command failed with exit code: ${result}`);
     }
 
-    // Read the output file from virtual filesystem
+    /* Read the output file from virtual filesystem */
     const outputData = module.FS.readFile(outputFileName);
     guard(outputData.length > 0, `ECM command failed to produce output file: ${outputFileName}`);
 
-    // Write to actual output path
+    /* Write to actual output path */
     const { writeFile } = await import('fs/promises');
     await writeFile(outputPath, outputData);
 
-    // Clean up virtual filesystem
+    /* Clean up virtual filesystem */
     try {
       module.FS.unlink(inputFileName);
       module.FS.unlink(outputFileName);
     } catch {
-      // Ignore cleanup errors
+      /* Ignore cleanup errors */
     }
   } catch (error) {
     throw new Error(`ECM command execution failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -197,58 +197,58 @@ async function runECMCommand(module: ECMModule, inputPath: string, outputPath: s
 
 async function runUNECMCommand(module: UNECMModule, inputPath: string, outputPath: string): Promise<void> {
   try {
-    // Read the input file
+    /* Read the input file */
     const { readFile } = await import('fs/promises');
     const inputData = await readFile(inputPath);
     console.log('Input file read, size:', inputData.length);
     guard(inputData.length > 0, `UNECM command failed to read input file: ${inputPath}`);
 
-    // Write input file to WASM virtual filesystem
+    /* Write input file to WASM virtual filesystem */
     const inputFileName = 'input.ecm';
     const outputFileName = 'output.bin';
 
-    // Write to virtual filesystem
+    /* Write to virtual filesystem */
     console.log('Writing to virtual filesystem:', inputFileName);
     module.FS.writeFile(inputFileName, inputData);
 
-    // Open files in WASM filesystem
+    /* Open files in WASM filesystem */
     console.log('Opening files in WASM filesystem');
     const inStream = module.FS.open(inputFileName, 'r');
     const outStream = module.FS.open(outputFileName, 'w');
     console.log('Files opened, inStream.fd:', inStream.fd, 'outStream.fd:', outStream.fd);
 
-    // Call unecmify function using ccall for better compatibility
+    /* Call unecmify function using ccall for better compatibility */
     console.log('Calling _unecmify using ccall...');
     console.log('Input file size in WASM:', module.FS.stat(inputFileName).size);
     
     const result = module.ccall('unecmify', 'number', ['number', 'number'], [inStream.fd, outStream.fd]);
     console.log('UNECM result:', result);
 
-    // Don't close files here - the C code already closes them with fclose()
-    // module.FS.close(inStream);
-    // module.FS.close(outStream);
+    /* Don't close files here - the C code already closes them with fclose() */
+    /* module.FS.close(inStream); */
+    /* module.FS.close(outStream); */
 
     if (result !== 0) {
       throw new Error(`UNECM command failed with exit code: ${result}`);
     }
 
-    // Read the output file from virtual filesystem
+    /* Read the output file from virtual filesystem */
     console.log('Reading output from virtual filesystem');
     const outputData = module.FS.readFile(outputFileName);
     console.log('Output data size:', outputData.length);
     guard(outputData.length > 0, `UNECM command failed to produce output file: ${outputFileName}`);
 
-    // Write to actual output path
+    /* Write to actual output path */
     const { writeFile } = await import('fs/promises');
     await writeFile(outputPath, outputData);
     console.log('Output written to:', outputPath);
 
-    // Clean up virtual filesystem
+    /* Clean up virtual filesystem */
     try {
       module.FS.unlink(inputFileName);
       module.FS.unlink(outputFileName);
     } catch {
-      // Ignore cleanup errors
+      /* Ignore cleanup errors */
     }
   } catch (error) {
     console.error('UNECM command error details:', error);
@@ -288,7 +288,7 @@ export class EcmWasm {
         this.unecmModule = await loadUNECMModule();
       }
       
-      // Create a temporary output file
+      /* Create a temporary output file */
       const { mkdtemp, writeFile, unlink, rmdir } = await import('fs/promises');
       const { join } = await import('path');
       const { tmpdir } = await import('os');
@@ -306,7 +306,7 @@ export class EcmWasm {
           await unlink(tempOutput);
           await rmdir(tempDir);
         } catch {
-          // Ignore cleanup errors
+          /* Ignore cleanup errors */
         }
       }
     } catch (error) {

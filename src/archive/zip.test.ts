@@ -13,7 +13,7 @@ describe('ZipArchive', () => {
         testDir = await storageInstance.createTemporaryDirectory();
         zipArchive = new ZipArchive(join(testDir, 'test.zip'));
 
-        // Initialize temporaryFiles for testing
+        /* Initialize temporaryFiles for testing */
         if (!globalThis.temporaryFiles) {
             globalThis.temporaryFiles = [];
         }
@@ -32,7 +32,7 @@ describe('ZipArchive', () => {
 
     describe('compress', () => {
         it('should compress a directory to a zip file', async () => {
-            // Create some test files
+            /* Create some test files */
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
@@ -44,11 +44,11 @@ describe('ZipArchive', () => {
 
             await zipArchive.compress(testDir);
 
-            // Verify the zip file was created
+            /* Verify the zip file was created */
             const exists = await storageInstance.exists(zipPath);
             expect(exists).toBe(true);
 
-            // Verify the zip file has content
+            /* Verify the zip file has content */
             const stats = await storageInstance.size(zipPath);
             expect(stats).toBeGreaterThan(0);
         });
@@ -56,7 +56,7 @@ describe('ZipArchive', () => {
 
     describe('extract', () => {
         it('should extract a zip file to a directory', async () => {
-            // First create a zip file
+            /* First create a zip file */
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
@@ -68,27 +68,27 @@ describe('ZipArchive', () => {
 
             await zipArchive.compress(testDir);
 
-            // Now extract it
+            /* Now extract it */
             const extractedDir = await zipArchive.extract();
 
-            // Verify the extracted directory exists
+            /* Verify the extracted directory exists */
             const exists = await storageInstance.exists(extractedDir);
             expect(exists).toBe(true);
 
-            // Verify the files were extracted
+            /* Verify the files were extracted */
             const files = await storageInstance.list(extractedDir, {
                 recursive: false,
             });
             expect(files.length).toBeGreaterThan(0);
 
-            // Clean up
+            /* Clean up */
             await storageInstance.remove(extractedDir);
         });
     });
 
     describe('verify', () => {
         it('should verify a valid zip file', async () => {
-            // Create a valid zip file
+            /* Create a valid zip file */
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
@@ -99,13 +99,13 @@ describe('ZipArchive', () => {
 
             await zipArchive.compress(testDir);
 
-            // Verify the zip file
+            /* Verify the zip file */
             const isValid = await zipArchive.verify();
             expect(isValid).toBe(true);
         });
 
         it('should return false for an invalid zip file', async () => {
-            // Create an invalid zip file (just a text file)
+            /* Create an invalid zip file (just a text file) */
             const testContent = 'This is not a zip file';
             const testBuffer = new TextEncoder().encode(testContent);
 
@@ -114,7 +114,7 @@ describe('ZipArchive', () => {
 
             const zipArchive = new ZipArchive(invalidZipPath);
 
-            // Verify the invalid zip file
+            /* Verify the invalid zip file */
             const isValid = await zipArchive.verify();
             expect(isValid).toBe(false);
         });

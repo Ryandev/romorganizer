@@ -254,15 +254,17 @@ async function _listDirectory(
     /* https://github.com/microsoft/TypeScript/issues/7294 */
     const fsListings = files.filter(item => typeof item === 'string');
 
-    // Filter out hidden files if avoidHiddenFiles is true
-    const filteredListings = options?.avoidHiddenFiles 
+    /* Filter out hidden files if avoidHiddenFiles is true */
+    const filteredListings = options?.avoidHiddenFiles
         ? fsListings.filter(item => !item.startsWith('.'))
         : fsListings;
 
     const nestedListings: string[][] = [];
 
     if (options?.recursive ?? false) {
-        const entryPaths = filteredListings.map(item => path.join(filePath, item));
+        const entryPaths = filteredListings.map(item =>
+            path.join(filePath, item)
+        );
         const isDirectories = await Promise.all(
             entryPaths.map(entry => _isDirectory(entry))
         );
@@ -359,10 +361,7 @@ function _copyFile(
     });
 }
 
-async function _move(
-    source: FilePath,
-    destination: FilePath
-): Promise<void> {
+async function _move(source: FilePath, destination: FilePath): Promise<void> {
     if (source === destination) {
         /* Nothing to do */
         return;
@@ -375,11 +374,11 @@ async function _move(
     }
 
     /* if the source is a file & the destination is a directory, rename destination to the basename of the source file in the destination directory */
-    if (await _isFile(source) && await _isDirectory(destination)) {
+    if ((await _isFile(source)) && (await _isDirectory(destination))) {
         destination = path.join(destination, path.basename(source));
     }
 
-    // Ensure destination directory exists
+    /* Ensure destination directory exists */
     await _createDirectory(path.dirname(destination));
 
     /* If we attempt to copy across partitions, we need to use the copy command otherwise we will get EXDEV: cross-device link not permitted error */
@@ -440,7 +439,11 @@ function storage(
         read: (filePath: string) => _read(filePath),
         list: async (
             filePath: string,
-            options?: { removePrefix?: boolean; recursive?: boolean; avoidHiddenFiles?: boolean }
+            options?: {
+                removePrefix?: boolean;
+                recursive?: boolean;
+                avoidHiddenFiles?: boolean;
+            }
         ) => {
             const results = await _listDirectory(filePath, {
                 recursive: options?.recursive ?? parameters.recursive ?? false,

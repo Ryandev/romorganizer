@@ -6,11 +6,14 @@ import { setTimeout } from 'node:timers';
  * @param timeoutMs - Timeout in milliseconds
  * @returns Promise that resolves with the original promise result or rejects with timeout error
  */
-export async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+export async function withTimeout<T>(
+    promise: Promise<T>,
+    timeoutMs: number
+): Promise<T> {
     return Promise.race([
         promise,
-        new Promise<never>((_, reject) => 
+        new Promise<never>((_, reject) =>
             setTimeout(() => reject(new Error('Command timed out')), timeoutMs)
-        )
+        ),
     ]);
 }

@@ -14,8 +14,8 @@ export default {
   testMatch: ['**/*.test.ts'],
   testPathIgnorePatterns: [
     'scripts/other/__tests__',
-    'deps/.*\\.test\\.ts',  // Fixed regex pattern
-    'src/archive/ecm.test.ts',  // Exclude ECM tests that use import.meta
+    'deps/.*\\.test\\.ts',  /* Fixed regex pattern */
+    'src/archive/ecm.test.ts',  /* Exclude ECM tests that use import.meta */
   ],
   collectCoverageFrom: [
     'src/**/*.ts',

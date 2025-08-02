@@ -1,6 +1,6 @@
 import { extname } from 'path';
 import { Archive } from './base';
-// import { EcmArchive } from './ecm';
+/* import { EcmArchive } from './ecm'; */
 import { RarArchive } from './rar';
 import { SevenZipArchive } from './seven-zip';
 import { ZipArchive } from './zip';
@@ -10,7 +10,7 @@ export { BaseArchive } from './base';
 export { SevenZipArchive } from './seven-zip';
 export { RarArchive } from './rar';
 export { ZipArchive } from './zip';
-// export { EcmArchive } from './ecm';
+/* export { EcmArchive } from './ecm'; */
 
 export function createArchive(archiveFile: string): Archive {
     const fileExtension = extname(archiveFile).toLowerCase().slice(1);
@@ -22,7 +22,9 @@ export function createArchive(archiveFile: string): Archive {
         case 'zip':
             return new ZipArchive(archiveFile);
         case 'ecm':
-            throw new Error('ECM support is not available in the built version. Use the development version for ECM functionality.');
+            throw new Error(
+                'ECM support is not available in the built version. Use the development version for ECM functionality.'
+            );
         default:
             abort(`Unsupported file extension: ${fileExtension}`);
     }

@@ -39,7 +39,7 @@ export class VerificationResult {
     ) {}
 }
 
-// These are simply all the commands that are used in chdman's .cue file writing code:
+/* These are simply all the commands that are used in chdman's .cue file writing code: */
 const CHDMAN_SUPPORTED_CUE_COMMANDS = new Set([
     'FILE',
     'TRACK',
@@ -70,7 +70,7 @@ export async function convertChdToNormalizedRedumpDumpFolder(
         path.basename(chdPath, '.chd') + '.cue'
     );
 
-    // Use the existing CHD extraction functionality
+    /* Use the existing CHD extraction functionality */
     await convertChdToBincue(chdPath, cueFilePath, showCommandOutput);
     await normalizeRedumpBincueDump(cueFilePath);
 }
@@ -81,28 +81,38 @@ async function convertChdToBincue(
     showCommandOutput: boolean
 ): Promise<void> {
     try {
-        log.info(`Converting "${path.basename(chdFilePath)}" to .bin/.cue format`);
+        log.info(
+            `Converting "${path.basename(chdFilePath)}" to .bin/.cue format`
+        );
 
-        // Use the existing CHD extraction functionality
+        /* Use the existing CHD extraction functionality */
         const extractedCuePath = await chd.extract({
             chdFilePath,
-            format: 'cue'
+            format: 'cue',
         });
 
-        // Copy the extracted files to the desired output location
+        /* Copy the extracted files to the desired output location */
         const extractedDir = path.dirname(extractedCuePath);
-        const extractedFiles = await storage().list(extractedDir, { recursive: false });
-        
+        const extractedFiles = await storage().list(extractedDir, {
+            recursive: false,
+        });
+
         for (const file of extractedFiles) {
             const fileName = path.basename(file);
-            const targetPath = path.join(path.dirname(outputCueFilePath), fileName);
+            const targetPath = path.join(
+                path.dirname(outputCueFilePath),
+                fileName
+            );
             await storage().copy(file, targetPath);
         }
 
-        log.info(`Splitting "${path.basename(outputCueFilePath)}" to use separate tracks if necessary`);
+        log.info(
+            `Splitting "${path.basename(outputCueFilePath)}" to use separate tracks if necessary`
+        );
 
-        // Use binmerge to split tracks if needed
-        const binmergeResult = await $`binmerge --split -o ${path.dirname(outputCueFilePath)} ${outputCueFilePath} ${path.basename(outputCueFilePath, '.cue')}`;
+        /* Use binmerge to split tracks if needed */
+        const binmergeResult =
+            await $`binmerge --split -o ${path.dirname(outputCueFilePath)} ${outputCueFilePath} ${path.basename(outputCueFilePath, '.cue')}`;
 
         if (showCommandOutput) {
             log.info(binmergeResult.stdout);
@@ -127,20 +137,23 @@ async function convertChdToBincue(
 }
 
 async function normalizeRedumpBincueDump(cueFilePath: string): Promise<void> {
-    // Read the cue file
+    /* Read the cue file */
     const cueContent = await storage().read(cueFilePath);
     const cueText = new TextDecoder().decode(cueContent);
-    
-    // Normalize line endings and remove extra whitespace
+
+    /* Normalize line endings and remove extra whitespace */
     const normalizedLines = cueText
         .split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0);
-    
+
     const normalizedContent = normalizedLines.join('\n');
-    
-    // Write back the normalized content
-    await storage().write(cueFilePath, new TextEncoder().encode(normalizedContent));
+
+    /* Write back the normalized content */
+    await storage().write(
+        cueFilePath,
+        new TextEncoder().encode(normalizedContent)
+    );
 }
 
 async function calculateFileSha1(filePath: string): Promise<string> {
@@ -160,17 +173,17 @@ async function verifyRedumpDumpFolder(
         throw new VerificationException(`No .bin files found in ${dumpFolder}`);
     }
 
-    // Verify each .bin file against the DAT
+    /* Verify each .bin file against the DAT */
     const verifiedRoms: ROM[] = [];
     for (const binFile of binFiles) {
         const fileName = path.basename(binFile);
         const fileSize = await storage().size(binFile);
         const fileSha1 = await calculateFileSha1(binFile);
 
-        // Find matching ROM in DAT
+        /* Find matching ROM in DAT */
         const matchingRoms = dat.romsBySha1hex.get(fileSha1) || [];
-        const matchingRom = matchingRoms.find(rom => 
-            rom.name === fileName && rom.size === fileSize
+        const matchingRom = matchingRoms.find(
+            rom => rom.name === fileName && rom.size === fileSize
         );
 
         if (!matchingRom) {
@@ -182,38 +195,44 @@ async function verifyRedumpDumpFolder(
         verifiedRoms.push(matchingRom);
     }
 
-    // Find the game that contains all verified ROMs
+    /* Find the game that contains all verified ROMs */
     const game = verifiedRoms[0]?.game;
     if (!game) {
         throw new VerificationException('No game found for verified ROMs');
     }
 
-    // Verify that all ROMs belong to the same game
-    const allRomsBelongToSameGame = verifiedRoms.every(rom => rom.game === game);
+    /* Verify that all ROMs belong to the same game */
+    const allRomsBelongToSameGame = verifiedRoms.every(
+        rom => rom.game === game
+    );
     if (!allRomsBelongToSameGame) {
         throw new VerificationException('ROMs belong to different games');
     }
 
-    // Verify .cue file if present
+    /* Verify .cue file if present */
     let cueVerificationResult = CueVerificationResult.NO_CUE_NEEDED;
     if (cueFiles.length > 0) {
         const cueFile = cueFiles[0];
         const cueContent = await storage().read(cueFile);
         const cueText = new TextDecoder().decode(cueContent);
-        
-        // Find matching .cue ROM in DAT
+
+        /* Find matching .cue ROM in DAT */
         const cueFileName = path.basename(cueFile);
         const matchingCueRom = game.roms.find(rom => rom.name === cueFileName);
-        
+
         if (matchingCueRom) {
             const cueSha1 = await calculateFileSha1(cueFile);
             if (cueSha1 === matchingCueRom.sha1hex) {
-                cueVerificationResult = CueVerificationResult.GENERATED_CUE_VERIFIED_EXACTLY;
+                cueVerificationResult =
+                    CueVerificationResult.GENERATED_CUE_VERIFIED_EXACTLY;
             } else {
-                // Try to normalize and compare
-                stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(cueText);
-                // For now, we'll assume it matches if we can't verify exactly
-                cueVerificationResult = CueVerificationResult.GENERATED_CUE_MISMATCH_WITH_NO_EXTRA_CUE_PROVIDED;
+                /* Try to normalize and compare */
+                stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(
+                    cueText
+                );
+                /* For now, we'll assume it matches if we can't verify exactly */
+                cueVerificationResult =
+                    CueVerificationResult.GENERATED_CUE_MISMATCH_WITH_NO_EXTRA_CUE_PROVIDED;
             }
         }
     }
@@ -238,10 +257,7 @@ export async function verifyChd(
             dat.system,
             showCommandOutput
         );
-        const verificationResult = await verifyRedumpDumpFolder(
-            tempDir,
-            dat
-        );
+        const verificationResult = await verifyRedumpDumpFolder(tempDir, dat);
 
         switch (verificationResult.cueVerificationResult) {
             case CueVerificationResult.NO_CUE_NEEDED:
@@ -257,7 +273,7 @@ export async function verifyChd(
                 break;
             case CueVerificationResult.GENERATED_CUE_MISMATCH_WITH_NO_EXTRA_CUE_PROVIDED: {
                 const message = `"${verificationResult.game.name}" .bin files verified and complete, but .cue does not match Datfile`;
-                
+
                 if (allowCueMismatches) {
                     log.warn(message);
                 } else {
@@ -273,7 +289,7 @@ export async function verifyChd(
 
         return verificationResult.game;
     } finally {
-        // Clean up temp directory
+        /* Clean up temp directory */
         await storage().remove(tempDir);
     }
-} 
+}

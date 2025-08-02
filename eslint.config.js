@@ -41,7 +41,7 @@ export default [
       'no-console': 'off',
       'no-debugger': 'warn',
       
-      // Unicorn rules - using recommended config with customizations for Node.js project
+      /* Unicorn rules - using recommended config with customizations for Node.js project */
       ...unicorn.configs.recommended.rules,
       'unicorn/filename-case': 'off',
       'unicorn/no-console-spaces': 'off',
@@ -107,7 +107,7 @@ export default [
       'no-console': 'off',
       'no-debugger': 'warn',
       
-      // Unicorn rules - using recommended config with customizations for Node.js project
+      /* Unicorn rules - using recommended config with customizations for Node.js project */
       ...unicorn.configs.recommended.rules,
       'unicorn/filename-case': 'off',
       'unicorn/no-console-spaces': 'off',

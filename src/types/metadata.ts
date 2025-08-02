@@ -1,7 +1,7 @@
 import storage from '../utils/storage';
 import { z } from 'zod';
 
-// Schema for file metadata
+/* Schema for file metadata */
 export const FileMetadataSchema = z.object({
     name: z.string(),
     size: z.number(),
@@ -10,7 +10,7 @@ export const FileMetadataSchema = z.object({
     md5: z.string().optional(),
 });
 
-// Schema for Game metadata
+/* Schema for Game metadata */
 export const GameMetadataSchema = z.object({
     name: z.string(),
     files: z.array(FileMetadataSchema).default([]),
@@ -18,19 +18,19 @@ export const GameMetadataSchema = z.object({
     category: z.string().optional(),
 });
 
-// Schema for DAT metadata
+/* Schema for DAT metadata */
 export const DatMetadataSchema = z.object({
     system: z.string(),
     games: z.array(GameMetadataSchema).default([]),
 });
 
-// Schema for cuesheet metadata
+/* Schema for cuesheet metadata */
 export const CuesheetMetadataSchema = z.object({
     name: z.string(),
     content: z.string(),
 });
 
-// Schema for the complete metadata file
+/* Schema for the complete metadata file */
 export const MetadataFileSchema = z.object({
     game: GameMetadataSchema.optional(),
     message: z.string().optional().default(''),
@@ -42,7 +42,7 @@ export type FileMetadata = z.infer<typeof FileMetadataSchema>;
 export type GameMetadata = z.infer<typeof GameMetadataSchema>;
 export type DatMetadata = z.infer<typeof DatMetadataSchema>;
 export type CuesheetMetadata = z.infer<typeof CuesheetMetadataSchema>;
-export type MetadataFile = z.infer<typeof MetadataFileSchema>; 
+export type MetadataFile = z.infer<typeof MetadataFileSchema>;
 
 async function readFile(filePath: string): Promise<MetadataFile> {
     const file = await storage().read(filePath);
@@ -51,8 +51,11 @@ async function readFile(filePath: string): Promise<MetadataFile> {
     return JSON.parse(jsonString);
 }
 
-async function writeFile(metadata: z.infer<typeof MetadataFileSchema>, filePath: string) {
-    // Validate metadata with zod
+async function writeFile(
+    metadata: z.infer<typeof MetadataFileSchema>,
+    filePath: string
+) {
+    /* Validate metadata with zod */
     const validatedMetadata = MetadataFileSchema.parse(metadata);
 
     const jsonString = JSON.stringify(validatedMetadata, undefined, 2);
@@ -63,4 +66,4 @@ async function writeFile(metadata: z.infer<typeof MetadataFileSchema>, filePath:
 export default {
     readFile,
     writeFile,
-}
+};

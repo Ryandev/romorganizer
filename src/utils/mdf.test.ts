@@ -1,7 +1,7 @@
 import * as mdf from './mdf';
 import { doesCommandExist, isCommandExecutable } from './command';
 
-// Mock all dependencies
+/* Mock all dependencies */
 jest.mock('zx', () => ({
     $: jest.fn(),
 }));
@@ -55,14 +55,16 @@ describe('mdf', () => {
             (doesCommandExist as jest.Mock).mockResolvedValue(false);
             (isCommandExecutable as jest.Mock).mockResolvedValue(false);
 
-            await expect(mdf.convertToIso(mockFilePath)).rejects.toThrow('IAT conversion failed');
+            await expect(mdf.convertToIso(mockFilePath)).rejects.toThrow(
+                'IAT conversion failed'
+            );
         });
 
         it('should convert MDF to ISO when iat is available', async () => {
             (doesCommandExist as jest.Mock).mockResolvedValue(true);
             (isCommandExecutable as jest.Mock).mockResolvedValue(true);
 
-            // Mock the zx $ function to return a successful result
+            /* Mock the zx $ function to return a successful result */
             const mockZx = require('zx');
             mockZx.$ = jest.fn().mockResolvedValue({ exitCode: 0 });
 
@@ -70,4 +72,4 @@ describe('mdf', () => {
             expect(result).toContain('.iso');
         });
     });
-}); 
+});

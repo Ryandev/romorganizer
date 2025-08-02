@@ -5,7 +5,7 @@ import { doesCommandExist, isCommandExecutable } from './command';
 import { guard } from './guard';
 import { withTimeout } from './promise';
 
-// Mock dependencies
+/* Mock dependencies */
 jest.mock('./storage');
 jest.mock('./command');
 jest.mock('./guard');
@@ -16,8 +16,12 @@ jest.mock('zx', () => ({
 }));
 
 const mockStorage = storage as jest.MockedFunction<typeof storage>;
-const mockDoesCommandExist = doesCommandExist as jest.MockedFunction<typeof doesCommandExist>;
-const mockIsCommandExecutable = isCommandExecutable as jest.MockedFunction<typeof isCommandExecutable>;
+const mockDoesCommandExist = doesCommandExist as jest.MockedFunction<
+    typeof doesCommandExist
+>;
+const mockIsCommandExecutable = isCommandExecutable as jest.MockedFunction<
+    typeof isCommandExecutable
+>;
 const mockGuard = guard as jest.MockedFunction<typeof guard>;
 const mockWithTimeout = withTimeout as jest.MockedFunction<typeof withTimeout>;
 
@@ -27,16 +31,18 @@ describe('ISO Utilities', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        
-        // Setup storage mock
+
+        /* Setup storage mock */
         mockStorageInstance = {
-            createTemporaryDirectory: jest.fn().mockResolvedValue('/tmp/test-dir'),
+            createTemporaryDirectory: jest
+                .fn()
+                .mockResolvedValue('/tmp/test-dir'),
             exists: jest.fn().mockResolvedValue(true),
             size: jest.fn().mockResolvedValue(1024),
         };
         mockStorage.mockReturnValue(mockStorageInstance);
-        
-        // Setup zx mock
+
+        /* Setup zx mock */
         mockZx = {
             $: jest.fn().mockReturnValue({
                 exitCode: 0,
@@ -44,17 +50,17 @@ describe('ISO Utilities', () => {
             }),
         };
         require('zx').$ = mockZx.$;
-        
-        // Setup withTimeout mock to return the promise directly
-        mockWithTimeout.mockImplementation(async (promise) => {
+
+        /* Setup withTimeout mock to return the promise directly */
+        mockWithTimeout.mockImplementation(async promise => {
             return await promise;
         });
-        
-        // Setup command mocks
+
+        /* Setup command mocks */
         mockDoesCommandExist.mockResolvedValue(true);
         mockIsCommandExecutable.mockResolvedValue(true);
-        
-        // Setup guard mock
+
+        /* Setup guard mock */
         mockGuard.mockImplementation((condition: boolean, message: string) => {
             if (!condition) {
                 throw new Error(message);
@@ -65,26 +71,35 @@ describe('ISO Utilities', () => {
     describe('convert', () => {
         it('should convert ISO to BIN format successfully', async () => {
             const result = await iso.convert('/path/to/test.iso');
-            
+
             expect(result).toContain('.bin');
-            expect(mockStorageInstance.createTemporaryDirectory).toHaveBeenCalled();
-            expect(mockZx.$).toHaveBeenCalledWith(['', ' convert "', '" -o "', '"'], 'poweriso', '/path/to/test.iso', expect.stringContaining('.bin'));
+            expect(
+                mockStorageInstance.createTemporaryDirectory
+            ).toHaveBeenCalled();
+            expect(mockZx.$).toHaveBeenCalledWith(
+                ['', ' convert "', '" -o "', '"'],
+                'poweriso',
+                '/path/to/test.iso',
+                expect.stringContaining('.bin')
+            );
         });
 
         it('should throw error when poweriso is not installed', async () => {
             mockDoesCommandExist.mockResolvedValue(false);
-            
-            await expect(iso.convert('/path/to/test.iso')).rejects.toThrow('PowerISO operations failed');
+
+            await expect(iso.convert('/path/to/test.iso')).rejects.toThrow(
+                'PowerISO operations failed'
+            );
         });
 
         it('should throw error when conversion fails', async () => {
             mockZx.$.mockReturnValue({
                 exitCode: 1,
             });
-            
-            await expect(iso.convert('/path/to/test.iso')).rejects.toThrow('Failed to convert /path/to/test.iso to BIN/CUE');
+
+            await expect(iso.convert('/path/to/test.iso')).rejects.toThrow(
+                'Failed to convert /path/to/test.iso to BIN/CUE'
+            );
         });
-
-
     });
-}); 
+});

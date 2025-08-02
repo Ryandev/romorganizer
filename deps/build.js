@@ -13,7 +13,7 @@ const projectRoot = join(depsRoot, '..');
 
 console.log('Building dependencies...');
 
-// Build ECM WASM modules via local script
+/* Build ECM WASM modules via local script */
 try {
   execSync('node deps/ecm/build.js', {
     stdio: 'inherit',

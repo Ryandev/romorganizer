@@ -1,5 +1,3 @@
-
-
 export class BinSplitterException extends Error {
     constructor(message: string) {
         super(message);
@@ -21,4 +19,3 @@ export interface SplitResult {
     splitFiles: string[];
     message: string;
 }
-

@@ -10,24 +10,24 @@ import {
     guardDirectoryExists,
     guardCommandExists,
     createGuard,
-    abort
+    abort,
 } from './guard';
 import { log } from './logger';
 
-// Mock the logger
+/* Mock the logger */
 jest.mock('./logger', () => ({
     log: {
         error: jest.fn(),
     },
 }));
 
-// Mock fs
+/* Mock fs */
 jest.mock('node:fs', () => ({
     existsSync: jest.fn(),
     statSync: jest.fn(),
 }));
 
-// Mock zx
+/* Mock zx */
 jest.mock('zx', () => ({
     $: jest.fn(),
 }));
@@ -54,7 +54,9 @@ describe('Guard Functions', () => {
         });
 
         test('should throw custom message when condition is false', () => {
-            expect(() => guard(false, 'Custom error message')).toThrow('Custom error message');
+            expect(() => guard(false, 'Custom error message')).toThrow(
+                'Custom error message'
+            );
         });
     });
 
@@ -73,19 +75,27 @@ describe('Guard Functions', () => {
         });
 
         test('should throw for null', () => {
-            expect(() => guardNotFalsy(null as any)).toThrow('Value is null or undefined');  
+            expect(() => guardNotFalsy(null as any)).toThrow(
+                'Value is null or undefined'
+            );
         });
 
         test('should throw for undefined', () => {
-            expect(() => guardNotFalsy(undefined as any)).toThrow('Value is null or undefined');
+            expect(() => guardNotFalsy(undefined as any)).toThrow(
+                'Value is null or undefined'
+            );
         });
 
         test('should throw custom message for null', () => {
-            expect(() => guardNotFalsy(null as any, 'Custom null error')).toThrow('Custom null error');  
+            expect(() =>
+                guardNotFalsy(null as any, 'Custom null error')
+            ).toThrow('Custom null error');
         });
 
         test('should throw custom message for undefined', () => {
-            expect(() => guardNotFalsy(undefined as any, 'Custom undefined error')).toThrow('Custom undefined error');
+            expect(() =>
+                guardNotFalsy(undefined as any, 'Custom undefined error')
+            ).toThrow('Custom undefined error');
         });
     });
 
@@ -100,15 +110,21 @@ describe('Guard Functions', () => {
         });
 
         test('should throw for null', () => {
-            expect(() => guardNotNull(null as any)).toThrow('No item given to guard against');  
+            expect(() => guardNotNull(null as any)).toThrow(
+                'No item given to guard against'
+            );
         });
 
         test('should throw for undefined', () => {
-            expect(() => guardNotNull(undefined as any)).toThrow('No item given to guard against');
+            expect(() => guardNotNull(undefined as any)).toThrow(
+                'No item given to guard against'
+            );
         });
 
         test('should throw custom message for null', () => {
-            expect(() => guardNotNull(null as any, 'Custom null error')).toThrow('Custom null error');  
+            expect(() =>
+                guardNotNull(null as any, 'Custom null error')
+            ).toThrow('Custom null error');
         });
     });
 
@@ -126,11 +142,15 @@ describe('Guard Functions', () => {
         });
 
         test('should throw for incorrect type', () => {
-            expect(() => guardType<string>(123, 'string')).toThrow('Expected string');
+            expect(() => guardType<string>(123, 'string')).toThrow(
+                'Expected string'
+            );
         });
 
         test('should throw custom message for incorrect type', () => {
-            expect(() => guardType<string>(123, 'string', 'Custom type error')).toThrow('Custom type error');
+            expect(() =>
+                guardType<string>(123, 'string', 'Custom type error')
+            ).toThrow('Custom type error');
         });
     });
 
@@ -143,25 +163,39 @@ describe('Guard Functions', () => {
         });
 
         test('should throw for non-number types', () => {
-            expect(() => guardValidNumber('123')).toThrow('No number given to guard against');
-            expect(() => guardValidNumber(null as any)).toThrow('No number given to guard against');  
-            expect(() => guardValidNumber(undefined as any)).toThrow('No number given to guard against');
+            expect(() => guardValidNumber('123')).toThrow(
+                'No number given to guard against'
+            );
+            expect(() => guardValidNumber(null as any)).toThrow(
+                'No number given to guard against'
+            );
+            expect(() => guardValidNumber(undefined as any)).toThrow(
+                'No number given to guard against'
+            );
         });
 
         test('should throw for NaN', () => {
-            expect(() => guardValidNumber(Number.NaN)).toThrow('No valid number given to guard against');  
+            expect(() => guardValidNumber(Number.NaN)).toThrow(
+                'No valid number given to guard against'
+            );
         });
 
         test('should throw for Infinity', () => {
-            expect(() => guardValidNumber(Infinity)).toThrow('No valid number given to guard against');
+            expect(() => guardValidNumber(Infinity)).toThrow(
+                'No valid number given to guard against'
+            );
         });
 
         test('should throw for -Infinity', () => {
-            expect(() => guardValidNumber(-Infinity)).toThrow('No valid number given to guard against');
+            expect(() => guardValidNumber(-Infinity)).toThrow(
+                'No valid number given to guard against'
+            );
         });
 
         test('should throw custom message', () => {
-            expect(() => guardValidNumber('123', 'Custom number error')).toThrow('Custom number error');
+            expect(() =>
+                guardValidNumber('123', 'Custom number error')
+            ).toThrow('Custom number error');
         });
     });
 
@@ -169,33 +203,47 @@ describe('Guard Functions', () => {
         test('should not throw for valid strings', () => {
             expect(() => guardValidString('test')).not.toThrow();
             expect(() => guardValidString('123')).not.toThrow();
-            expect(() => guardValidString(' ')).not.toThrow(); // Space is valid
+            expect(() =>
+                guardValidString(' ')
+            ).not.toThrow(); /* Space is valid */
         });
 
         test('should throw for null', () => {
-            expect(() => guardValidString(null as any)).toThrow('No string given to guard against');  
+            expect(() => guardValidString(null as any)).toThrow(
+                'No string given to guard against'
+            );
         });
 
         test('should throw for undefined', () => {
-            expect(() => guardValidString(undefined as any)).toThrow('No string given to guard against');
+            expect(() => guardValidString(undefined as any)).toThrow(
+                'No string given to guard against'
+            );
         });
 
         test('should throw for empty string', () => {
-            expect(() => guardValidString('')).toThrow('Expected string.length > 0');
+            expect(() => guardValidString('')).toThrow(
+                'Expected string.length > 0'
+            );
         });
 
         test('should not throw for non-string types that convert to valid strings', () => {
-            // guardValidString converts values to strings using String()
-            expect(() => guardValidString(123)).not.toThrow(); // "123"
-            expect(() => guardValidString({})).not.toThrow(); // "[object Object]"
+            /* guardValidString converts values to strings using String() */
+            expect(() => guardValidString(123)).not.toThrow(); /* "123" */
+            expect(() =>
+                guardValidString({})
+            ).not.toThrow(); /* "[object Object]" */
         });
 
         test('should throw for non-string types that convert to empty strings', () => {
-            expect(() => guardValidString([])).toThrow('Expected string.length > 0'); // String([]) returns ""
+            expect(() => guardValidString([])).toThrow(
+                'Expected string.length > 0'
+            ); /* String([]) returns "" */
         });
 
         test('should throw custom message', () => {
-            expect(() => guardValidString('', 'Custom string error')).toThrow('Custom string error');
+            expect(() => guardValidString('', 'Custom string error')).toThrow(
+                'Custom string error'
+            );
         });
     });
 
@@ -214,12 +262,16 @@ describe('Guard Functions', () => {
 
         test('should throw when file does not exist', () => {
             mockFs.existsSync.mockReturnValue(false);
-            expect(() => guardFileExists('/path/to/file.txt')).toThrow('File does not exist: /path/to/file.txt');
+            expect(() => guardFileExists('/path/to/file.txt')).toThrow(
+                'File does not exist: /path/to/file.txt'
+            );
         });
 
         test('should throw custom message when file does not exist', () => {
             mockFs.existsSync.mockReturnValue(false);
-            expect(() => guardFileExists('/path/to/file.txt', 'Custom file error')).toThrow('Custom file error');
+            expect(() =>
+                guardFileExists('/path/to/file.txt', 'Custom file error')
+            ).toThrow('Custom file error');
         });
     });
 
@@ -229,57 +281,77 @@ describe('Guard Functions', () => {
         });
 
         test('should not throw when file does not exist', () => {
-            expect(() => guardFileDoesNotExist('/path/to/file.txt')).not.toThrow();
+            expect(() =>
+                guardFileDoesNotExist('/path/to/file.txt')
+            ).not.toThrow();
         });
 
         test('should throw for invalid file path', () => {
-            expect(() => guardFileDoesNotExist('')).toThrow('Invalid file path: ');
+            expect(() => guardFileDoesNotExist('')).toThrow(
+                'Invalid file path: '
+            );
         });
 
         test('should throw when file exists', () => {
             mockFs.existsSync.mockReturnValue(true);
-            expect(() => guardFileDoesNotExist('/path/to/file.txt')).toThrow('File should not exist: /path/to/file.txt');
+            expect(() => guardFileDoesNotExist('/path/to/file.txt')).toThrow(
+                'File should not exist: /path/to/file.txt'
+            );
         });
 
         test('should throw custom message when file exists', () => {
             mockFs.existsSync.mockReturnValue(true);
-            expect(() => guardFileDoesNotExist('/path/to/file.txt', 'Custom file error')).toThrow('Custom file error');
+            expect(() =>
+                guardFileDoesNotExist('/path/to/file.txt', 'Custom file error')
+            ).toThrow('Custom file error');
         });
     });
 
     describe('guardDirectoryExists', () => {
         beforeEach(() => {
             mockFs.statSync.mockReturnValue({
-                isDirectory: () => true
+                isDirectory: () => true,
             } as any);
         });
 
         test('should not throw for valid directory path', () => {
-            expect(() => guardDirectoryExists('/path/to/directory')).not.toThrow();
+            expect(() =>
+                guardDirectoryExists('/path/to/directory')
+            ).not.toThrow();
         });
 
         test('should throw for null directory path', () => {
-            expect(() => guardDirectoryExists(null as any)).toThrow('Invalid directory path: null');  
+            expect(() => guardDirectoryExists(null as any)).toThrow(
+                'Invalid directory path: null'
+            );
         });
 
         test('should throw for undefined directory path', () => {
-            expect(() => guardDirectoryExists(undefined as any)).toThrow('Invalid directory path: undefined');
+            expect(() => guardDirectoryExists(undefined as any)).toThrow(
+                'Invalid directory path: undefined'
+            );
         });
 
         test('should throw for empty directory path', () => {
-            expect(() => guardDirectoryExists('')).toThrow('Invalid directory path: ');
+            expect(() => guardDirectoryExists('')).toThrow(
+                'Invalid directory path: '
+            );
         });
 
         test('should throw for non-string directory path', () => {
-            expect(() => guardDirectoryExists(123 as any)).toThrow('Invalid directory path: 123');  
+            expect(() => guardDirectoryExists(123 as any)).toThrow(
+                'Invalid directory path: 123'
+            );
         });
 
         test('should throw when path exists but is not a directory', () => {
             mockFs.statSync.mockReset();
             mockFs.statSync.mockReturnValue({
-                isDirectory: () => false
+                isDirectory: () => false,
             } as any);
-            expect(() => guardDirectoryExists('/path/to/file.txt')).toThrow('Path exists but is not a directory: /path/to/file.txt');
+            expect(() => guardDirectoryExists('/path/to/file.txt')).toThrow(
+                'Path exists but is not a directory: /path/to/file.txt'
+            );
         });
 
         test('should throw when directory does not exist', () => {
@@ -287,11 +359,15 @@ describe('Guard Functions', () => {
             mockFs.statSync.mockImplementation(() => {
                 throw new Error('ENOENT: no such file or directory');
             });
-            expect(() => guardDirectoryExists('/path/to/nonexistent')).toThrow('Directory does not exist: /path/to/nonexistent');
+            expect(() => guardDirectoryExists('/path/to/nonexistent')).toThrow(
+                'Directory does not exist: /path/to/nonexistent'
+            );
         });
 
         test('should throw custom message', () => {
-            expect(() => guardDirectoryExists('', 'Custom directory error')).toThrow('Custom directory error');
+            expect(() =>
+                guardDirectoryExists('', 'Custom directory error')
+            ).toThrow('Custom directory error');
         });
     });
 
@@ -305,48 +381,74 @@ describe('Guard Functions', () => {
         });
 
         test('should throw for null command', async () => {
-            await expect(guardCommandExists(null as any)).rejects.toThrow('No command given to guard against');
+            await expect(guardCommandExists(null as any)).rejects.toThrow(
+                'No command given to guard against'
+            );
         });
 
         test('should throw for undefined command', async () => {
-            await expect(guardCommandExists(undefined as any)).rejects.toThrow('No command given to guard against');
+            await expect(guardCommandExists(undefined as any)).rejects.toThrow(
+                'No command given to guard against'
+            );
         });
 
         test('should throw for non-string command', async () => {
-            await expect(guardCommandExists(123 as any)).rejects.toThrow('Invalid command given to guard against');
+            await expect(guardCommandExists(123 as any)).rejects.toThrow(
+                'Invalid command given to guard against'
+            );
         });
 
         test('should throw when command does not exist', async () => {
             mockZx.$.mockRejectedValue(new Error('Command not found'));
-            await expect(guardCommandExists('nonExistentCommand')).rejects.toThrow('Cannot find command: nonExistentCommand in env');
+            await expect(
+                guardCommandExists('nonExistentCommand')
+            ).rejects.toThrow('Cannot find command: nonExistentCommand in env');
         });
 
         test('should throw custom message when command does not exist', async () => {
             mockZx.$.mockRejectedValue(new Error('Command not found'));
-            await expect(guardCommandExists('nonExistentCommand', 'Custom command error')).rejects.toThrow('Custom command error');
+            await expect(
+                guardCommandExists('nonExistentCommand', 'Custom command error')
+            ).rejects.toThrow('Custom command error');
         });
     });
 
     describe('createGuard', () => {
         test('should create a guard that passes for valid values', () => {
-            const isPositive = createGuard((n: number) => n > 0, 'Number must be positive');
+            const isPositive = createGuard(
+                (n: number) => n > 0,
+                'Number must be positive'
+            );
             expect(() => isPositive(5)).not.toThrow();
         });
 
         test('should create a guard that throws for invalid values', () => {
-            const isPositive = createGuard((n: number) => n > 0, 'Number must be positive');
+            const isPositive = createGuard(
+                (n: number) => n > 0,
+                'Number must be positive'
+            );
             expect(() => isPositive(0)).toThrow('Number must be positive');
         });
 
         test('should create a guard that throws custom message', () => {
-            const isPositive = createGuard((n: number) => n > 0, 'Number must be positive');
-            expect(() => isPositive(0, 'Custom positive error')).toThrow('Custom positive error');
+            const isPositive = createGuard(
+                (n: number) => n > 0,
+                'Number must be positive'
+            );
+            expect(() => isPositive(0, 'Custom positive error')).toThrow(
+                'Custom positive error'
+            );
         });
 
         test('should work with complex conditions', () => {
-            const isValidEmail = createGuard((email: string) => email.includes('@'), 'Invalid email format');
+            const isValidEmail = createGuard(
+                (email: string) => email.includes('@'),
+                'Invalid email format'
+            );
             expect(() => isValidEmail('test@example.com')).not.toThrow();
-            expect(() => isValidEmail('invalid-email')).toThrow('Invalid email format');
+            expect(() => isValidEmail('invalid-email')).toThrow(
+                'Invalid email format'
+            );
         });
     });
 
@@ -358,9 +460,12 @@ describe('Guard Functions', () => {
             originalExit = process.exit;
             mockExit = jest.fn();
             process.exit = mockExit;
-            
-            // Clear global temporary files
-            (globalThis as any).temporaryFiles = ['/temp/file1.txt', '/temp/file2.txt'];
+
+            /* Clear global temporary files */
+            (globalThis as any).temporaryFiles = [
+                '/temp/file1.txt',
+                '/temp/file2.txt',
+            ];
         });
 
         afterEach(() => {
@@ -395,4 +500,4 @@ describe('Guard Functions', () => {
             expect(mockExit).toHaveBeenCalledWith(1);
         });
     });
-}); 
+});

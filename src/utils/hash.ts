@@ -7,12 +7,12 @@ import { readFile } from 'node:fs/promises';
  * @returns Promise<string> - SHA1 hash as hexadecimal string
  */
 async function calculateFileSha1(filePath: string): Promise<string> {
-    // Use Node.js fs.readFile directly for more reliable binary reading
-    // This avoids potential issues with the storage abstraction's ArrayBuffer handling
+    /* Use Node.js fs.readFile directly for more reliable binary reading
+       This avoids potential issues with the storage abstraction's ArrayBuffer handling */
     const buffer = await readFile(filePath);
     return createHash('sha1').update(buffer).digest('hex');
-} 
+}
 
 export default {
-    calculateFileSha1
-}
+    calculateFileSha1,
+};

@@ -11,12 +11,12 @@ export default defineConfig({
         const wasmSourceDir = join(__dirname, 'deps', 'ecm', 'wasm', 'build');
         const wasmDestDir = join(__dirname, 'dist', 'deps', 'ecm', 'wasm', 'build');
         
-        // Create destination directory
+        /* Create destination directory */
         if (!existsSync(wasmDestDir)) {
           mkdirSync(wasmDestDir, { recursive: true });
         }
         
-        // Copy WASM files
+        /* Copy WASM files */
         const files = ['ecm.js', 'ecm.wasm', 'unecm.js', 'unecm.wasm'];
         files.forEach(file => {
           const sourcePath = join(wasmSourceDir, file);

@@ -9,16 +9,20 @@ describe('promise', () => {
         });
 
         it('should reject when promise takes longer than timeout', async () => {
-            const slowPromise = new Promise<string>((resolve) => {
+            const slowPromise = new Promise<string>(resolve => {
                 setTimeout(() => resolve('success'), 2000);
             });
 
-            await expect(withTimeout(slowPromise, 100)).rejects.toThrow('Command timed out');
+            await expect(withTimeout(slowPromise, 100)).rejects.toThrow(
+                'Command timed out'
+            );
         });
 
         it('should reject when promise rejects before timeout', async () => {
             const failingPromise = Promise.reject(new Error('Promise failed'));
-            await expect(withTimeout(failingPromise, 1000)).rejects.toThrow('Promise failed');
+            await expect(withTimeout(failingPromise, 1000)).rejects.toThrow(
+                'Promise failed'
+            );
         });
 
         it('should work with async functions', async () => {
@@ -31,4 +35,4 @@ describe('promise', () => {
             expect(result).toBe('async success');
         });
     });
-}); 
+});

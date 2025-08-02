@@ -22,13 +22,13 @@ import { EcmWasm } from './deps/ecm/wasm';
 
 const ecmWasm = new EcmWasm();
 
-// Compress a file to ECM format
+/* Compress a file to ECM format */
 await ecmWasm.compress('input.img', 'output.ecm');
 
-// Extract an ECM file
+/* Extract an ECM file */
 await ecmWasm.extract('input.ecm', 'output.img');
 
-// Verify an ECM file
+/* Verify an ECM file */
 const isValid = await ecmWasm.verify('input.ecm');
 ```
 
@@ -39,15 +39,15 @@ import { EcmArchive } from './src/archive/ecm';
 
 const ecmArchive = new EcmArchive('file.ecm');
 
-// Extract ECM file
+/* Extract ECM file */
 const outputPath = await ecmArchive.extract();
 console.log('Extracted to:', outputPath);
 
-// Compress file to ECM
+/* Compress file to ECM */
 const compressedPath = await ecmArchive.compress('/path/to/file.img');
 console.log('Compressed to:', compressedPath);
 
-// Verify ECM file
+/* Verify ECM file */
 const isValid = await ecmArchive.verify();
 console.log('Is valid:', isValid);
 ```

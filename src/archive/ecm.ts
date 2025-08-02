@@ -6,12 +6,12 @@ import { EcmWasm } from '../../deps/ecm/wasm';
 import { guardFileExists } from '../utils/guard';
 
 export class EcmArchive extends BaseArchive {
-      private ecmWasm: EcmWasm;
+    private ecmWasm: EcmWasm;
 
-  constructor(filePath: string) {
-    super(filePath);
-    this.ecmWasm = new EcmWasm();
-  }
+    constructor(filePath: string) {
+        super(filePath);
+        this.ecmWasm = new EcmWasm();
+    }
 
     async extract(): Promise<string> {
         guardFileExists(this.filePath);
@@ -27,13 +27,15 @@ export class EcmArchive extends BaseArchive {
             log.info(`Extracted ${this.filePath}`);
             return outputFilePath;
         } catch (error) {
-            throw new Error(`ECM extraction failed: ${error instanceof Error ? error.message : String(error)}`);
+            throw new Error(
+                `ECM extraction failed: ${error instanceof Error ? error.message : String(error)}`
+            );
         }
     }
 
     async verify(): Promise<boolean> {
         log.info(`Verifying ${this.filePath}...`);
-        
+
         try {
             const storageInstance = await storage();
             if (!(await storageInstance.exists(this.filePath))) {
@@ -41,7 +43,7 @@ export class EcmArchive extends BaseArchive {
                 return false;
             }
 
-            // Use WASM implementation to verify the ECM file
+            /* Use WASM implementation to verify the ECM file */
             const isValid = await this.ecmWasm.verify(this.filePath);
             if (isValid) {
                 log.info(`✓ ${this.filePath} appears to be a valid ECM file`);
@@ -69,7 +71,9 @@ export class EcmArchive extends BaseArchive {
             log.info(`Encoded ${filePath}`);
             return outputFilePath;
         } catch (error) {
-            throw new Error(`ECM compression failed: ${error instanceof Error ? error.message : String(error)}`);
+            throw new Error(
+                `ECM compression failed: ${error instanceof Error ? error.message : String(error)}`
+            );
         }
     }
 }

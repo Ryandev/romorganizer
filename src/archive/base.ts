@@ -11,7 +11,7 @@ export interface Archive {
     compress(contentsDirectory: string): Promise<string>;
 }
 
-// Global temporary files array - will be managed by the main application
+/* Global temporary files array - will be managed by the main application */
 declare global {
     var temporaryFiles: string[];
     function abort(message: string): never;

@@ -20,8 +20,14 @@ export function guard(condition: boolean, message?: string): asserts condition {
  * @param item - Item to check
  * @param message - Optional error message
  */
-export function guardNotFalsy<T>(value: T | null | undefined, message?: string): asserts value is T {
-    guard(value !== null && value !== undefined, message || 'Value is null or undefined');
+export function guardNotFalsy<T>(
+    value: T | null | undefined,
+    message?: string
+): asserts value is T {
+    guard(
+        value !== null && value !== undefined,
+        message || 'Value is null or undefined'
+    );
     guard(!!value, message || 'Value is falsy');
 }
 
@@ -100,15 +106,30 @@ export function guardValidString(
  * @param message - Optional error message
  */
 export function guardFileExists(filePath: unknown, message?: string): void {
-    guard(typeof filePath === 'string', message || `Invalid file path: ${filePath}`);
+    guard(
+        typeof filePath === 'string',
+        message || `Invalid file path: ${filePath}`
+    );
     guard(filePath.length > 0, message || `Invalid file path: ${filePath}`);
-    guard(fs.existsSync(filePath), message || `File does not exist: ${filePath}`);
+    guard(
+        fs.existsSync(filePath),
+        message || `File does not exist: ${filePath}`
+    );
 }
 
-export function guardFileDoesNotExist(filePath: string, message?: string): void {
-    guard(typeof filePath === 'string', message || `Invalid file path: ${filePath}`);
+export function guardFileDoesNotExist(
+    filePath: string,
+    message?: string
+): void {
+    guard(
+        typeof filePath === 'string',
+        message || `Invalid file path: ${filePath}`
+    );
     guard(filePath.length > 0, message || `Invalid file path: ${filePath}`);
-    guard(!fs.existsSync(filePath), message || `File should not exist: ${filePath}`);
+    guard(
+        !fs.existsSync(filePath),
+        message || `File should not exist: ${filePath}`
+    );
 }
 
 /**
@@ -117,25 +138,39 @@ export function guardFileDoesNotExist(filePath: string, message?: string): void 
  * @param directoryPath - Path to the directory
  * @param message - Optional error message
  */
-export function guardDirectoryExists(directoryPath: unknown, message?: string): void {
-    guard(typeof directoryPath === 'string', message || `Invalid directory path: ${directoryPath}`);
-    guard(directoryPath.length > 0, message || `Invalid directory path: ${directoryPath}`);
-    
+export function guardDirectoryExists(
+    directoryPath: unknown,
+    message?: string
+): void {
+    guard(
+        typeof directoryPath === 'string',
+        message || `Invalid directory path: ${directoryPath}`
+    );
+    guard(
+        directoryPath.length > 0,
+        message || `Invalid directory path: ${directoryPath}`
+    );
+
     try {
         const stats = fs.statSync(directoryPath);
-        guard(stats.isDirectory(), message || `Path exists but is not a directory: ${directoryPath}`);
+        guard(
+            stats.isDirectory(),
+            message || `Path exists but is not a directory: ${directoryPath}`
+        );
     } catch (error) {
-        // Only catch fs.statSync errors, not guard errors
-        if (error instanceof Error && 
-            (error.message.includes('guard condition failed') || 
-             error.message.includes('Path exists but is not a directory'))) {
-            throw error; // Re-throw guard errors as-is
+        /* Only catch fs.statSync errors, not guard errors */
+        if (
+            error instanceof Error &&
+            (error.message.includes('guard condition failed') ||
+                error.message.includes('Path exists but is not a directory'))
+        ) {
+            throw error; /* Re-throw guard errors as-is */
         }
-        throw new Error(message || `Directory does not exist: ${directoryPath}`);
+        throw new Error(
+            message || `Directory does not exist: ${directoryPath}`
+        );
     }
 }
-
-
 
 /**
  * Guard that checks if a command exists in the system
@@ -160,9 +195,11 @@ export async function guardCommandExists(
     try {
         await $`command -v ${command}`;
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+            error instanceof Error ? error.message : String(error);
         throw new Error(
-            message || `Cannot find command: ${command} in env, error: ${errorMessage}`
+            message ||
+                `Cannot find command: ${command} in env, error: ${errorMessage}`
         );
     }
 }
@@ -182,10 +219,10 @@ export function createGuard<T>(
     };
 }
 
-// Utility function to abort execution with cleanup
+/* Utility function to abort execution with cleanup */
 export function abort(message: string): never {
     log.error(message);
-    // Clean up any temporary files if they exist
+    /* Clean up any temporary files if they exist */
     if (globalThis.temporaryFiles && Array.isArray(globalThis.temporaryFiles)) {
         globalThis.temporaryFiles.length = 0;
     }

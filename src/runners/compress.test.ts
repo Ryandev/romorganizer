@@ -1,7 +1,7 @@
 import { Runner, IRunner } from './compress';
 import createCHDRunner from './compress';
 
-// Mock all dependencies
+/* Mock all dependencies */
 jest.mock('../utils/logger', () => ({
     log: {
         info: jest.fn(),
@@ -45,19 +45,23 @@ jest.mock('../archive/seven-zip', () => ({
 jest.mock('../utils/mdf', () => ({
     extract: jest.fn().mockResolvedValue('/path/to/extracted.iso'),
     verify: jest.fn().mockResolvedValue(true),
-    create: jest.fn().mockRejectedValue(new Error('MDF compression is not supported')),
+    create: jest
+        .fn()
+        .mockRejectedValue(new Error('MDF compression is not supported')),
 }));
 
 jest.mock('../utils/guard', () => ({
     guard: jest.fn(),
-    guardNotFalsy: jest.fn((value) => value),
-    guardValidString: jest.fn((value) => value),
+    guardNotFalsy: jest.fn(value => value),
+    guardValidString: jest.fn(value => value),
 }));
 
 const mockStorage = {
     stat: jest.fn().mockResolvedValue({ size: 1024 }),
     crc32: jest.fn().mockResolvedValue('12345678'),
-    list: jest.fn().mockResolvedValue(['/path/to/file1.cue', '/path/to/file2.bin']),
+    list: jest
+        .fn()
+        .mockResolvedValue(['/path/to/file1.cue', '/path/to/file2.bin']),
     copy: jest.fn().mockResolvedValue(undefined),
     remove: jest.fn().mockResolvedValue(undefined),
     createTemporaryDirectory: jest.fn().mockResolvedValue('/tmp/test-dir'),
@@ -109,7 +113,9 @@ describe('createCHDRunner', () => {
     it('should return an Error for unsupported IMG file', () => {
         const result = createCHDRunner(['/path/to/test.img']);
         expect(result).toBeInstanceOf(Error);
-        expect((result as Error).message).toContain('No matching extensions found');
+        expect((result as Error).message).toContain(
+            'No matching extensions found'
+        );
     });
 
     it('should return a Runner instance for valid MDF file', () => {
@@ -120,7 +126,9 @@ describe('createCHDRunner', () => {
     it('should return an Error for unsupported MDS file', () => {
         const result = createCHDRunner(['/path/to/test.mds']);
         expect(result).toBeInstanceOf(Error);
-        expect((result as Error).message).toContain('No matching extensions found');
+        expect((result as Error).message).toContain(
+            'No matching extensions found'
+        );
     });
 
     it('should return a Runner instance for valid ECM file', () => {
@@ -196,7 +204,9 @@ describe('createCHDRunner', () => {
     it('should return an Error for unsupported file extension', () => {
         const result = createCHDRunner(['/path/to/test.txt']);
         expect(result).toBeInstanceOf(Error);
-        expect((result as Error).message).toContain('No matching extensions found');
+        expect((result as Error).message).toContain(
+            'No matching extensions found'
+        );
     });
 });
 
@@ -218,6 +228,6 @@ describe('Runner', () => {
         expect(result).toBeInstanceOf(Promise);
     });
 
-    // Don't test the actual start() method as it has complex logic
-    // that can cause infinite recursion with the current mocks
+    /* Don't test the actual start() method as it has complex logic
+     * that can cause infinite recursion with the current mocks */
 });

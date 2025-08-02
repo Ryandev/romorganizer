@@ -50,4 +50,4 @@ export function setTemporaryDirectory(path: string): void {
  */
 export function clearTemporaryDirectory(): void {
     delete globalEnvironment.temporaryDirectory;
-} 
+}

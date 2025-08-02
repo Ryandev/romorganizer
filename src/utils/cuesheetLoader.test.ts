@@ -1,4 +1,7 @@
-import { findCuesheetEntryForGame, findAndLoadCuesheetForGame } from './cuesheetLoader';
+import {
+    findCuesheetEntryForGame,
+    findAndLoadCuesheetForGame,
+} from './cuesheetLoader';
 
 describe('CuesheetLoader', () => {
     describe('findCuesheetEntryForGame', () => {
@@ -7,16 +10,27 @@ describe('CuesheetLoader', () => {
                 {
                     name: 'Test Game',
                     path: '/test.cue',
-                    load: async () => ({ name: 'Test Game', content: 'test content', path: '/test.cue' })
+                    load: async () => ({
+                        name: 'Test Game',
+                        content: 'test content',
+                        path: '/test.cue',
+                    }),
                 },
                 {
                     name: 'Another Game',
                     path: '/another.cue',
-                    load: async () => ({ name: 'Another Game', content: 'another content', path: '/another.cue' })
-                }
+                    load: async () => ({
+                        name: 'Another Game',
+                        content: 'another content',
+                        path: '/another.cue',
+                    }),
+                },
             ];
-            
-            const result = findCuesheetEntryForGame(cuesheetEntries, 'Test Game');
+
+            const result = findCuesheetEntryForGame(
+                cuesheetEntries,
+                'Test Game'
+            );
             expect(result).toBeDefined();
             expect(result?.name).toBe('Test Game');
         });
@@ -26,11 +40,18 @@ describe('CuesheetLoader', () => {
                 {
                     name: 'Test Game',
                     path: '/test.cue',
-                    load: async () => ({ name: 'Test Game', content: 'test content', path: '/test.cue' })
-                }
+                    load: async () => ({
+                        name: 'Test Game',
+                        content: 'test content',
+                        path: '/test.cue',
+                    }),
+                },
             ];
-            
-            const result = findCuesheetEntryForGame(cuesheetEntries, 'test game');
+
+            const result = findCuesheetEntryForGame(
+                cuesheetEntries,
+                'test game'
+            );
             expect(result).toBeDefined();
             expect(result?.name).toBe('Test Game');
         });
@@ -40,11 +61,18 @@ describe('CuesheetLoader', () => {
                 {
                     name: 'Test Game',
                     path: '/test.cue',
-                    load: async () => ({ name: 'Test Game', content: 'test content', path: '/test.cue' })
-                }
+                    load: async () => ({
+                        name: 'Test Game',
+                        content: 'test content',
+                        path: '/test.cue',
+                    }),
+                },
             ];
-            
-            const result = findCuesheetEntryForGame(cuesheetEntries, 'Non Existent Game');
+
+            const result = findCuesheetEntryForGame(
+                cuesheetEntries,
+                'Non Existent Game'
+            );
             expect(result).toBeUndefined();
         });
     });
@@ -55,11 +83,18 @@ describe('CuesheetLoader', () => {
                 {
                     name: 'Test Game',
                     path: '/test.cue',
-                    load: async () => ({ name: 'Test Game', content: 'test content', path: '/test.cue' })
-                }
+                    load: async () => ({
+                        name: 'Test Game',
+                        content: 'test content',
+                        path: '/test.cue',
+                    }),
+                },
             ];
-            
-            const result = await findAndLoadCuesheetForGame(cuesheetEntries, 'Test Game');
+
+            const result = await findAndLoadCuesheetForGame(
+                cuesheetEntries,
+                'Test Game'
+            );
             expect(result).toBeDefined();
             expect(result?.name).toBe('Test Game');
             expect(result?.content).toBe('test content');
@@ -70,12 +105,19 @@ describe('CuesheetLoader', () => {
                 {
                     name: 'Test Game',
                     path: '/test.cue',
-                    load: async () => ({ name: 'Test Game', content: 'test content', path: '/test.cue' })
-                }
+                    load: async () => ({
+                        name: 'Test Game',
+                        content: 'test content',
+                        path: '/test.cue',
+                    }),
+                },
             ];
-            
-            const result = await findAndLoadCuesheetForGame(cuesheetEntries, 'Non Existent Game');
+
+            const result = await findAndLoadCuesheetForGame(
+                cuesheetEntries,
+                'Non Existent Game'
+            );
             expect(result).toBeUndefined();
         });
     });
-}); 
+});

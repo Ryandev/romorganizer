@@ -13,7 +13,7 @@ describe('SevenZipArchive', () => {
         testDir = await storageInstance.createTemporaryDirectory();
         sevenZipArchive = new SevenZipArchive(join(testDir, 'test.7z'));
 
-        // Initialize temporaryFiles for testing
+        /* Initialize temporaryFiles for testing */
         if (!globalThis.temporaryFiles) {
             globalThis.temporaryFiles = [];
         }
@@ -34,7 +34,7 @@ describe('SevenZipArchive', () => {
 
     describe('compress', () => {
         it('should compress a directory to a 7z file', async () => {
-            // Create some test files
+            /* Create some test files */
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
@@ -44,19 +44,19 @@ describe('SevenZipArchive', () => {
             const sevenZipPath = join(testDir, 'output.7z');
             const sevenZipArchive = new SevenZipArchive(sevenZipPath);
 
-            // This test might fail if 7z is not installed, which is expected
+            /* This test might fail if 7z is not installed, which is expected */
             try {
                 await sevenZipArchive.compress(testDir);
 
-                // Verify the 7z file was created
+                /* Verify the 7z file was created */
                 const exists = await storageInstance.exists(sevenZipPath);
                 expect(exists).toBe(true);
 
-                // Verify the 7z file has content
+                /* Verify the 7z file has content */
                 const stats = await storageInstance.size(sevenZipPath);
                 expect(stats).toBeGreaterThan(0);
             } catch (error) {
-                // If 7z is not installed or other errors occur, just verify it's an error
+                /* If 7z is not installed or other errors occur, just verify it's an error */
                 expect(error).toBeInstanceOf(Error);
             }
         });
@@ -64,7 +64,7 @@ describe('SevenZipArchive', () => {
 
     describe('extract', () => {
         it('should extract a 7z file to a directory', async () => {
-            // First create a 7z file
+            /* First create a 7z file */
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
@@ -74,27 +74,27 @@ describe('SevenZipArchive', () => {
             const sevenZipPath = join(testDir, 'test.7z');
             const sevenZipArchive = new SevenZipArchive(sevenZipPath);
 
-            // This test might fail if 7z is not installed, which is expected
+            /* This test might fail if 7z is not installed, which is expected */
             try {
                 await sevenZipArchive.compress(testDir);
 
-                // Now extract it
+                /* Now extract it */
                 const extractedDir = await sevenZipArchive.extract();
 
-                // Verify the extracted directory exists
+                /* Verify the extracted directory exists */
                 const exists = await storageInstance.exists(extractedDir);
                 expect(exists).toBe(true);
 
-                // Verify the files were extracted
+                /* Verify the files were extracted */
                 const files = await storageInstance.list(extractedDir, {
                     recursive: false,
                 });
                 expect(files.length).toBeGreaterThan(0);
 
-                // Clean up
+                /* Clean up */
                 await storageInstance.remove(extractedDir);
             } catch (error) {
-                // If 7z is not installed or other errors occur, just verify it's an error
+                /* If 7z is not installed or other errors occur, just verify it's an error */
                 expect(error).toBeInstanceOf(Error);
             }
         });
@@ -102,7 +102,7 @@ describe('SevenZipArchive', () => {
 
     describe('verify', () => {
         it('should verify a valid 7z file', async () => {
-            // Create a valid 7z file
+            /* Create a valid 7z file */
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
@@ -111,21 +111,21 @@ describe('SevenZipArchive', () => {
             const sevenZipPath = join(testDir, 'test.7z');
             const sevenZipArchive = new SevenZipArchive(sevenZipPath);
 
-            // This test might fail if 7z is not installed, which is expected
+            /* This test might fail if 7z is not installed, which is expected */
             try {
                 await sevenZipArchive.compress(testDir);
 
-                // Verify the 7z file
+                /* Verify the 7z file */
                 const isValid = await sevenZipArchive.verify();
                 expect(isValid).toBe(true);
             } catch (error) {
-                // If 7z is not installed or other errors occur, just verify it's an error
+                /* If 7z is not installed or other errors occur, just verify it's an error */
                 expect(error).toBeInstanceOf(Error);
             }
         });
 
         it('should return false for an invalid 7z file', async () => {
-            // Create an invalid 7z file (just a text file)
+            /* Create an invalid 7z file (just a text file) */
             const testContent = 'This is not a 7z file';
             const testBuffer = new TextEncoder().encode(testContent);
 
@@ -134,7 +134,7 @@ describe('SevenZipArchive', () => {
 
             const sevenZipArchive = new SevenZipArchive(invalidSevenZipPath);
 
-            // Verify the invalid 7z file
+            /* Verify the invalid 7z file */
             const isValid = await sevenZipArchive.verify();
             expect(isValid).toBe(false);
         });

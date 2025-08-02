@@ -1,6 +1,6 @@
 import { doesCommandExist, isCommandExecutable } from './command';
 
-// Mock zx
+/* Mock zx */
 jest.mock('zx', () => ({
     $: jest.fn(),
 }));
@@ -20,7 +20,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await doesCommandExist('ls');
-            
+
             expect(result).toBe(true);
             expect(mockZx.$).toHaveBeenCalled();
         });
@@ -31,7 +31,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await doesCommandExist('nonExistentCommand');
-            
+
             expect(result).toBe(false);
             expect(mockZx.$).toHaveBeenCalled();
         });
@@ -42,7 +42,7 @@ describe('Command Utilities', () => {
             });
 
             const result = await doesCommandExist('someCommand');
-            
+
             expect(result).toBe(false);
             expect(mockZx.$).toHaveBeenCalled();
         });
@@ -53,7 +53,7 @@ describe('Command Utilities', () => {
             });
 
             const result = await doesCommandExist('slowCommand');
-            
+
             expect(result).toBe(false);
             expect(mockZx.$).toHaveBeenCalled();
         });
@@ -64,7 +64,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await doesCommandExist('');
-            
+
             expect(result).toBe(true);
             expect(mockZx.$).toHaveBeenCalled();
         });
@@ -75,7 +75,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await doesCommandExist('git status');
-            
+
             expect(result).toBe(true);
             expect(mockZx.$).toHaveBeenCalled();
         });
@@ -86,7 +86,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await doesCommandExist('node-v16');
-            
+
             expect(result).toBe(true);
             expect(mockZx.$).toHaveBeenCalled();
         });
@@ -97,7 +97,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await doesCommandExist('missingCommand');
-            
+
             expect(result).toBe(false);
             expect(mockZx.$).toHaveBeenCalled();
         });
@@ -108,7 +108,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await doesCommandExist('missingCommand');
-            
+
             expect(result).toBe(false);
             expect(mockZx.$).toHaveBeenCalled();
         });
@@ -123,7 +123,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await isCommandExecutable('/usr/bin/ls');
-            
+
             expect(result).toBe(true);
             expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
@@ -136,7 +136,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await isCommandExecutable('/usr/bin/readonlyFile');
-            
+
             expect(result).toBe(false);
             expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
@@ -149,7 +149,7 @@ describe('Command Utilities', () => {
             });
 
             const result = await isCommandExecutable('/usr/bin/protected');
-            
+
             expect(result).toBe(false);
             expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
@@ -162,7 +162,7 @@ describe('Command Utilities', () => {
             });
 
             const result = await isCommandExecutable('/usr/bin/slowCommand');
-            
+
             expect(result).toBe(false);
             expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
@@ -175,7 +175,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await isCommandExecutable('');
-            
+
             expect(result).toBe(true);
             expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
@@ -187,8 +187,10 @@ describe('Command Utilities', () => {
                 exitCode: Promise.resolve(0),
             } as any);
 
-            const result = await isCommandExecutable('/usr/local/bin/my script');
-            
+            const result = await isCommandExecutable(
+                '/usr/local/bin/my script'
+            );
+
             expect(result).toBe(true);
             expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
@@ -201,7 +203,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await isCommandExecutable('/usr/bin/node-v16.14.0');
-            
+
             expect(result).toBe(true);
             expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
@@ -214,7 +216,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await isCommandExecutable('./my-script.sh');
-            
+
             expect(result).toBe(true);
             expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
@@ -227,7 +229,7 @@ describe('Command Utilities', () => {
             } as any);
 
             const result = await isCommandExecutable('~/bin/custom-command');
-            
+
             expect(result).toBe(true);
             expect(mockZx.$).toHaveBeenCalledTimes(2);
         });
@@ -237,15 +239,17 @@ describe('Command Utilities', () => {
         test('should handle both functions with same command', async () => {
             mockZx.$.mockReturnValueOnce({
                 exitCode: Promise.resolve(0),
-            } as any).mockReturnValueOnce({
-                stdout: '/usr/bin/git',
-            } as any).mockReturnValueOnce({
-                exitCode: Promise.resolve(0),
-            } as any);
+            } as any)
+                .mockReturnValueOnce({
+                    stdout: '/usr/bin/git',
+                } as any)
+                .mockReturnValueOnce({
+                    exitCode: Promise.resolve(0),
+                } as any);
 
             const exists = await doesCommandExist('git');
             const executable = await isCommandExecutable('/usr/bin/git');
-            
+
             expect(exists).toBe(true);
             expect(executable).toBe(true);
             expect(mockZx.$).toHaveBeenCalledTimes(3);
@@ -259,8 +263,10 @@ describe('Command Utilities', () => {
             } as any);
 
             const exists = await doesCommandExist('readonlyFile');
-            const executable = await isCommandExecutable('/usr/bin/readonlyFile');
-            
+            const executable = await isCommandExecutable(
+                '/usr/bin/readonlyFile'
+            );
+
             expect(exists).toBe(true);
             expect(executable).toBe(false);
         });
@@ -271,8 +277,10 @@ describe('Command Utilities', () => {
             } as any);
 
             const exists = await doesCommandExist('nonExistent');
-            const executable = await isCommandExecutable('/usr/bin/nonExistent');
-            
+            const executable = await isCommandExecutable(
+                '/usr/bin/nonExistent'
+            );
+
             expect(exists).toBe(false);
             expect(executable).toBe(false);
         });
@@ -285,8 +293,10 @@ describe('Command Utilities', () => {
             /* Cspell:disable-next-line */
             const exists = await doesCommandExist('networkcommand');
             /* Cspell:disable-next-line */
-            const executable = await isCommandExecutable('/usr/bin/networkcommand');
-            
+            const executable = await isCommandExecutable(
+                '/usr/bin/networkcommand'
+            );
+
             expect(exists).toBe(false);
             expect(executable).toBe(false);
         });
@@ -300,7 +310,7 @@ describe('Command Utilities', () => {
 
             /* Cspell:disable-next-line */
             const result = await doesCommandExist('weirdcommand');
-            
+
             expect(result).toBe(false);
         });
 
@@ -311,7 +321,7 @@ describe('Command Utilities', () => {
 
             /* Cspell:disable-next-line */
             const result = await doesCommandExist('weirdcommand');
-            
+
             expect(result).toBe(false);
         });
 
@@ -322,7 +332,7 @@ describe('Command Utilities', () => {
 
             /* Cspell:disable-next-line */
             const result = await doesCommandExist('weirdcommand');
-            
+
             expect(result).toBe(false);
         });
 
@@ -331,8 +341,8 @@ describe('Command Utilities', () => {
 
             /* Cspell:disable-next-line */
             const result = await doesCommandExist('weirdcommand');
-            
+
             expect(result).toBe(false);
         });
     });
-}); 
+});

@@ -1,4 +1,4 @@
-// Base interface for common WASM module properties
+/* Base interface for common WASM module properties */
 interface BaseWASMModule {
   FS: {
     writeFile: (path: string, data: Uint8Array) => void;
@@ -12,12 +12,12 @@ interface BaseWASMModule {
   onRuntimeInitialized?: () => void;
 }
 
-// ECM compression module
+/* ECM compression module */
 export interface ECMModule extends BaseWASMModule {
   _ecmify: (inFile: number, outFile: number) => number;
 }
 
-// UNECM decompression module  
+/* UNECM decompression module   */
 export interface UNECMModule extends BaseWASMModule {
   _unecmify: (inFile: number, outFile: number) => number;
 } 

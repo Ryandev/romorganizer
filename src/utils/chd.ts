@@ -8,10 +8,8 @@ const CHD_FORMATS = ['cue', 'gdi', 'iso', 'img'] as const;
 type ChdFormat = (typeof CHD_FORMATS)[number];
 
 export interface ChdManager {
-    create(options: {
-        inputFilePath: string;
-    }): Promise<string>;
-    extract(options: { 
+    create(options: { inputFilePath: string }): Promise<string>;
+    extract(options: {
         chdFilePath: string;
         format: ChdFormat;
     }): Promise<string>;
@@ -24,41 +22,55 @@ async function createChdFile(options: {
     guardCommandExists('chdman');
     const { inputFilePath } = options;
 
-    guardFileExists(inputFilePath, `Input file does not exist: ${inputFilePath}`);
+    guardFileExists(
+        inputFilePath,
+        `Input file does not exist: ${inputFilePath}`
+    );
 
     /* check input file path format */
     const inputFileExtension = path.extname(inputFilePath).slice(1);
     if (!CHD_FORMATS.includes(inputFileExtension as ChdFormat)) {
-        throw new Error(`Input file extension does not match format: ${inputFileExtension} !== ${CHD_FORMATS.join(', ')}`);
+        throw new Error(
+            `Input file extension does not match format: ${inputFileExtension} !== ${CHD_FORMATS.join(', ')}`
+        );
     }
 
-    const temporaryDirectory = await storage().createTemporaryDirectory()
+    const temporaryDirectory = await storage().createTemporaryDirectory();
 
-    const outputFileName = path.basename(inputFilePath, `.${inputFileExtension}`) + '.chd';
+    const outputFileName =
+        path.basename(inputFilePath, `.${inputFileExtension}`) + '.chd';
 
     const outputFilePath = path.join(temporaryDirectory, outputFileName);
 
     let exitCode: number;
-    
+
     switch (inputFileExtension) {
         case 'cue':
         case 'gdi':
         case 'iso': {
-            const { exitCode: code } = await $`chdman createcd --force --input ${inputFilePath} --output ${outputFilePath}`;
+            const { exitCode: code } =
+                await $`chdman createcd --force --input ${inputFilePath} --output ${outputFilePath}`;
             exitCode = code ?? 1;
             break;
         }
         case 'img': {
-            const { exitCode: code } = await $`chdman createcd --force --input ${inputFilePath} --output ${outputFilePath}`;
+            const { exitCode: code } =
+                await $`chdman createcd --force --input ${inputFilePath} --output ${outputFilePath}`;
             exitCode = code ?? 1;
             break;
         }
         default:
             throw new Error(`No command found for ${inputFileExtension}`);
     }
-    guard(exitCode === 0, `Failed to create CHD file for ${inputFilePath}, status code: ${exitCode}`);
+    guard(
+        exitCode === 0,
+        `Failed to create CHD file for ${inputFilePath}, status code: ${exitCode}`
+    );
 
-    guardFileExists(outputFilePath, `CHD file does not exist: ${outputFilePath}`);
+    guardFileExists(
+        outputFilePath,
+        `CHD file does not exist: ${outputFilePath}`
+    );
 
     log.info(`Successfully created ${outputFilePath}`);
 
@@ -74,9 +86,10 @@ async function extractChdFile(options: {
     const { chdFilePath, format } = options;
     guardFileExists(chdFilePath, `CHD file does not exist: ${chdFilePath}`);
 
-    const temporaryDirectory = await storage().createTemporaryDirectory()
+    const temporaryDirectory = await storage().createTemporaryDirectory();
 
-    const outputFileName = path.basename(chdFilePath, '.chd') + `.${options.format}`;
+    const outputFileName =
+        path.basename(chdFilePath, '.chd') + `.${options.format}`;
     const outputFilePath = path.join(temporaryDirectory, outputFileName);
 
     switch (format) {
@@ -92,7 +105,10 @@ async function extractChdFile(options: {
             throw new Error(`No command found for ${format}`);
     }
 
-    guardFileExists(outputFilePath, `Cue file does not exist: ${outputFilePath}`);
+    guardFileExists(
+        outputFilePath,
+        `Cue file does not exist: ${outputFilePath}`
+    );
     log.info(`Successfully extracted ${chdFilePath} to ${outputFilePath}`);
 
     return outputFilePath;

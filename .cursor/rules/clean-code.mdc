@@ -20,7 +20,13 @@ alwaysApply: false
 - Use comments to explain why something is done a certain way
 - Document APIs, complex algorithms, and non-obvious side effects
 - Do not use emojis in comments
-- Use /* */ style comments in javascript & typescript files
+
+## Comment Style
+- **ALWAYS** use `/* */` style comments in JavaScript and TypeScript files
+- **NEVER** use `//` style comments - they are code-smell and indicate commented-out code
+- `//` comments are typically the result of keyboard shortcuts and should be avoided
+- Use `/* */` for all single-line and multi-line comments
+- This applies to all code files: `.ts`, `.js`, `.tsx`, `.jsx`
 
 ## Single Responsibility
 - Each function should do exactly one thing

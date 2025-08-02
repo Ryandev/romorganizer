@@ -6,111 +6,117 @@ const COMMAND_NAME = 'romorganizer';
 
 /* Define command line option definitions */
 const optionDefinitions: commandLineArgs.OptionDefinition[] = [
-    { 
+    {
         name: 'command',
         type: String,
         multiple: false,
-        defaultOption: true
+        defaultOption: true,
     },
-    { 
-        name: 'source-dir', 
-        alias: 's', 
-        type: String, 
-        multiple: false
-    },
-    { 
-        name: 'output-dir', 
-        alias: 'o', 
-        type: String, 
-        multiple: false
-    },
-    { 
-        name: 'dat-file', 
-        alias: 'd', 
-        type: String, 
-        multiple: false
-    },
-    { 
-        name: 'cuesheets-file', 
-        alias: 'c', 
-        type: String, 
-        multiple: false
-    },
-    { 
-        name: 'remove-source', 
-        alias: 'r', 
-        type: Boolean, 
-        multiple: false, 
-        defaultValue: false
-    },
-    { 
-        name: 'use-dat-file-name', 
-        alias: 'u', 
-        type: Boolean, 
+    {
+        name: 'source-dir',
+        alias: 's',
+        type: String,
         multiple: false,
-        defaultValue: false
     },
-    { 
-        name: 'rename', 
-        alias: 'n', 
-        type: Boolean, 
+    {
+        name: 'output-dir',
+        alias: 'o',
+        type: String,
         multiple: false,
-        defaultValue: false
     },
-    { 
-        name: 'overwrite', 
-        alias: 'w', 
-        type: Boolean, 
+    {
+        name: 'dat-file',
+        alias: 'd',
+        type: String,
         multiple: false,
-        defaultValue: false
+    },
+    {
+        name: 'cuesheets-file',
+        alias: 'c',
+        type: String,
+        multiple: false,
+    },
+    {
+        name: 'remove-source',
+        alias: 'r',
+        type: Boolean,
+        multiple: false,
+        defaultValue: false,
+    },
+    {
+        name: 'use-dat-file-name',
+        alias: 'u',
+        type: Boolean,
+        multiple: false,
+        defaultValue: false,
+    },
+    {
+        name: 'rename',
+        alias: 'n',
+        type: Boolean,
+        multiple: false,
+        defaultValue: false,
+    },
+    {
+        name: 'overwrite',
+        alias: 'w',
+        type: Boolean,
+        multiple: false,
+        defaultValue: false,
     },
     {
         name: 'force',
         alias: 'f',
         type: Boolean,
         multiple: false,
-        defaultValue: false
+        defaultValue: false,
     },
     {
         name: 'help',
         alias: 'h',
         type: Boolean,
         multiple: false,
-        defaultValue: false
+        defaultValue: false,
     },
     {
         name: 'temp-dir',
         alias: 't',
         type: String,
-        multiple: false
-    }
+        multiple: false,
+    },
 ];
 
 /* Zod schema for command line arguments */
 const CompressSchema = z.object({
     command: z.literal('compress'),
-    sourceDir: z.string().min(1, 'Source directory is required').refine(
-        (dir) => {
-            try {
-                guardDirectoryExists(dir);
-                return true;
-            } catch {
-                return false;
-            }
-        },
-        { message: 'Source directory does not exist or is not accessible' }
-    ),
-    outputDir: z.string().min(1, 'Output directory is required').refine(
-        (dir) => {
-            try {
-                guardDirectoryExists(dir);
-                return true;
-            } catch {
-                return false;
-            }
-        },
-        { message: 'Output directory does not exist or is not accessible' }
-    ),
+    sourceDir: z
+        .string()
+        .min(1, 'Source directory is required')
+        .refine(
+            dir => {
+                try {
+                    guardDirectoryExists(dir);
+                    return true;
+                } catch {
+                    return false;
+                }
+            },
+            { message: 'Source directory does not exist or is not accessible' }
+        ),
+    outputDir: z
+        .string()
+        .min(1, 'Output directory is required')
+        .refine(
+            dir => {
+                try {
+                    guardDirectoryExists(dir);
+                    return true;
+                } catch {
+                    return false;
+                }
+            },
+            { message: 'Output directory does not exist or is not accessible' }
+        ),
     tempDir: z.string().optional(),
     removeSource: z.boolean().default(false),
     useDatFileName: z.boolean().default(false),
@@ -122,17 +128,20 @@ const CompressSchema = z.object({
 
 const VerifySchema = z.object({
     command: z.literal('verify'),
-    sourceDir: z.string().min(1, 'Source directory is required').refine(
-        (dir) => {
-            try {
-                guardDirectoryExists(dir);
-                return true;
-            } catch {
-                return false;
-            }
-        },
-        { message: 'Source directory does not exist or is not accessible' }
-    ),
+    sourceDir: z
+        .string()
+        .min(1, 'Source directory is required')
+        .refine(
+            dir => {
+                try {
+                    guardDirectoryExists(dir);
+                    return true;
+                } catch {
+                    return false;
+                }
+            },
+            { message: 'Source directory does not exist or is not accessible' }
+        ),
     outputDir: z.string().optional(),
     tempDir: z.string().optional(),
     datFile: z.string().min(1, 'DAT file is required'),
@@ -145,7 +154,10 @@ const VerifySchema = z.object({
     help: z.boolean().default(false),
 });
 
-const CommandSchema = z.discriminatedUnion('command', [CompressSchema, VerifySchema]);
+const CommandSchema = z.discriminatedUnion('command', [
+    CompressSchema,
+    VerifySchema,
+]);
 
 export type LaunchParameters = z.infer<typeof CommandSchema>;
 
@@ -212,24 +224,25 @@ Examples:
   ${COMMAND_NAME} compress --source-dir ./input --output-dir ./output --remove-source
 
 Use '${COMMAND_NAME} <command> --help' for command-specific help.
-`
+`,
 } as const;
 
 /**
  * Shows help text for the specified command or global help
  */
 function showHelp(command?: string): never {
-    const helpText = command && command in HELP_TEXT_MAP 
-        ? HELP_TEXT_MAP[command as keyof typeof HELP_TEXT_MAP]
-        : HELP_TEXT_MAP.global;
-    
+    const helpText =
+        command && command in HELP_TEXT_MAP
+            ? HELP_TEXT_MAP[command as keyof typeof HELP_TEXT_MAP]
+            : HELP_TEXT_MAP.global;
+
     console.log(helpText);
-    
+
     /* Don't exit in test environment */
     if (process.env['NODE_ENV'] === 'test') {
         throw new Error('Help requested');
     }
-    
+
     process.exit(0);
 }
 
@@ -237,32 +250,35 @@ function showHelp(command?: string): never {
  * Parses command line arguments using command-line-args and validates them using Zod
  */
 function _parseCommandLineArguments(args: string[]): LaunchParameters {
-    // Check for empty args first
+    /* Check for empty args first */
     if (args.length === 0) {
         showHelp();
     }
 
-    // Check if first argument is a valid command
+    /* Check if first argument is a valid command */
     const command = args[0];
     if (command === 'help' || command === '--help' || command === '-h') {
         showHelp();
     }
 
     if (!command || !Object.keys(HELP_TEXT_MAP).includes(command)) {
-        // If first arg is not a valid command, show help
+        /* If first arg is not a valid command, show help */
         showHelp();
     }
 
     try {
-        // Parse arguments using command-line-args
-        const parsedOptions = commandLineArgs(optionDefinitions, { argv: args, partial: true });
+        /* Parse arguments using command-line-args */
+        const parsedOptions = commandLineArgs(optionDefinitions, {
+            argv: args,
+            partial: true,
+        });
 
-        // Check for help flag before validation
+        /* Check for help flag before validation */
         if (parsedOptions['help'] || parsedOptions['h']) {
             showHelp(command);
         }
 
-        // Transform parsed options to match our schema
+        /* Transform parsed options to match our schema */
         const transformedArgs = {
             command,
             sourceDir: parsedOptions['source-dir'],
@@ -278,12 +294,16 @@ function _parseCommandLineArguments(args: string[]): LaunchParameters {
             help: parsedOptions['help'] || false,
         };
 
-        // Validate with Zod schema
+        /* Validate with Zod schema */
         return CommandSchema.parse(transformedArgs);
     } catch (error) {
         if (error instanceof z.ZodError) {
             const zodError = error as z.ZodError<unknown>;
-            const messages = zodError.issues.map((err: z.ZodIssue) => `${err.path.join('.')}: ${err.message}`).join('\n');
+            const messages = zodError.issues
+                .map(
+                    (err: z.ZodIssue) => `${err.path.join('.')}: ${err.message}`
+                )
+                .join('\n');
             throw new Error(`Validation error:\n${messages}`);
         }
         throw error;
