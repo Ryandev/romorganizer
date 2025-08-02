@@ -218,7 +218,6 @@ The coverage configuration ensures that new code maintains the current quality s
 - `npm run pretty:fix`: Fix code formatting with Prettier
 - `npm run spell:check`: Check spelling with cspell
 - `npm run audit:check`: Run security audit on dependencies
-- `npm run audit:fix`: Run security audit and attempt to fix issues
 
 ### Project structure:
 ```
@@ -239,8 +238,10 @@ The coverage configuration ensures that new code maintains the current quality s
 │       ├── rar.ts    # RAR archive implementation
 │       ├── zip.ts    # ZIP archive implementation
 │       └── ecm.ts    # ECM archive implementation
-├── dist/             # Compiled JavaScript output
-├── dist-package/     # Single executable output (after npm run package)
+├── dist/             # Build output directory
+│   ├── build/        # Compiled JavaScript output (ES modules)
+│   ├── package/      # Single executable output (after npm run package)
+│   └── native/       # Native executables for different platforms
 ├── scripts/          # Build scripts
 ├── package.json      # Project configuration
 ├── tsconfig.json     # TypeScript configuration

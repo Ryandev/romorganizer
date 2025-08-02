@@ -119,7 +119,6 @@ jobs:
         name: dist-${{ matrix.os }}-${{ matrix.package-manager }}
         path: |
           dist/
-          dist-package/
         retention-days: 30
 
   # Security audit

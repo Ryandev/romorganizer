@@ -45,7 +45,7 @@ export default defineConfig({
         assetFileNames: '[name].[ext]'
       }
     },
-    outDir: 'dist-pkg',
+    outDir: 'dist/package',
     sourcemap: false,
     minify: false
   },
