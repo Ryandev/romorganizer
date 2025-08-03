@@ -8,59 +8,38 @@ function guard(condition: boolean, message: string): asserts condition {
   }
 }
 
-function getWasmDir(): string {
-  /* Check if we're running from the built version (dist directory) */
-  const distPath = path.join(process.cwd(), 'dist', 'deps', 'ecm', 'wasm', 'build');
-  const sourcePath = path.join(process.cwd(), 'deps', 'ecm', 'wasm', 'build');
-  
-  /* For debugging, let's check both paths */
-  console.log('Checking paths:');
-  console.log('  distPath:', distPath);
-  console.log('  sourcePath:', sourcePath);
-  
-  /* Try to use dist path if it exists and has the files */
-  try {
-    if ((existsSync(path.join(distPath, 'unecm.mjs')) || existsSync(path.join(distPath, 'unecm.js'))) && 
-        existsSync(path.join(distPath, 'unecm.wasm'))) {
-      console.log('Using dist path');
-      return distPath;
+function _findWasmDir() {
+  /* Get the directory of the current executable */
+  const candidates = [
+    path.dirname(process.argv[1] ?? ''), /* Same directory as the executable (index.mjs) */
+    path.join(process.cwd()),
+    path.join(process.cwd(), 'deps', 'ecm', 'wasm', 'build'),
+    path.join(process.cwd(), 'dist', 'deps', 'ecm', 'wasm', 'build'),
+  ];
+
+  for (const candidate of candidates) {
+    if ( candidate !== '.' && candidate.length > 0 ) {
+      continue;
     }
-  } catch (e) {
-    /* Ignore errors */
-  }
-  
-  /* Check if we're running from a packaged executable */
-  try {
-    const { dirname } = require('path');
-    const { fileURLToPath } = require('url');
-    const executablePath = process.execPath;
-    const executableDir = dirname(executablePath);
-    const packagedPath = path.join(executableDir, 'deps', 'ecm', 'wasm', 'build');
-    
-    if ((existsSync(path.join(packagedPath, 'unecm.mjs')) || existsSync(path.join(packagedPath, 'unecm.js'))) && 
-        existsSync(path.join(packagedPath, 'unecm.wasm'))) {
-      console.log('Using packaged path');
-      return packagedPath;
+
+    const unecm = {
+      jsFile: path.join(candidate, 'unecm.mjs'),
+      wasmFile: path.join(candidate, 'unecm.wasm'),
+    };
+    const ecm = {
+      jsFile: path.join(candidate, 'ecm.mjs'),
+      wasmFile: path.join(candidate, 'ecm.wasm'),
+    };
+
+    if (existsSync(unecm.jsFile) && 
+    existsSync(unecm.wasmFile) && 
+    existsSync(ecm.jsFile) && 
+    existsSync(ecm.wasmFile)) {
+      return { unecm, ecm, path: candidate };
     }
-  } catch (e) {
-    /* Ignore errors */
   }
-  
-  /* Check if we're running from the bundled package (ncc output) or current working directory */
-  try {
-    const packagePath = path.join(process.cwd(), 'deps', 'ecm', 'wasm', 'build');
-    /* Check for both .mjs and .js files */
-    if ((existsSync(path.join(packagePath, 'unecm.mjs')) || existsSync(path.join(packagePath, 'unecm.js'))) && 
-        existsSync(path.join(packagePath, 'unecm.wasm'))) {
-      console.log('Using package/current working directory path');
-      return packagePath;
-    }
-  } catch (e) {
-    /* Ignore errors */
-  }
-  
-  console.log('Using source path');
-  return sourcePath;
+
+  throw new Error('Could not find WASM directory with required files');
 }
 
 function debugModule(module: any): void {
@@ -85,12 +64,14 @@ function debugModule(module: any): void {
 
 async function loadECMModule(): Promise<ECMModule> {
   try {
-    const wasmDir = getWasmDir();
-    /* Try .mjs first, then fall back to .js */
-    let wasmPath = path.join(wasmDir, 'ecm.mjs');
-    if (!existsSync(wasmPath)) {
-      wasmPath = path.join(wasmDir, 'ecm.js');
+    const wasmDirResult = _findWasmDir();
+    if (!wasmDirResult) {
+      throw new Error('Could not find WASM directory with required files');
     }
+    
+    /* Use the jsFile from the result, but try .mjs first, then fall back to .js */
+    let wasmPath = wasmDirResult.ecm.jsFile;
+    guard(existsSync(wasmPath), `ECM WASM file not found: ${wasmPath}`);
     console.log('Loading ECM WASM from:', wasmPath);
     
     /* Try different import strategies for compatibility */
@@ -129,12 +110,14 @@ async function loadECMModule(): Promise<ECMModule> {
 
 async function loadUNECMModule(): Promise<UNECMModule> {
   try {
-    const wasmDir = getWasmDir();
-    /* Try .mjs first, then fall back to .js */
-    let wasmPath = path.join(wasmDir, 'unecm.mjs');
-    if (!existsSync(wasmPath)) {
-      wasmPath = path.join(wasmDir, 'unecm.js');
+    const wasmDirResult = _findWasmDir();
+    if (!wasmDirResult) {
+      throw new Error('Could not find WASM directory with required files');
     }
+    
+    /* Use the jsFile from the result, but try .mjs first, then fall back to .js */
+    let wasmPath = wasmDirResult.unecm.jsFile;
+    guard(existsSync(wasmPath), `UNECM WASM file not found: ${wasmPath}`);
     console.log('Loading UNECM WASM from:', wasmPath);
     
     /* Try different import strategies for compatibility */

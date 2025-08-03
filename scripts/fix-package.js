@@ -23,12 +23,12 @@ jsContent = jsContent.replace(/__filename/g, 'import.meta.url');
 
 writeFileSync(jsPath, jsContent);
 
-/* Copy WASM files from dist/build to dist/package */
+/* Copy WASM files from dist/build to dist/package (same directory as index.mjs) */
 const wasmSourceDir = path.join(process.cwd(), 'dist', 'build', 'deps', 'ecm', 'wasm', 'build');
-const wasmDestDir = path.join(process.cwd(), 'dist', 'package', 'deps', 'ecm', 'wasm', 'build');
+const wasmDestDir = path.join(process.cwd(), 'dist', 'package'); /* Same directory as index.mjs */
 
 copyWasmFiles(wasmSourceDir, wasmDestDir, 'dist/package: ');
 
 console.log('✅ Fixed package.json for CommonJS compatibility');
 console.log('✅ Fixed __filename references for ES module compatibility');
-console.log('✅ Copied WASM files to package directory'); 
+console.log('✅ Copied WASM files to package directory (same directory as index.mjs)'); 
