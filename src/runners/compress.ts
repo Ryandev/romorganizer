@@ -15,14 +15,29 @@ import { fileExtension, groupedFiles } from './utils';
 
 const EXTRACT_OPERATIONS = new Map<
     string,
-    (sourceFile: string) => Promise<string[]>
+    (sourceFile: string, allFiles: string[]) => Promise<string[]>
 >([
     [
         'ecm',
-        async (sourceFile: string) => {
+        async (sourceFile: string, allFiles: string[]) => {
             const ecmArchive = createArchive(sourceFile);
-            const extractedFile = await ecmArchive.extract();
+            let extractedFile = await ecmArchive.extract();
             guardFileExists(extractedFile, `Extracted file missing, does not exist: ${extractedFile}`);
+            const cueFile = allFiles.find(file => file.endsWith('.cue'));
+            if ( cueFile ) {
+                /* Read the cue file & get the name of the expected bin file. */
+                /* If the bin filename does not match the cue file. Rename the bin file before returning */
+                const cueContent = await cueSheet.parseFromCueFile(cueFile);
+                const cueData = await cueSheet.deserializeCueSheet(cueContent);
+                const binFileName = cueData.files.map(file => file.filename).find(filename => filename.endsWith('.bin'));
+                if ( binFileName ) {
+                    const binFilePath = path.join(path.dirname(cueFile), binFileName);
+                    if ( binFilePath !== extractedFile ) {
+                        await storage().move(extractedFile, binFilePath);
+                        extractedFile = binFilePath;
+                    }
+                }
+            }
             return [extractedFile];
         },
     ],
@@ -194,7 +209,7 @@ export class RunnerFile implements IRunner<string[]> {
                     }
 
                     log.info(`Extracting file ${filePath} with operation ${extractOperation.name}`);
-                    const extractedFiles = await extractOperation(filePath);
+                    const extractedFiles = await extractOperation(filePath, currentFiles);
                     /* Move extracted files back to current directory */
                     for (const extractedFile of extractedFiles) {
                         const newFilePath = path.join(

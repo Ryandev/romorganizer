@@ -13,11 +13,198 @@ import { parse } from 'ini';
 import storage from './storage';
 
 /**
+ * Interface representing a track index in a CUE file
+ */
+export interface CueTrackIndex {
+    id: number;
+    timestamp: string; /* MM:SS:FF format */
+    fileOffset?: number; /* Optional sector offset */
+}
+
+/**
+ * Interface representing a track in a CUE file
+ */
+export interface CueTrack {
+    number: number;
+    type: string; /* AUDIO, MODE1/2352, etc. */
+    indexes: CueTrackIndex[];
+}
+
+/**
+ * Interface representing a file reference in a CUE file
+ */
+export interface CueFile {
+    filename: string;
+    type: string; /* Usually "BINARY" */
+    tracks: CueTrack[];
+}
+
+/**
+ * Interface representing the complete structure of a CUE file
+ */
+export interface CueSheet {
+    files: CueFile[];
+    /* Optional metadata that might be present in some CUE files */
+    metadata?: {
+        title?: string;
+        performer?: string;
+        songwriter?: string;
+        catalog?: string;
+        isrc?: string;
+        comment?: string;
+    };
+}
+
+/**
  * Interface for file processing results
  */
 interface ProcessingResult {
     status: boolean;
     result: string[];
+}
+
+/**
+ * Deserialize a CUE file string into a structured CueSheet object
+ * @param cueContent - The CUE file content as a string
+ * @returns CueSheet - The parsed CUE file structure
+ */
+function deserializeCueSheet(cueContent: string): CueSheet {
+    const lines = cueContent.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    const cueSheet: CueSheet = { files: [] };
+    let currentFile: CueFile | undefined;
+    let currentTrack: CueTrack | undefined;
+
+    for (const line of lines) {
+        /* Parse FILE line */
+        const fileMatch = line.match(/^FILE\s+"([^"]+)"\s+(\w+)$/i);
+        if (fileMatch && fileMatch[1] && fileMatch[2]) {
+            currentFile = {
+                filename: fileMatch[1],
+                type: fileMatch[2].toUpperCase(),
+                tracks: []
+            };
+            cueSheet.files.push(currentFile);
+            currentTrack = undefined;
+            continue;
+        }
+
+        /* Parse TRACK line */
+        const trackMatch = line.match(/^TRACK\s+(\d+)\s+(\w+(?:\/\d+)?)$/i);
+        if (trackMatch && trackMatch[1] && trackMatch[2] && currentFile) {
+            currentTrack = {
+                number: Number.parseInt(trackMatch[1], 10),
+                type: trackMatch[2].toUpperCase(),
+                indexes: []
+            };
+            currentFile.tracks.push(currentTrack);
+            continue;
+        }
+
+        /* Parse INDEX line */
+        const indexMatch = line.match(/^INDEX\s+(\d+)\s+(\d{1,2}:\d{2}:\d{2})$/i);
+        if (indexMatch && indexMatch[1] && indexMatch[2] && currentTrack) {
+            const index: CueTrackIndex = {
+                id: Number.parseInt(indexMatch[1], 10),
+                timestamp: indexMatch[2]
+            };
+            currentTrack.indexes.push(index);
+            continue;
+        }
+
+        /* Parse metadata lines (optional) */
+        const titleMatch = line.match(/^TITLE\s+"([^"]+)"$/i);
+        if (titleMatch) {
+            if (!cueSheet.metadata) cueSheet.metadata = {};
+            cueSheet.metadata.title = titleMatch[1];
+            continue;
+        }
+
+        const performerMatch = line.match(/^PERFORMER\s+"([^"]+)"$/i);
+        if (performerMatch) {
+            if (!cueSheet.metadata) cueSheet.metadata = {};
+            cueSheet.metadata.performer = performerMatch[1];
+            continue;
+        }
+
+        const songwriterMatch = line.match(/^SONGWRITER\s+"([^"]+)"$/i);
+        if (songwriterMatch) {
+            if (!cueSheet.metadata) cueSheet.metadata = {};
+            cueSheet.metadata.songwriter = songwriterMatch[1];
+            continue;
+        }
+
+        const catalogMatch = line.match(/^CATALOG\s+(\w+)$/i);
+        if (catalogMatch) {
+            if (!cueSheet.metadata) cueSheet.metadata = {};
+            cueSheet.metadata.catalog = catalogMatch[1];
+            continue;
+        }
+
+        const isrcMatch = line.match(/^ISRC\s+(\w+)$/i);
+        if (isrcMatch) {
+            if (!cueSheet.metadata) cueSheet.metadata = {};
+            cueSheet.metadata.isrc = isrcMatch[1];
+            continue;
+        }
+
+        const commentMatch = line.match(/^REM\s+COMMENT\s+"([^"]+)"$/i);
+        if (commentMatch) {
+            if (!cueSheet.metadata) cueSheet.metadata = {};
+            cueSheet.metadata.comment = commentMatch[1];
+            continue;
+        }
+    }
+
+    return cueSheet;
+}
+
+/**
+ * Serialize a CueSheet object into a CUE file string
+ * @param cueSheet - The CUE file structure to serialize
+ * @returns string - The CUE file content as a string
+ */
+function serializeCueSheet(cueSheet: CueSheet): string {
+    let output = '';
+
+    /* Write metadata if present */
+    if (cueSheet.metadata) {
+        if (cueSheet.metadata.title) {
+            output += `TITLE "${cueSheet.metadata.title}"\n`;
+        }
+        if (cueSheet.metadata.performer) {
+            output += `PERFORMER "${cueSheet.metadata.performer}"\n`;
+        }
+        if (cueSheet.metadata.songwriter) {
+            output += `SONGWRITER "${cueSheet.metadata.songwriter}"\n`;
+        }
+        if (cueSheet.metadata.catalog) {
+            output += `CATALOG ${cueSheet.metadata.catalog}\n`;
+        }
+        if (cueSheet.metadata.isrc) {
+            output += `ISRC ${cueSheet.metadata.isrc}\n`;
+        }
+        if (cueSheet.metadata.comment) {
+            output += `REM COMMENT "${cueSheet.metadata.comment}"\n`;
+        }
+        if (output.length > 0) {
+            output += '\n'; /* Add blank line after metadata */
+        }
+    }
+
+    /* Write files and tracks */
+    for (const file of cueSheet.files) {
+        output += `FILE "${file.filename}" ${file.type}\n`;
+        
+        for (const track of file.tracks) {
+            output += `  TRACK ${track.number.toString().padStart(2, '0')} ${track.type}\n`;
+            
+            for (const index of track.indexes) {
+                output += `    INDEX ${index.id.toString().padStart(2, '0')} ${index.timestamp}\n`;
+            }
+        }
+    }
+
+    return output;
 }
 
 /**
@@ -367,11 +554,35 @@ async function processDirectory(
     };
 }
 
+/**
+ * Parse a CUE file and return its content as a string
+ * @param filePath - Path to the CUE file
+ * @returns Promise<string> - The CUE file content
+ */
+async function parseFromCueFile(filePath: string): Promise<string> {
+    /* Verify extension is .cue */
+    guard(
+        filePath.endsWith('.cue'),
+        `File must have .cue extension: ${filePath}`
+    );
+    guardFileExists(filePath, `CUE file does not exist: ${filePath}`);
+
+    /* Read the CUE file content */
+    const storageInstance = await storage();
+    const cueContentBytes = await storageInstance.read(filePath);
+    const cueContent = new TextDecoder().decode(cueContentBytes);
+
+    return cueContent;
+}
+
 export default {
     generateMergedCueSheet,
     generateSplitCueSheet,
     createCueFile,
     parseFromCCDFile,
+    parseFromCueFile,
+    deserializeCueSheet,
+    serializeCueSheet,
     processDirectory,
     fileProcessors,
 };
