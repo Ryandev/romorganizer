@@ -22,21 +22,22 @@ const EXTRACT_OPERATIONS = new Map<
         async (sourceFile: string, allFiles: string[]) => {
             const ecmArchive = createArchive(sourceFile);
             let extractedFile = await ecmArchive.extract();
+            const extractedFileExtension = fileExtension(extractedFile);
             guardFileExists(extractedFile, `Extracted file missing, does not exist: ${extractedFile}`);
             const cueFile = allFiles.find(file => file.toLowerCase().endsWith('.cue'));
             if ( cueFile ) {
-                /* Read the cue file & get the name of the expected bin file. */
+                /* Read the cue file & get the name of the expected bin/img/etc (look based on the extractedFileExtension) file. */
                 /* If the bin filename does not match the cue file. Rename the bin file before returning */
                 const cueContent = await cueSheet.parseFromCueFile(cueFile);
                 const cueData = await cueSheet.deserializeCueSheet(cueContent);
-                const binFileName = cueData.files.map(file => file.filename).find(filename => filename.toLowerCase().endsWith('.bin'));
-                log.info(`Found cue file ${cueFile} & bin file ${binFileName}`);
-                if ( binFileName ) {
-                    const binFilePath = path.join(path.dirname(cueFile), binFileName);
-                    if ( binFilePath !== extractedFile ) {
-                        log.info(`Renaming extracted ecm file ${extractedFile} to ${binFilePath}`);
-                        await storage().move(extractedFile, binFilePath);
-                        extractedFile = binFilePath;
+                const trackFileName = cueData.files.map(file => file.filename).find(filename => filename.toLowerCase().endsWith(extractedFileExtension));
+                log.info(`Found cue file ${cueFile} & data file ${trackFileName}`);
+                if ( trackFileName ) {
+                    const trackFilePath = path.join(path.dirname(cueFile), trackFileName);
+                    if ( trackFilePath !== extractedFile ) {
+                        log.info(`Renaming extracted ecm file ${extractedFile} to ${trackFilePath}`);
+                        await storage().move(extractedFile, trackFilePath);
+                        extractedFile = trackFilePath;
                     }
                 }
             }
@@ -364,6 +365,13 @@ export class RunnerDirectory implements IRunner<string[]> {
                 const runner = this._createRunner(files, this.overwrite);
                 if (runner instanceof Error) {
                     log.error(`Error creating runner for ${files}: ${runner.message}`);
+                    continue;
+                }
+
+                const expectedOutputFileName = `${path.basename(files[0] ?? '')}.chd`;
+                const expectedOutputFilePath = path.join(this.outputDir, expectedOutputFileName);
+                if ( await storage().exists(expectedOutputFilePath) && !this.overwrite ) {
+                    log.info(`Skipping ${files} - output file already exists in output directory`);
                     continue;
                 }
 
