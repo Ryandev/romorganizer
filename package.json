@@ -6,6 +6,7 @@
   "type": "module",
   "bin": "./dist/build/index.js",
   "scripts": {
+    "prepare": "husky",
     "setup": "node scripts/setup.js",
     "clean": "rm -rf dist && rm -rf deps/ecm/wasm/build",
     "spell:check": "cspell \"src/**/*.ts\"",
@@ -21,36 +22,11 @@
     "build:deps": "node deps/build.js",
     "build": "yarn build:deps && vite build --config vite.config.ts",
     "build:debug": "yarn build:deps && vite build --config vite.debug.config.ts",
-    "package": "yarn build && ncc build dist/build/index.js -o dist/package && node scripts/fix-package.js && mv dist/package/index.js dist/package/index.mjs && chmod +x dist/package/index.mjs",
     "build:package": "yarn build:deps && vite build --config vite.package.config.ts",
-    "build:native": "yarn build:package && npx @yao-pkg/pkg -t node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64,node20-win-x64 -o dist/native/romorganizer dist/package/index.js",
-    "package:native": "npx @yao-pkg/pkg -t node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64,node20-win-x64 -o dist/native/romorganizer dist/package/index.js",
     "audit:check": "yarn npm audit --recursive --severity critical --environment production --json",
-    "prepare": "husky"
+    "package": "yarn build:package && yarn dlx @yao-pkg/pkg dist/package/index.js --targets node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64,node20-win-x64 --output dist/native/romorganizer"
   },
-  "yao-pkg": {
-    "entry": "dist/package/index.js",
-    "output": "dist/native/romorganizer",
-    "targets": [
-      "node20-macos-arm64",
-      "node20-macos-x64",
-      "node20-linux-arm64",
-      "node20-linux-x64",
-      "node20-win-x64"
-    ],
-    "ignore": [
-      "**/*.test.ts",
-      "**/*.test.js",
-      "**/*.test.json",
-      "**/*.test.md",
-      "**/*.test.txt",
-      "dist/bin"
-    ],
-    "assets": [
-      "deps/ecm/wasm/build/*.wasm",
-      "deps/ecm/wasm/build/*.js"
-    ]
-  },
+
   "keywords": [
     "7z",
     "rar",
@@ -88,6 +64,7 @@
     "husky": "^9.1.7",
     "jest": "^30.0.5",
     "node-gyp": "^10.0.1",
+    "pkg": "^5.8.1",
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",

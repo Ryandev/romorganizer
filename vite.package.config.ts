@@ -20,9 +20,7 @@ const packageConfig = {
     )
   ],
   build: {
-    lib: {
-      formats: ['cjs']
-    },
+    /* CJS format is inherited from baseConfig for yao-pkg compatibility */
     outDir: 'dist/package',
     sourcemap: false,
     minify: false

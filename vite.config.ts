@@ -23,7 +23,8 @@ export const baseConfig: UserConfig = {
       entry: path.resolve(__dirname, 'src/index.ts'),
       name: 'RomOrganizer',
       fileName: 'index',
-      formats: ['es']
+      /* Use CJS format for compatibility with yao-pkg bundling */
+      formats: ['cjs']
     },
     rollupOptions: {
       external: [

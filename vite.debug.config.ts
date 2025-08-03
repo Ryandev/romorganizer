@@ -25,7 +25,8 @@ const debugConfig = {
     minify: false
   },
   define: {
-    __DEV__: true
+    __DEV__: true,
+    'process.env.DEBUG': '"1"'
   },
   ssr: {
     noExternal: ['deps/ecm/wasm/build/*.js']

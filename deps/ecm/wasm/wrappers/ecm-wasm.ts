@@ -2,33 +2,72 @@ import path from 'node:path';
 import { existsSync } from 'node:fs';
 import type { ECMModule, UNECMModule } from '../types.js';
 
+/* Extend Process interface for pkg */
+declare global {
+  namespace NodeJS {
+    interface Process {
+      pkg?: {
+        defaultEntry?: string;
+      };
+    }
+  }
+}
+
 function guard(condition: boolean, message: string): asserts condition {
   if (!condition) {
     throw new Error(message);
   }
 }
 
+const debugEnabled = process.env['DEBUG'] === '1';
+
+const _debug = (...args: any[]) => {
+  if (debugEnabled) {
+    console.log(...args);
+  }
+}
+
 function _findWasmDir() {
   /* Get the directory of the current executable */
+  const execPath = process.argv[1];
+  const execDir = execPath ? path.dirname(execPath) : process.cwd();
+  
+  /* pkg-specific path resolution */
+  const pkgEntry = process.pkg?.defaultEntry;
+  const pkgDir = pkgEntry ? path.dirname(pkgEntry) : null;
+  
   const candidates = [
-    path.dirname(process.argv[1] ?? ''), /* Same directory as the executable (index.mjs) */
+    pkgDir, /* pkg executable directory (highest priority) */
+    execDir, /* Same directory as the executable (index.mjs) */
     path.join(process.cwd()),
     path.join(process.cwd(), 'deps', 'ecm', 'wasm', 'build'),
+    path.join(process.cwd(), 'dist'),
+    path.join(process.cwd(), 'dist', 'package'),
     path.join(process.cwd(), 'dist', 'deps', 'ecm', 'wasm', 'build'),
   ];
 
+  _debug('Executable path:', process.argv[1]);
+  _debug('Current working directory:', process.cwd());
+  _debug('pkg entry:', pkgEntry);
+  _debug('pkg directory:', pkgDir);
+  _debug('Searching in candidates:', candidates);
+
   for (const candidate of candidates) {
-    if ( candidate === '.' || candidate.length <= 1 ) {
+    /* Skip invalid paths */
+    if (!candidate || candidate === '.' || candidate.length <= 1) {
       continue;
     }
 
+    const normalizedCandidate = path.resolve(candidate);
+    _debug('Checking normalized path:', normalizedCandidate);
+
     const unecm = {
-      jsFile: path.join(candidate, 'unecm.mjs'),
-      wasmFile: path.join(candidate, 'unecm.wasm'),
+      jsFile: path.join(normalizedCandidate, 'unecm.mjs'),
+      wasmFile: path.join(normalizedCandidate, 'unecm.wasm'),
     };
     const ecm = {
-      jsFile: path.join(candidate, 'ecm.mjs'),
-      wasmFile: path.join(candidate, 'ecm.wasm'),
+      jsFile: path.join(normalizedCandidate, 'ecm.mjs'),
+      wasmFile: path.join(normalizedCandidate, 'ecm.wasm'),
     };
 
     const exists = [
@@ -39,9 +78,9 @@ function _findWasmDir() {
     ];
 
     if (exists.every(Boolean)) {
-      return { unecm, ecm, path: candidate };
+      return { unecm, ecm, path: normalizedCandidate };
     } else {
-      console.log('WASM files not found in: ' + candidate + ', ' + exists.map(Boolean).join(', '));
+      _debug('WASM files not found in: ' + normalizedCandidate + ', ' + exists.map(Boolean).join(', '));
     }
   }
 
@@ -49,22 +88,22 @@ function _findWasmDir() {
 }
 
 function debugModule(module: any): void {
-  console.log('Module type:', typeof module);
-  console.log('Module keys:', Object.keys(module));
-  console.log('Available functions:');
+  _debug('Module type:', typeof module);
+  _debug('Module keys:', Object.keys(module));
+  _debug('Available functions:');
   for (const key of Object.keys(module)) {
     if (typeof module[key] === 'function') {
-      console.log(`  ${key}: ${typeof module[key]}`);
+      _debug(`  ${key}: ${typeof module[key]}`);
     }
   }
   
   /* Check for specific functions we need */
-  console.log('Checking for specific functions:');
-  console.log('  _ecmify:', typeof module._ecmify);
-  console.log('  _unecmify:', typeof module._unecmify);
-  console.log('  FS:', typeof module.FS);
+  _debug('Checking for specific functions:');
+  _debug('  _ecmify:', typeof module._ecmify);
+  _debug('  _unecmify:', typeof module._unecmify);
+  _debug('  FS:', typeof module.FS);
   if (module.FS) {
-    console.log('  FS methods:', Object.keys(module.FS));
+    _debug('  FS methods:', Object.keys(module.FS));
   }
 }
 
@@ -78,25 +117,30 @@ async function loadECMModule(): Promise<ECMModule> {
     /* Use the jsFile from the result, but try .mjs first, then fall back to .js */
     let wasmPath = wasmDirResult.ecm.jsFile;
     guard(existsSync(wasmPath), `ECM WASM file not found: ${wasmPath}`);
-    console.log('Loading ECM WASM from:', wasmPath);
+    _debug('Loading ECM WASM from:', wasmPath);
     
     /* Try different import strategies for compatibility */
     let importedModule;
     let createECMModule;
     
-    /* Import the ES module directly */
-    importedModule = await import(wasmPath);
-    createECMModule = importedModule.default;
+    /* Use require() for CJS compatibility with yao-pkg */
+    try {
+      importedModule = require(wasmPath);
+      createECMModule = importedModule.default;
+    } catch (importError) {
+      console.error('Failed to import ECM module:', importError);
+      throw new Error(`Failed to import ECM module from ${wasmPath}: ${importError instanceof Error ? importError.message : String(importError)}`);
+    }
     
     if (typeof createECMModule !== 'function') {
       throw new Error(`createECMModule is not a function: ${typeof createECMModule}`);
     }
     
-    console.log('ECM module loaded:', typeof importedModule);
+    _debug('ECM module loaded:', typeof importedModule);
     debugModule(importedModule);
-    console.log('createECMModule:', typeof createECMModule);
+    _debug('createECMModule:', typeof createECMModule);
     const module = await createECMModule();
-    console.log('ECM module instance created');
+    _debug('ECM module instance created');
     
     /* Wait for the module to be fully initialized */
     if (module.onRuntimeInitialized) {
@@ -105,7 +149,7 @@ async function loadECMModule(): Promise<ECMModule> {
       });
     }
     
-    console.log('ECM module initialized');
+    _debug('ECM module initialized');
     debugModule(module);
     return module;
   } catch (error) {
@@ -124,25 +168,30 @@ async function loadUNECMModule(): Promise<UNECMModule> {
     /* Use the jsFile from the result, but try .mjs first, then fall back to .js */
     let wasmPath = wasmDirResult.unecm.jsFile;
     guard(existsSync(wasmPath), `UNECM WASM file not found: ${wasmPath}`);
-    console.log('Loading UNECM WASM from:', wasmPath);
+    _debug('Loading UNECM WASM from:', wasmPath);
     
     /* Try different import strategies for compatibility */
     let importedModule;
     let createUNECMModule;
     
-    /* Import the ES module directly */
-    importedModule = await import(wasmPath);
-    createUNECMModule = importedModule.default;
+    /* Use require() for CJS compatibility with yao-pkg */
+    try {
+      importedModule = require(wasmPath);
+      createUNECMModule = importedModule.default;
+    } catch (importError) {
+      console.error('Failed to import UNECM module:', importError);
+      throw new Error(`Failed to import UNECM module from ${wasmPath}: ${importError instanceof Error ? importError.message : String(importError)}`);
+    }
     
     if (typeof createUNECMModule !== 'function') {
       throw new Error(`createUNECMModule is not a function: ${typeof createUNECMModule}`);
     }
     
-    console.log('UNECM module loaded:', typeof importedModule);
+    _debug('UNECM module loaded:', typeof importedModule);
     debugModule(importedModule);
-    console.log('createUNECMModule:', typeof createUNECMModule);
+    _debug('createUNECMModule:', typeof createUNECMModule);
     const module = await createUNECMModule();
-    console.log('UNECM module instance created');
+    _debug('UNECM module instance created');
     
     /* Wait for the module to be fully initialized */
     if (module.onRuntimeInitialized) {
@@ -151,7 +200,7 @@ async function loadUNECMModule(): Promise<UNECMModule> {
       });
     }
     
-    console.log('UNECM module initialized');
+    _debug('UNECM module initialized');
     debugModule(module);
     return module;
   } catch (error) {
@@ -163,8 +212,9 @@ async function loadUNECMModule(): Promise<UNECMModule> {
 async function runECMCommand(module: ECMModule, inputPath: string, outputPath: string): Promise<void> {
   try {
     /* Read the input file */
-    const { readFile } = await import('fs/promises');
-    const inputData = await readFile(inputPath);
+    /* Use require() for CJS compatibility with yao-pkg */
+    const fs = require('fs/promises');
+    const inputData = await fs.readFile(inputPath);
     guard(inputData.length > 0, `ECM command failed to read input file: ${inputPath}`);
 
     /* Write input file to WASM virtual filesystem */
@@ -179,7 +229,18 @@ async function runECMCommand(module: ECMModule, inputPath: string, outputPath: s
     const outStream = module.FS.open(outputFileName, 'w');
 
     /* Call ecmify function using ccall for better compatibility */
-    const result = module.ccall('ecmify', 'number', ['number', 'number'], [inStream.fd, outStream.fd]);
+    let result: number;
+    if (typeof module._ecmify === 'function') {
+      /* Use direct function call if available */
+      _debug('Using direct _ecmify function');
+      result = module._ecmify(inStream.fd, outStream.fd);
+    } else if (typeof module.ccall === 'function') {
+      /* Fall back to ccall if direct function not available */
+      _debug('Using ccall for ecmify');
+      result = module.ccall('ecmify', 'number', ['number', 'number'], [inStream.fd, outStream.fd]);
+    } else {
+      throw new Error('Neither _ecmify function nor ccall is available in ECM module');
+    }
 
     /* Don't close files here - the C code already closes them with fclose() */
     /* module.FS.close(inStream); */
@@ -194,8 +255,7 @@ async function runECMCommand(module: ECMModule, inputPath: string, outputPath: s
     guard(outputData.length > 0, `ECM command failed to produce output file: ${outputFileName}`);
 
     /* Write to actual output path */
-    const { writeFile } = await import('fs/promises');
-    await writeFile(outputPath, outputData);
+    await fs.writeFile(outputPath, outputData);
 
     /* Clean up virtual filesystem */
     try {
@@ -212,9 +272,10 @@ async function runECMCommand(module: ECMModule, inputPath: string, outputPath: s
 async function runUNECMCommand(module: UNECMModule, inputPath: string, outputPath: string): Promise<void> {
   try {
     /* Read the input file */
-    const { readFile } = await import('fs/promises');
-    const inputData = await readFile(inputPath);
-    console.log('Input file read, size:', inputData.length);
+    /* Use require() for CJS compatibility with yao-pkg */
+    const fs = require('fs/promises');
+    const inputData = await fs.readFile(inputPath);
+    _debug('Input file read, size:', inputData.length);
     guard(inputData.length > 0, `UNECM command failed to read input file: ${inputPath}`);
 
     /* Write input file to WASM virtual filesystem */
@@ -222,21 +283,40 @@ async function runUNECMCommand(module: UNECMModule, inputPath: string, outputPat
     const outputFileName = 'output.bin';
 
     /* Write to virtual filesystem */
-    console.log('Writing to virtual filesystem:', inputFileName);
+    _debug('Writing to virtual filesystem:', inputFileName);
     module.FS.writeFile(inputFileName, inputData);
 
     /* Open files in WASM filesystem */
-    console.log('Opening files in WASM filesystem');
+    _debug('Opening files in WASM filesystem');
     const inStream = module.FS.open(inputFileName, 'r');
     const outStream = module.FS.open(outputFileName, 'w');
-    console.log('Files opened, inStream.fd:', inStream.fd, 'outStream.fd:', outStream.fd);
+    _debug('Files opened, inStream.fd:', inStream.fd, 'outStream.fd:', outStream.fd);
 
     /* Call unecmify function using ccall for better compatibility */
-    console.log('Calling _unecmify using ccall...');
-    console.log('Input file size in WASM:', module.FS.stat(inputFileName).size);
+    _debug('Calling _unecmify using ccall...');
+    _debug('Input file size in WASM:', module.FS.stat(inputFileName).size);
     
-    const result = module.ccall('unecmify', 'number', ['number', 'number'], [inStream.fd, outStream.fd]);
-    console.log('UNECM result:', result);
+    let result: number;
+    _debug('Checking _unecmify function availability...');
+    _debug('typeof module._unecmify:', typeof module._unecmify);
+    _debug('module._unecmify:', module._unecmify);
+    
+    if (typeof module._unecmify === 'function') {
+      /* Use direct function call if available */
+      _debug('Using direct _unecmify function');
+      _debug('Calling module._unecmify with args:', inStream.fd, outStream.fd);
+      result = module._unecmify(inStream.fd, outStream.fd);
+      _debug('Direct _unecmify call completed, result:', result);
+    } else if (typeof module.ccall === 'function') {
+      /* Fall back to ccall if direct function not available */
+      _debug('Using ccall for unecmify');
+      _debug('Calling module.ccall with args:', 'unecmify', 'number', ['number', 'number'], [inStream.fd, outStream.fd]);
+      result = module.ccall('unecmify', 'number', ['number', 'number'], [inStream.fd, outStream.fd]);
+      _debug('ccall completed, result:', result);
+    } else {
+      throw new Error('Neither _unecmify function nor ccall is available in UNECM module');
+    }
+    _debug('UNECM result:', result);
 
     /* Don't close files here - the C code already closes them with fclose() */
     /* module.FS.close(inStream); */
@@ -247,15 +327,14 @@ async function runUNECMCommand(module: UNECMModule, inputPath: string, outputPat
     }
 
     /* Read the output file from virtual filesystem */
-    console.log('Reading output from virtual filesystem');
+    _debug('Reading output from virtual filesystem');
     const outputData = module.FS.readFile(outputFileName);
-    console.log('Output data size:', outputData.length);
+    _debug('Output data size:', outputData.length);
     guard(outputData.length > 0, `UNECM command failed to produce output file: ${outputFileName}`);
 
     /* Write to actual output path */
-    const { writeFile } = await import('fs/promises');
-    await writeFile(outputPath, outputData);
-    console.log('Output written to:', outputPath);
+    await fs.writeFile(outputPath, outputData);
+    _debug('Output written to:', outputPath);
 
     /* Clean up virtual filesystem */
     try {
@@ -303,9 +382,9 @@ export class EcmWasm {
       }
       
       /* Create a temporary output file */
-      const { mkdtemp, writeFile, unlink, rmdir } = await import('fs/promises');
-      const { join } = await import('path');
-      const { tmpdir } = await import('os');
+      const { mkdtemp, writeFile, unlink, rmdir } = require('fs/promises');
+      const { join } = require('path');
+      const { tmpdir } = require('os');
       
       const tempDir = await mkdtemp(path.join(tmpdir(), 'ecm-verify-'));
       const tempOutput = path.join(tempDir, 'temp_output.bin');
