@@ -290,9 +290,9 @@ describe('Command Utilities', () => {
                 throw new Error('Network timeout');
             });
 
-            /* Cspell:disable-next-line */
+            // cspell:disable-next-line
             const exists = await doesCommandExist('networkcommand');
-            /* Cspell:disable-next-line */
+            // cspell:disable-next-line
             const executable = await isCommandExecutable(
                 '/usr/bin/networkcommand'
             );
@@ -308,7 +308,7 @@ describe('Command Utilities', () => {
                 exitCode: Promise.resolve(),
             } as any);
 
-            /* Cspell:disable-next-line */
+            // cspell:disable-next-line
             const result = await doesCommandExist('weirdcommand');
 
             expect(result).toBe(false);
@@ -319,7 +319,7 @@ describe('Command Utilities', () => {
                 exitCode: Promise.resolve(),
             } as any);
 
-            /* Cspell:disable-next-line */
+            // cspell:disable-next-line
             const result = await doesCommandExist('weirdcommand');
 
             expect(result).toBe(false);
@@ -330,7 +330,7 @@ describe('Command Utilities', () => {
                 exitCode: Promise.resolve('error'),
             } as any);
 
-            /* Cspell:disable-next-line */
+            // cspell:disable-next-line
             const result = await doesCommandExist('weirdcommand');
 
             expect(result).toBe(false);
@@ -339,7 +339,7 @@ describe('Command Utilities', () => {
         test('should handle missing exitCode property', async () => {
             mockZx.$.mockReturnValue({} as any);
 
-            /* Cspell:disable-next-line */
+            // cspell:disable-next-line
             const result = await doesCommandExist('weirdcommand');
 
             expect(result).toBe(false);

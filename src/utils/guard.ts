@@ -1,5 +1,4 @@
 import { $ } from 'zx';
-import { log } from './logger';
 import fs from 'node:fs';
 
 /**
@@ -217,14 +216,4 @@ export function createGuard<T>(
     return (value: T, message?: string): asserts value is T => {
         guard(conditionFunction(value), message || defaultMessage);
     };
-}
-
-/* Utility function to abort execution with cleanup */
-export function abort(message: string): never {
-    log.error(message);
-    /* Clean up any temporary files if they exist */
-    if (globalThis.temporaryFiles && Array.isArray(globalThis.temporaryFiles)) {
-        globalThis.temporaryFiles.length = 0;
-    }
-    process.exit(1);
 }

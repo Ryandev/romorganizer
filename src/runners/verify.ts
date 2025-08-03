@@ -5,21 +5,16 @@ import path from 'path';
 import { Dat, Game } from '../utils/dat';
 import { CuesheetEntry } from '../utils/cuesheetLoader';
 import hash from '../utils/hash';
+import { IRunner } from './interface';
+import { log } from "../utils/logger";
+import metadata from "../types/metadata";
+import { fileExtension } from './utils';
 
-export interface IRunner {
-    start(): Promise<{
-        status: 'match' | 'partial' | 'none';
-        message: string;
-        game: Game | undefined;
-    }>;
-}
-
-const _fileExtension = (filePath: string): string => {
-    return filePath.split('.').pop() ?? '';
-};
-
-export class Runner implements IRunner {
-    private readonly temporaryFiles: string[] = [];
+export class VerifyRunnerFile implements IRunner<{
+    status: 'match' | 'partial' | 'none';
+    message: string;
+    game: Game | undefined;
+}> {
     constructor(
         private readonly sourceFile: string,
         private readonly dat: Dat,
@@ -30,26 +25,17 @@ export class Runner implements IRunner {
         this.cuesheetEntries = cuesheetEntries;
     }
 
-    /* Cleanup the temporary files when the runner is disposed */
-    async [Symbol.dispose]() {
-        await this._cleanup();
-    }
-
-    private async _cleanup(): Promise<void> {
-        for (const file of this.temporaryFiles) {
-            await storage()
-                .remove(file)
-                .catch(() => {
-                    /* ignore errors */
-                });
-        }
-    }
-
     private async _work(compressedFilePath: string): Promise<{
         status: 'match' | 'partial' | 'none';
         message: string;
         game: Game | undefined;
     }> {
+        const extension = fileExtension(compressedFilePath);
+        if (extension !== 'chd') {
+            throw new Error(`Unsupported file extension: ${extension}`);
+        }
+
+
         const filePathCue = await chd.extract({
             chdFilePath: compressedFilePath,
             format: 'cue',
@@ -139,24 +125,112 @@ export class Runner implements IRunner {
         message: string;
         game: Game | undefined;
     }> {
-        try {
-            const result = await this._work(this.sourceFile);
-            guardValidString(result);
-            return result;
-        } finally {
-            await this._cleanup();
-        }
+        const result = await this._work(this.sourceFile);
+        guardValidString(result);
+        return result;
     }
 }
 
-export default function createVerifyRunner(
-    sourceFile: string,
-    dat: Dat,
-    cuesheetEntries: CuesheetEntry[]
-): IRunner | Error {
-    const fileExtension = _fileExtension(sourceFile);
-    if (fileExtension !== 'chd') {
-        return new Error(`Unsupported file extension: ${fileExtension}`);
+export class VerifyRunnerDirectory implements IRunner<string[]> {
+    constructor(
+        private readonly sourceDir: string,
+        private readonly dat: Dat,
+        private readonly cuesheetEntries: CuesheetEntry[],
+        private readonly rename: boolean,
+        private readonly force: boolean,
+    ) {
+        this.sourceDir = sourceDir;
+        this.dat = dat;
+        this.cuesheetEntries = cuesheetEntries;
+        this.rename = rename;
+        this.force = force;
     }
-    return new Runner(sourceFile, dat, cuesheetEntries);
+
+    async start(): Promise<string[]> {
+        const outputFiles: string[] = [];
+        const files = await storage().list(this.sourceDir, {
+            avoidHiddenFiles: true,
+            recursive: true,
+        });
+        log.info(`Found ${files.length} files in source directory`);
+
+        for (const file of files) {
+            /* Check if metadata.json already exists for this file */
+            const baseFileName = path.basename(file, path.extname(file));
+            const metadataFileName = `${baseFileName}.metadata.json`;
+            const metadataFilePath = path.join(this.sourceDir, metadataFileName);
+
+            const metadataExists = await storage().exists(metadataFilePath);
+            if (metadataExists && !this.force) {
+                log.info(
+                    `Skipping ${file} - metadata.json already exists (use --force to re-verify)`
+                );
+                continue;
+            }
+
+            const runner = new VerifyRunnerFile(file, this.dat, this.cuesheetEntries);
+            if (runner instanceof Error) {
+                log.error(
+                    `Error creating verify runner for ${file}: ${runner.message}`
+                );
+                continue;
+            }
+
+            const result = await runner.start();
+            log.info(
+                `Verification result for ${file}: ${result.status} - ${result.message}`
+            );
+
+            let finalFileName = path.basename(file);
+            let finalMetadataFileName = `${path.basename(file, path.extname(file))}.metadata.json`;
+
+            /* Rename file if requested and we have a game match */
+            if (this.rename && result.game && result.status !== 'none') {
+                const gameName = result.game.name;
+                const fileExtension = path.extname(file);
+                const newFileName = `${gameName}${fileExtension}`;
+                const newFilePath = path.join(this.sourceDir, newFileName);
+
+                await storage().move(file, newFilePath);
+                log.info(`Renamed ${finalFileName} to ${newFileName}`);
+                finalFileName = newFileName;
+                finalMetadataFileName = `${gameName}.metadata.json`;
+            }
+
+            const finalMetadataFilePath = path.join(
+                this.sourceDir,
+                finalMetadataFileName
+            );
+            await metadata.writeFile(
+                {
+                    game: result.game
+                        ? {
+                                name: result.game.name,
+                                files: result.game.roms.map(rom => ({
+                                    name: rom.name,
+                                    size: rom.size,
+                                    sha1hex: rom.sha1hex,
+                                    ...(rom.crc && { crc: rom.crc }),
+                                    ...(rom.md5 && { md5: rom.md5 }),
+                                })),
+                                ...(result.game.description && {
+                                    description: result.game.description,
+                                }),
+                                ...(result.game.category && {
+                                    category: result.game.category,
+                                }),
+                            }
+                        : undefined,
+                    message: result.message,
+                    status: result.status,
+                    timestamp: new Date().toISOString(),
+                },
+                finalMetadataFilePath
+            );
+
+            outputFiles.push(file);
+        }
+
+        return outputFiles;
+    }
 }

@@ -27,7 +27,7 @@ try {
   console.error('❌ Emscripten is not available in the local emsdk installation.');
   console.error(`   Expected path: ${emccPath}`);
   console.error('   Please ensure the emsdk is properly installed in deps/ecm/emsdk/');
-  process.exit(1);
+  throw new Error('Emscripten is not available in the local emsdk installation');
 }
 
 const wasmBuildDir = join(ecmRoot, 'wasm', 'build');
@@ -38,7 +38,7 @@ try {
   execSync(`mkdir -p "${wasmBuildDir}"`, { stdio: 'inherit' });
 } catch (error) {
   console.error('Failed to create build directory:', error instanceof Error ? error.message : String(error));
-  process.exit(1);
+  throw new Error('Failed to create build directory');
 }
 
 /* Build ecm.wasm */
@@ -66,7 +66,7 @@ try {
   console.log('✅ ecm.wasm built successfully');
 } catch (error) {
   console.error('❌ Failed to build ecm.wasm:', error.message);
-  process.exit(1);
+  throw new Error('Failed to build ecm.wasm');
 }
 
 /* Build unecm.wasm */
@@ -95,7 +95,7 @@ try {
   console.log('✅ unecm.wasm built successfully');
 } catch (error) {
   console.error('❌ Failed to build unecm.wasm:', error.message);
-  process.exit(1);
+  throw new Error('Failed to build unecm.wasm');
 }
 
 console.log('✅ ECM WASM modules built successfully');

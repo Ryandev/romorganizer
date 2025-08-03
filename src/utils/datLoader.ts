@@ -1,7 +1,7 @@
 import { log } from './logger';
 import storage from './storage';
 import { loadDat, Dat } from './dat';
-import { ZipArchive } from '../archive/zip';
+import { createArchive } from '../archive';
 import path from 'node:path';
 
 export class DatLoaderException extends Error {
@@ -52,7 +52,7 @@ async function loadDatFromZip(zipPath: string): Promise<Dat> {
 
     try {
         /* Extract the zip file */
-        const zipArchive = new ZipArchive(zipPath);
+        const zipArchive = createArchive(zipPath);
         const extractedDir = await zipArchive.extract();
 
         /* Find all .dat files in the extracted directory */
@@ -130,7 +130,7 @@ export async function isZipWithDat(filePath: string): Promise<boolean> {
 
     try {
         /* Try to extract and check for .dat files */
-        const zipArchive = new ZipArchive(filePath);
+        const zipArchive = createArchive(filePath);
         const extractedDir = await zipArchive.extract();
 
         const allFiles = await storage().list(extractedDir, {

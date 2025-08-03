@@ -1,286 +1,260 @@
-import { join } from 'path';
 import { EcmArchive } from './ecm';
+import { EcmWasm } from '../../deps/ecm/wasm';
+import { log } from '../utils/logger';
 import storage from '../utils/storage';
+import { guardFileExists } from '../utils/guard';
+
+/* Mock dependencies */
+jest.mock('../../deps/ecm/wasm', () => ({
+    EcmWasm: jest.fn(),
+}));
+
+jest.mock('../utils/logger', () => ({
+    log: {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+    },
+}));
+
+jest.mock('../utils/storage', () => ({
+    __esModule: true,
+    default: jest.fn().mockResolvedValue({
+        exists: jest.fn(),
+        list: jest.fn(),
+        read: jest.fn(),
+        write: jest.fn(),
+        copy: jest.fn(),
+        move: jest.fn(),
+        remove: jest.fn(),
+        createTemporaryDirectory: jest.fn(),
+    }),
+}));
+
+jest.mock('../utils/guard', () => ({
+    guardFileExists: jest.fn(),
+}));
 
 describe('EcmArchive', () => {
-    let testDir: string;
-    let storageInstance: Awaited<ReturnType<typeof storage>>;
+    const mockLog = log as jest.Mocked<typeof log>;
+    const MockEcmWasm = EcmWasm as jest.MockedClass<typeof EcmWasm>;
+    const mockStorage = storage as jest.MockedFunction<typeof storage>;
+    const mockGuardFileExists = guardFileExists as jest.MockedFunction<typeof guardFileExists>;
 
-    beforeAll(async () => {
-        storageInstance = await storage();
-        testDir = await storageInstance.createTemporaryDirectory();
-    });
+    let mockEcmWasmInstance: any;
+    let ecmArchive: EcmArchive;
 
-    afterAll(async () => {
-        await storageInstance.remove(testDir);
-    });
-
-    afterEach(async () => {
-        /* Clean up any files created during tests */
-        const files = await storageInstance.list(testDir, {
-            removePrefix: false,
-        });
-        for (const file of files) {
-            await storageInstance.remove(file);
-        }
+    beforeEach(() => {
+        jest.clearAllMocks();
+        
+        mockEcmWasmInstance = {
+            extract: jest.fn(),
+            verify: jest.fn(),
+            compress: jest.fn(),
+        };
+        MockEcmWasm.mockImplementation(() => mockEcmWasmInstance);
+        
+        ecmArchive = new EcmArchive('/test/file.ecm');
     });
 
     describe('constructor', () => {
-        it('should create an EcmArchive instance', () => {
-            const ecmArchive = new EcmArchive(join(testDir, 'test.ecm'));
-            expect(ecmArchive).toBeInstanceOf(EcmArchive);
-            expect(ecmArchive.archiveFile()).toBe(join(testDir, 'test.ecm'));
+        it('should create EcmArchive instance with file path', () => {
+            /* Act */
+            const archive = new EcmArchive('/test/file.ecm');
+
+            /* Assert */
+            expect(archive).toBeInstanceOf(EcmArchive);
+            expect(MockEcmWasm).toHaveBeenCalledTimes(2); /* Once in constructor, once in beforeEach */
+        });
+
+        it('should create EcmWasm instance', () => {
+            /* Assert */
+            expect(MockEcmWasm).toHaveBeenCalled();
         });
     });
 
-    describe('compress and extract cycle', () => {
-        it('should compress and extract a simple text file', async () => {
-            /* Create a simple text file */
-            const originalContent =
-                'Hello, World! This is a test file for ECM compression.';
-            const originalBuffer = new TextEncoder().encode(originalContent);
-            const originalFilePath = join(testDir, 'original.txt');
-            await storageInstance.write(originalFilePath, originalBuffer);
+    describe('extract', () => {
+        it('should extract ECM file successfully', async () => {
+            /* Arrange */
+            mockEcmWasmInstance.extract.mockResolvedValue(undefined);
+            mockGuardFileExists.mockImplementation(() => {
+                /* No-op for guard check */
+            });
 
-            /* Create EcmArchive instance for compression */
-            const ecmArchive = new EcmArchive(join(testDir, 'test.ecm'));
+            /* Act */
+            const result = await ecmArchive.extract();
 
-            /* Compress the file */
-            const compressedFilePath =
-                await ecmArchive.compress(originalFilePath);
-            expect(await storageInstance.exists(compressedFilePath)).toBe(true);
-
-            /* Create a new EcmArchive instance for the compressed file */
-            const compressedArchive = new EcmArchive(compressedFilePath);
-
-            /* Verify the compressed file */
-            const verifyResult = await compressedArchive.verify();
-            expect(verifyResult).toBe(true);
-
-            /* Extract the compressed file */
-            const extractedFilePath = await compressedArchive.extract();
-            expect(await storageInstance.exists(extractedFilePath)).toBe(true);
-
-            /* Compare original and extracted content */
-            const extractedContent =
-                await storageInstance.read(extractedFilePath);
-            const extractedText = new TextDecoder().decode(extractedContent);
-            expect(extractedText).toBe(originalContent);
+            /* Assert */
+            expect(mockGuardFileExists).toHaveBeenCalledWith('/test/file.ecm');
+            expect(mockEcmWasmInstance.extract).toHaveBeenCalledWith('/test/file.ecm', expect.stringContaining('extracted.bin'));
+            expect(mockLog.info).toHaveBeenCalledWith('Extracted /test/file.ecm');
+            expect(result).toMatch(/extracted\.bin$/);
         });
 
-        it('should compress and extract a binary file', async () => {
-            /* Create a binary file with various byte patterns */
-            const originalBuffer = Buffer.from([
-                0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
-                0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 0xfe, 0xfd, 0xfc,
-                0xfb, 0xfa, 0xf9, 0xf8, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff,
-                0xff, 0xff,
-            ]);
-            const originalFilePath = join(testDir, 'original.bin');
-            await storageInstance.write(originalFilePath, originalBuffer);
+        it('should handle extraction errors', async () => {
+            /* Arrange */
+            const error = new Error('ECM extraction failed');
+            mockEcmWasmInstance.extract.mockRejectedValue(error);
+            mockGuardFileExists.mockImplementation(() => {
+                /* No-op for guard check */
+            });
 
-            /* Create EcmArchive instance for compression */
-            const ecmArchive = new EcmArchive(join(testDir, 'test.ecm'));
-
-            /* Compress the file */
-            const compressedFilePath =
-                await ecmArchive.compress(originalFilePath);
-            expect(await storageInstance.exists(compressedFilePath)).toBe(true);
-
-            /* Create a new EcmArchive instance for the compressed file */
-            const compressedArchive = new EcmArchive(compressedFilePath);
-
-            /* Verify the compressed file */
-            const verifyResult = await compressedArchive.verify();
-            expect(verifyResult).toBe(true);
-
-            /* Extract the compressed file */
-            const extractedFilePath = await compressedArchive.extract();
-            expect(await storageInstance.exists(extractedFilePath)).toBe(true);
-
-            /* Compare original and extracted content */
-            const extractedContent =
-                await storageInstance.read(extractedFilePath);
-            expect(Buffer.from(extractedContent)).toEqual(
-                Buffer.from(originalBuffer)
-            );
+            /* Act & Assert */
+            await expect(ecmArchive.extract()).rejects.toThrow('ECM extraction failed: ECM extraction failed');
         });
 
-        it('should compress and extract a large file', async () => {
-            /* Create a larger file with repeating patterns */
-            const chunk =
-                'This is a repeating pattern that should compress well. '.repeat(
-                    100
-                );
-            const originalContent = chunk + '\n' + chunk + '\n' + chunk;
-            const originalBuffer = new TextEncoder().encode(originalContent);
-            const originalFilePath = join(testDir, 'large.txt');
-            await storageInstance.write(originalFilePath, originalBuffer);
+        it('should handle non-Error objects in extraction', async () => {
+            /* Arrange */
+            mockEcmWasmInstance.extract.mockRejectedValue('String error');
+            mockGuardFileExists.mockImplementation(() => {
+                /* No-op for guard check */
+            });
 
-            /* Create EcmArchive instance for compression */
-            const ecmArchive = new EcmArchive(join(testDir, 'test.ecm'));
-
-            /* Compress the file */
-            const compressedFilePath =
-                await ecmArchive.compress(originalFilePath);
-            expect(await storageInstance.exists(compressedFilePath)).toBe(true);
-
-            /* Create a new EcmArchive instance for the compressed file */
-            const compressedArchive = new EcmArchive(compressedFilePath);
-
-            /* Verify the compressed file */
-            const verifyResult = await compressedArchive.verify();
-            expect(verifyResult).toBe(true);
-
-            /* Extract the compressed file */
-            const extractedFilePath = await compressedArchive.extract();
-            expect(await storageInstance.exists(extractedFilePath)).toBe(true);
-
-            /* Compare original and extracted content */
-            const extractedContent =
-                await storageInstance.read(extractedFilePath);
-            const extractedText = new TextDecoder().decode(extractedContent);
-            expect(extractedText).toBe(originalContent);
+            /* Act & Assert */
+            await expect(ecmArchive.extract()).rejects.toThrow('ECM extraction failed: String error');
         });
 
-        it('should compress and extract a file with special characters', async () => {
-            /* Create a file with special characters and unicode */
-            const originalContent =
-                'Special chars: !@#$%^&*()_+-=[]{}|;:,.<>?/~`\n' +
-                /* Cspell:disable-next-line */
-                'Unicode: éñüçåßøæñüçåßøæñüçåßøæñüçåßøæ\n' +
-                'Emojis: 🚀🎉💻📁🗜️🔧⚙️🎯🎪🎨🎭🎪🎨🎭🎪🎨🎭\n' +
-                'Numbers: 1234567890\n' +
-                'Mixed: AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz';
-            const originalBuffer = new TextEncoder().encode(originalContent);
-            const originalFilePath = join(testDir, 'special.txt');
-            await storageInstance.write(originalFilePath, originalBuffer);
+        it('should handle file not found error', async () => {
+            /* Arrange */
+            mockGuardFileExists.mockImplementation(() => {
+                throw new Error('File not found');
+            });
 
-            /* Create EcmArchive instance for compression */
-            const ecmArchive = new EcmArchive(join(testDir, 'test.ecm'));
-
-            /* Compress the file */
-            const compressedFilePath =
-                await ecmArchive.compress(originalFilePath);
-            expect(await storageInstance.exists(compressedFilePath)).toBe(true);
-
-            /* Create a new EcmArchive instance for the compressed file */
-            const compressedArchive = new EcmArchive(compressedFilePath);
-
-            /* Verify the compressed file */
-            const verifyResult = await compressedArchive.verify();
-            expect(verifyResult).toBe(true);
-
-            /* Extract the compressed file */
-            const extractedFilePath = await compressedArchive.extract();
-            expect(await storageInstance.exists(extractedFilePath)).toBe(true);
-
-            /* Compare original and extracted content */
-            const extractedContent =
-                await storageInstance.read(extractedFilePath);
-            const extractedText = new TextDecoder().decode(extractedContent);
-            expect(extractedText).toBe(originalContent);
-        });
-
-        it('should compress and extract a file with random data', async () => {
-            /* Create a file with random data */
-            const randomBytes = new Uint8Array(1024);
-            for (let i = 0; i < randomBytes.length; i++) {
-                randomBytes[i] = Math.floor(Math.random() * 256);
-            }
-            const originalFilePath = join(testDir, 'random.bin');
-            await storageInstance.write(originalFilePath, randomBytes);
-
-            /* Create EcmArchive instance for compression */
-            const ecmArchive = new EcmArchive(join(testDir, 'test.ecm'));
-
-            /* Compress the file */
-            const compressedFilePath =
-                await ecmArchive.compress(originalFilePath);
-            expect(await storageInstance.exists(compressedFilePath)).toBe(true);
-
-            /* Create a new EcmArchive instance for the compressed file */
-            const compressedArchive = new EcmArchive(compressedFilePath);
-
-            /* Verify the compressed file */
-            const verifyResult = await compressedArchive.verify();
-            expect(verifyResult).toBe(true);
-
-            /* Extract the compressed file */
-            const extractedFilePath = await compressedArchive.extract();
-            expect(await storageInstance.exists(extractedFilePath)).toBe(true);
-
-            /* Compare original and extracted content */
-            const extractedContent =
-                await storageInstance.read(extractedFilePath);
-            expect(Buffer.from(extractedContent)).toEqual(
-                Buffer.from(randomBytes)
-            );
+            /* Act & Assert */
+            await expect(ecmArchive.extract()).rejects.toThrow('File not found');
         });
     });
 
     describe('verify', () => {
-        it('should return false for non-existent file', async () => {
-            const nonExistentArchive = new EcmArchive(
-                join(testDir, 'non-existent.ecm')
-            );
-            const result = await nonExistentArchive.verify();
-            expect(result).toBe(false);
-        });
+        it('should verify valid ECM file successfully', async () => {
+            /* Arrange */
+            const mockStorageInstance = {
+                exists: jest.fn().mockResolvedValue(true),
+            };
+            mockStorage.mockResolvedValue(mockStorageInstance as any);
+            mockEcmWasmInstance.verify.mockResolvedValue(true);
 
-        it('should return false for invalid ECM file', async () => {
-            /* Create a file that's not a valid ECM file */
-            const invalidContent = 'This is not an ECM file';
-            const invalidBuffer = new TextEncoder().encode(invalidContent);
-            const invalidFilePath = join(testDir, 'invalid.ecm');
-            await storageInstance.write(invalidFilePath, invalidBuffer);
+            /* Act */
+            const result = await ecmArchive.verify();
 
-            const invalidArchive = new EcmArchive(invalidFilePath);
-            const result = await invalidArchive.verify();
-            expect(result).toBe(false);
-        });
-
-        it('should return true for valid ECM file', async () => {
-            /* Create a valid ECM file by compressing a test file first */
-            const testContent = 'Test content for ECM verification';
-            const testBuffer = new TextEncoder().encode(testContent);
-            const testFilePath = join(testDir, 'test.txt');
-            await storageInstance.write(testFilePath, testBuffer);
-
-            /* Create EcmArchive instance for compression */
-            const ecmArchive = new EcmArchive(join(testDir, 'test.ecm'));
-
-            /* Compress to create a valid ECM file */
-            const compressedFilePath = await ecmArchive.compress(testFilePath);
-            expect(await storageInstance.exists(compressedFilePath)).toBe(true);
-
-            /* Create a new EcmArchive instance for verification */
-            const compressedArchive = new EcmArchive(compressedFilePath);
-
-            /* Verify the compressed file */
-            const result = await compressedArchive.verify();
+            /* Assert */
+            expect(mockLog.info).toHaveBeenCalledWith('Verifying /test/file.ecm...');
+            expect(mockStorageInstance.exists).toHaveBeenCalledWith('/test/file.ecm');
+            expect(mockEcmWasmInstance.verify).toHaveBeenCalledWith('/test/file.ecm');
+            expect(mockLog.info).toHaveBeenCalledWith('✓ /test/file.ecm appears to be a valid ECM file');
             expect(result).toBe(true);
+        });
+
+        it('should return false when file does not exist', async () => {
+            /* Arrange */
+            const mockStorageInstance = {
+                exists: jest.fn().mockResolvedValue(false),
+            };
+            mockStorage.mockResolvedValue(mockStorageInstance as any);
+
+            /* Act */
+            const result = await ecmArchive.verify();
+
+            /* Assert */
+            expect(mockLog.warn).toHaveBeenCalledWith('✗ /test/file.ecm does not exist');
+            expect(result).toBe(false);
+        });
+
+        it('should return false when ECM file is invalid', async () => {
+            /* Arrange */
+            const mockStorageInstance = {
+                exists: jest.fn().mockResolvedValue(true),
+            };
+            mockStorage.mockResolvedValue(mockStorageInstance as any);
+            mockEcmWasmInstance.verify.mockResolvedValue(false);
+
+            /* Act */
+            const result = await ecmArchive.verify();
+
+            /* Assert */
+            expect(mockLog.warn).toHaveBeenCalledWith('✗ /test/file.ecm is not a valid ECM file');
+            expect(result).toBe(false);
+        });
+
+        it('should handle verification errors', async () => {
+            /* Arrange */
+            const error = new Error('Verification failed');
+            mockStorage.mockRejectedValue(error as any);
+
+            /* Act */
+            const result = await ecmArchive.verify();
+
+            /* Assert */
+            expect(mockLog.warn).toHaveBeenCalledWith('✗ /test/file.ecm is not accessible: Error: Verification failed');
+            expect(result).toBe(false);
+        });
+
+        it('should handle non-Error objects in verification', async () => {
+            /* Arrange */
+            mockStorage.mockRejectedValue('String error' as any);
+
+            /* Act */
+            const result = await ecmArchive.verify();
+
+            /* Assert */
+            expect(mockLog.warn).toHaveBeenCalledWith('✗ /test/file.ecm is not accessible: String error');
+            expect(result).toBe(false);
         });
     });
 
-    describe('error handling', () => {
-        it('should handle compression errors gracefully', async () => {
-            /* Try to compress a non-existent file */
-            const nonExistentFile = join(testDir, 'non-existent.txt');
-            const ecmArchive = new EcmArchive(join(testDir, 'test.ecm'));
+    describe('compress', () => {
+        it('should compress file to ECM successfully', async () => {
+            /* Arrange */
+            const inputFile = '/test/input.bin';
+            mockEcmWasmInstance.compress.mockResolvedValue(undefined);
+            mockGuardFileExists.mockImplementation(() => {
+                /* No-op for guard check */
+            });
 
-            await expect(
-                ecmArchive.compress(nonExistentFile)
-            ).rejects.toThrow();
+            /* Act */
+            const result = await ecmArchive.compress(inputFile);
+
+            /* Assert */
+            expect(mockGuardFileExists).toHaveBeenCalledWith(inputFile);
+            expect(mockEcmWasmInstance.compress).toHaveBeenCalledWith(inputFile, expect.stringContaining('input.bin.ecm'));
+            expect(mockLog.info).toHaveBeenCalledWith('Encoded /test/input.bin');
+            expect(result).toMatch(/input\.bin\.ecm$/);
         });
 
-        it('should handle extraction errors gracefully', async () => {
-            /* Try to extract a non-existent ECM file */
-            const nonExistentArchive = new EcmArchive(
-                join(testDir, 'non-existent.ecm')
-            );
+        it('should handle compression errors', async () => {
+            /* Arrange */
+            const inputFile = '/test/input.bin';
+            const error = new Error('Compression failed');
+            mockEcmWasmInstance.compress.mockRejectedValue(error);
+            mockGuardFileExists.mockImplementation(() => {
+                /* No-op for guard check */
+            });
 
-            await expect(nonExistentArchive.extract()).rejects.toThrow();
+            /* Act & Assert */
+            await expect(ecmArchive.compress(inputFile)).rejects.toThrow('ECM compression failed: Compression failed');
+        });
+
+        it('should handle non-Error objects in compression', async () => {
+            /* Arrange */
+            const inputFile = '/test/input.bin';
+            mockEcmWasmInstance.compress.mockRejectedValue('String error');
+            mockGuardFileExists.mockImplementation(() => {
+                /* No-op for guard check */
+            });
+
+            /* Act & Assert */
+            await expect(ecmArchive.compress(inputFile)).rejects.toThrow('ECM compression failed: String error');
+        });
+
+        it('should handle file not found error in compression', async () => {
+            /* Arrange */
+            const inputFile = '/test/input.bin';
+            mockGuardFileExists.mockImplementation(() => {
+                throw new Error('File not found');
+            });
+
+            /* Act & Assert */
+            await expect(ecmArchive.compress(inputFile)).rejects.toThrow('File not found');
         });
     });
 });

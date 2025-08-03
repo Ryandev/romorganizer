@@ -1,9 +1,6 @@
 import { log } from '../utils/logger';
 import chd from '../utils/chd';
-import { RarArchive } from '../archive/rar';
-import { ZipArchive } from '../archive/zip';
-import { EcmArchive } from '../archive/ecm';
-import { SevenZipArchive } from '../archive/seven-zip';
+import { createArchive } from '../archive';
 import * as mdf from '../utils/mdf';
 import { guard, guardFileExists } from '../utils/guard';
 import storage from '../utils/storage';
@@ -13,15 +10,9 @@ import cueSheet from '../utils/cueSheet';
 import iso from '../utils/iso';
 import { IStorage } from '../utils/storage.interface';
 import storageDecorator from '../utils/storage.decorator';
-
-export interface IRunner {
-    start(): Promise<string[]>;
-    outputFile(): string;
-}
-
-const _fileExtension = (filePath: string): string => {
-    return filePath.split('.').pop() ?? '';
-};
+import { IRunner } from './interface';
+import { setTemporaryDirectory } from '../utils/environment';
+import { fileExtension, groupedFiles } from './utils';
 
 const EXTRACT_OPERATIONS = new Map<
     string,
@@ -30,7 +21,7 @@ const EXTRACT_OPERATIONS = new Map<
     [
         'ecm',
         async (sourceFile: string, allFiles: string[] = []) => {
-            const ecmArchive = new EcmArchive(sourceFile);
+            const ecmArchive = createArchive(sourceFile);
             const extractedFile = await ecmArchive.extract();
             /* Find matching .cue file from .allFiles */
             for (const file of allFiles.filter(file => file.endsWith('.cue'))) {
@@ -61,9 +52,7 @@ const EXTRACT_OPERATIONS = new Map<
             if (!sourceFile.endsWith('.7z')) {
                 return [];
             }
-            const extractedFile = await new SevenZipArchive(
-                sourceFile
-            ).extract();
+            const extractedFile = await createArchive(sourceFile).extract();
             const contents = await storage().list(extractedFile);
             return contents;
         },
@@ -87,9 +76,7 @@ const EXTRACT_OPERATIONS = new Map<
             if (!sourceFile.endsWith('.rar')) {
                 return [];
             }
-            const extractedDirectory = await new RarArchive(
-                sourceFile
-            ).extract();
+            const extractedDirectory = await createArchive(sourceFile).extract();
             const contents = await storage().list(extractedDirectory);
             return contents;
         },
@@ -100,7 +87,7 @@ const EXTRACT_OPERATIONS = new Map<
             if (!sourceFile.endsWith('.zip')) {
                 return [];
             }
-            const outputDirectory = await new ZipArchive(sourceFile).extract();
+            const outputDirectory = await createArchive(sourceFile).extract();
             const contents = await storage().list(outputDirectory);
             return contents;
         },
@@ -179,18 +166,18 @@ const _findMatchingFiles = (
     fileListings: string[],
     extension: string
 ): string[] => {
-    return fileListings.filter(file => _fileExtension(file) === extension);
+    return fileListings.filter(file => fileExtension(file) === extension);
 };
 
-export class Runner implements IRunner {
+export class RunnerFile implements IRunner<string[]> {
     private readonly storage: IStorage;
 
     constructor(
         private readonly sourceFiles: string[],
-        private readonly outputFilePath: string
+        private readonly overwrite: boolean,
     ) {
         this.sourceFiles = sourceFiles;
-        this.outputFilePath = outputFilePath;
+        this.overwrite = overwrite;
         /* Decorate storage to automatically cleanup temporary files when the runner is disposed */
         this.storage = storageDecorator.withCleanup(storage());
     }
@@ -210,7 +197,7 @@ export class Runner implements IRunner {
             /* Try to extract each file */
             for (const filePath of currentFiles) {
                 try {
-                    const extension = _fileExtension(filePath);
+                    const extension = fileExtension(filePath);
                     const extractOperation = EXTRACT_OPERATIONS.get(
                         extension.toLowerCase()
                     );
@@ -246,11 +233,14 @@ export class Runner implements IRunner {
         return await this.storage.list(workingDirectory);
     }
 
-    outputFile(): string {
-        return this.outputFilePath;
-    }
-
     async start(): Promise<string[]> {
+        const outputFile = `${path.basename(this.sourceFiles[0] ?? '')}.chd`;
+        const outputDirectory = path.dirname(this.sourceFiles[0] ?? '');
+        const outputFilePath = path.join(outputDirectory, outputFile);
+        if (await storage().exists(outputFilePath) && !this.overwrite) {
+            throw new Error(`Output file already exists: ${outputFilePath}`);
+        }
+
         const workingDirectory = await this.storage.createTemporaryDirectory();
         for (const sourceFile of this.sourceFiles) {
             const destinationFile = path.join(
@@ -267,7 +257,7 @@ export class Runner implements IRunner {
 
         for (const filePath of currentFiles) {
             try {
-                const extension = _fileExtension(filePath);
+                const extension = fileExtension(filePath);
 
                 /* Only compress files that can be converted to CHD */
                 if (['cue', 'gdi'].includes(extension)) {
@@ -308,37 +298,92 @@ export class Runner implements IRunner {
     }
 }
 
-export default function createCHDRunner(
-    sourceFiles: string[]
-): IRunner | Error {
-    const fileExtensions = new Set(
-        sourceFiles.map(file => _fileExtension(file).toLowerCase())
-    );
-    const supportedExtensions = new Set(
-        [...EXTRACT_OPERATIONS.keys()].map(ext => ext.toLowerCase())
-    );
-    const compressibleExtensions = new Set([
-        'cue',
-        'gdi',
-    ]); /* Files that can be directly compressed to CHD */
-
-    /* Check if any file can be extracted or directly compressed */
-    const canExtract = [...supportedExtensions].some(extension =>
-        fileExtensions.has(extension)
-    );
-    const canCompress = [...compressibleExtensions].some(extension =>
-        fileExtensions.has(extension)
-    );
-
-    if (!canExtract && !canCompress) {
-        return new Error(
-            `No matching extensions found for ${sourceFiles.join(', ')}`
-        );
+export class RunnerDirectory implements IRunner<string[]> {
+    constructor(
+        private readonly sourceDir: string,
+        private readonly outputDir: string,
+        private readonly tempDir: string | undefined,
+        private readonly overwrite: boolean,
+        private readonly removeSource: boolean,
+    ) {
+        this.sourceDir = sourceDir;
+        this.outputDir = outputDir;
+        this.tempDir = tempDir ?? undefined;
+        this.overwrite = overwrite;
+        this.removeSource = removeSource;
     }
 
-    const outputFileName = `${path.basename(sourceFiles[0] ?? '')}.chd`; /* Grab basename & append .chd */
-    const outputDirectory = path.dirname(sourceFiles[0] ?? '');
-    const outputFilePath = path.join(outputDirectory, outputFileName);
+    private _createRunner(
+        sourceFiles: string[],
+        overwrite: boolean
+    ): RunnerFile | Error {
+        const fileExtensions = new Set(
+            sourceFiles.map(file => fileExtension(file).toLowerCase())
+        );
+        const supportedExtensions = new Set(
+            [...EXTRACT_OPERATIONS.keys()].map(ext => ext.toLowerCase())
+        );
+        const compressibleExtensions = new Set([
+            'cue',
+            'gdi',
+        ]); /* Files that can be directly compressed to CHD */
+    
+        /* Check if any file can be extracted or directly compressed */
+        const canExtract = [...supportedExtensions].some(extension =>
+            fileExtensions.has(extension)
+        );
+        const canCompress = [...compressibleExtensions].some(extension =>
+            fileExtensions.has(extension)
+        );
+    
+        if (!canExtract && !canCompress) {
+            return new Error(
+                `No matching extensions found for ${sourceFiles.join(', ')}`
+            );
+        }
+   
+        return new RunnerFile(sourceFiles, overwrite);
+    }
+    
 
-    return new Runner(sourceFiles, outputFilePath);
+    async start(): Promise<string[]> {
+        if (this.tempDir) {
+            setTemporaryDirectory(this.tempDir);
+        }
+                    
+            const outputFiles: string[] = [];
+            const fileGroups = await groupedFiles(this.sourceDir);
+            log.info(`Found ${fileGroups.length} files in source directory`);
+        
+            for (const files of fileGroups) {
+                const runner = this._createRunner(files, this.overwrite);
+                if (runner instanceof Error) {
+                    log.error(`Error creating runner for ${files}: ${runner.message}`);
+                    continue;
+                }
+                const outputFilePaths = await runner.start();
+                const chdFilePath = outputFilePaths.find(filePath => filePath.endsWith('.chd'));
+                if (chdFilePath && await storage().exists(chdFilePath) && !this.overwrite) {
+                    log.info(
+                        `Skipping ${files} - output file already exists in output directory`
+                    );
+                    continue;
+                }
+                const results = await runner.start();
+                log.info(`Processing ${results.length} results from ${files}`);
+                for (const result of results) {
+                    const outputFileName = path.basename(result);
+                    const outputPath = path.join(this.outputDir, outputFileName);
+        
+                    await storage().move(result, outputPath);
+                    outputFiles.push(result);
+                }
+                if (this.removeSource) {
+                    await Promise.all(files.map(file => storage().remove(file)));
+                    log.info(`Removed source files: ${files.join(', ')}`);
+                }
+            }
+        
+            return outputFiles;
+    }
 }

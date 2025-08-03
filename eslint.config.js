@@ -45,7 +45,6 @@ export default [
       ...unicorn.configs.recommended.rules,
       'unicorn/filename-case': 'off',
       'unicorn/no-console-spaces': 'off',
-      'unicorn/no-process-exit': 'off',
       'unicorn/prefer-add-event-listener': 'off',
       'unicorn/prefer-modern-dom-apis': 'off',
       'unicorn/prefer-query-selector': 'off',
@@ -67,27 +66,27 @@ export default [
         sourceType: 'module',
         project: './tsconfig.test.json'
       },
-              globals: {
-          console: 'readonly',
-          process: 'readonly',
-          Buffer: 'readonly',
-          globalThis: 'readonly',
-          abort: 'readonly',
-          require: 'readonly',
-          jest: 'readonly',
-          describe: 'readonly',
-          it: 'readonly',
-          test: 'readonly',
-          expect: 'readonly',
-          beforeEach: 'readonly',
-          afterEach: 'readonly',
-          beforeAll: 'readonly',
-          afterAll: 'readonly',
-          setTimeout: 'readonly',
-          clearTimeout: 'readonly',
-          setInterval: 'readonly',
-          clearInterval: 'readonly'
-        }
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        globalThis: 'readonly',
+        abort: 'readonly',
+        require: 'readonly',
+        jest: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly'
+      }
     },
     plugins: {
       '@typescript-eslint': tseslint,
@@ -111,7 +110,6 @@ export default [
       ...unicorn.configs.recommended.rules,
       'unicorn/filename-case': 'off',
       'unicorn/no-console-spaces': 'off',
-      'unicorn/no-process-exit': 'off',
       'unicorn/prefer-add-event-listener': 'off',
       'unicorn/prefer-modern-dom-apis': 'off',
       'unicorn/prefer-query-selector': 'off',
@@ -130,7 +128,8 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
       'unicorn/no-null': 'off',
       'unicorn/prefer-number-properties': 'off',
-      'unicorn/no-useless-undefined': 'off'
+      'unicorn/no-useless-undefined': 'off',
+      'unicorn/number-literal-case': 'off'
     }
   },
   {
@@ -149,7 +148,8 @@ export default [
     },
     rules: {
       'no-console': 'off',
-      'no-process-exit': 'off'
+      'prefer-const': 'error',
+      'no-var': 'error'
     }
   },
   {
@@ -168,7 +168,28 @@ export default [
     },
     rules: {
       'no-console': 'off',
-      'no-process-exit': 'off'
+      'prefer-const': 'error',
+      'no-var': 'error'
+    }
+  },
+  {
+    files: ['*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        globalThis: 'readonly',
+        abort: 'readonly',
+        require: 'readonly'
+      }
+    },
+    rules: {
+      'no-console': 'off',
+      'prefer-const': 'error',
+      'no-var': 'error'
     }
   },
   {
@@ -176,7 +197,9 @@ export default [
       'dist/',
       'dist-package/',
       'node_modules/',
-      'src/**/*.js'
+      'src/**/*.js',
+      'deps/ecm/emsdk/**/*',
+      'deps/ecm/wasm/build/**/*'
     ]
   }
 ]; 

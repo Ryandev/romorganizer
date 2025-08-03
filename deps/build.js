@@ -22,7 +22,7 @@ try {
   });
 } catch (error) {
   console.error('❌ Failed to build ECM WASM modules:', error.message);
-  process.exit(1);
+  throw new Error('Failed to build ECM WASM modules');
 }
 
 console.log('🎉 All dependencies built successfully!'); 

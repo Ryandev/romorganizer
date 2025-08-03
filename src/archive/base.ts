@@ -14,7 +14,6 @@ export interface Archive {
 /* Global temporary files array - will be managed by the main application */
 declare global {
     var temporaryFiles: string[];
-    function abort(message: string): never;
 }
 
 export abstract class BaseArchive implements Archive {
@@ -140,17 +139,21 @@ export abstract class BaseArchive implements Archive {
         command: string,
         installCmd: string
     ): Promise<void> {
+        const errorMessage = `${command} is not installed. Install with: ${installCmd}`;
         try {
-            await $`command -v ${command}`;
+            const result = await $`command -v ${command}`;
+            if (result.exitCode !== 0) {
+                throw new Error(errorMessage);
+            }
         } catch {
-            abort(`${command} is not installed. Install with: ${installCmd}`);
+            throw new Error(errorMessage);
         }
     }
 
     protected async runVerifyCommand(command: string): Promise<boolean> {
         try {
-            await $`${command}`;
-            return true;
+            const result = await $`${command}`;
+            return result.exitCode === 0;
         } catch {
             return false;
         }

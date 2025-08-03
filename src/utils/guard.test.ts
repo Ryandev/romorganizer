@@ -10,16 +10,7 @@ import {
     guardDirectoryExists,
     guardCommandExists,
     createGuard,
-    abort,
 } from './guard';
-import { log } from './logger';
-
-/* Mock the logger */
-jest.mock('./logger', () => ({
-    log: {
-        error: jest.fn(),
-    },
-}));
 
 /* Mock fs */
 jest.mock('node:fs', () => ({
@@ -29,17 +20,15 @@ jest.mock('node:fs', () => ({
 
 /* Mock zx */
 jest.mock('zx', () => ({
-    $: jest.fn(),
+    $: jest.fn().mockResolvedValue({ exitCode: 0 }),
 }));
 
 describe('Guard Functions', () => {
-    let mockLog: jest.Mocked<typeof log>;
     let mockFs: jest.Mocked<typeof import('node:fs')>;
     let mockZx: jest.Mocked<typeof import('zx')>;
 
     beforeEach(() => {
         jest.clearAllMocks();
-        mockLog = log as jest.Mocked<typeof log>;
         mockFs = require('node:fs');
         mockZx = require('zx');
     });
@@ -452,52 +441,4 @@ describe('Guard Functions', () => {
         });
     });
 
-    describe('abort', () => {
-        let originalExit: (code?: number) => never;
-        let mockExit: jest.Mock;
-
-        beforeEach(() => {
-            originalExit = process.exit;
-            mockExit = jest.fn();
-            process.exit = mockExit;
-
-            /* Clear global temporary files */
-            (globalThis as any).temporaryFiles = [
-                '/temp/file1.txt',
-                '/temp/file2.txt',
-            ];
-        });
-
-        afterEach(() => {
-            process.exit = originalExit;
-            delete (globalThis as any).temporaryFiles;
-        });
-
-        test('should log error message', () => {
-            abort('Test error message');
-            expect(mockLog.error).toHaveBeenCalledWith('Test error message');
-        });
-
-        test('should clear temporary files if they exist', () => {
-            abort('Test error message');
-            expect((globalThis as any).temporaryFiles).toEqual([]);
-        });
-
-        test('should exit with code 1', () => {
-            abort('Test error message');
-            expect(mockExit).toHaveBeenCalledWith(1);
-        });
-
-        test('should handle case when temporary files do not exist', () => {
-            delete (globalThis as any).temporaryFiles;
-            expect(() => abort('Test error message')).not.toThrow();
-            expect(mockExit).toHaveBeenCalledWith(1);
-        });
-
-        test('should handle case when temporary files is not an array', () => {
-            (globalThis as any).temporaryFiles = 'not an array';
-            expect(() => abort('Test error message')).not.toThrow();
-            expect(mockExit).toHaveBeenCalledWith(1);
-        });
-    });
 });

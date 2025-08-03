@@ -70,7 +70,7 @@ function installEmsdk() {
     console.log('✅ emsdk installed and activated successfully');
   } catch (error) {
     console.error('❌ Failed to install emsdk:', error.message);
-    process.exit(1);
+    throw new Error('Failed to install emsdk');
   }
 }
 
@@ -91,5 +91,5 @@ async function main() {
 
 main().catch((error) => {
   console.error('❌ Setup failed:', error.message);
-  process.exit(1);
+  throw new Error('Setup failed');
 }); 

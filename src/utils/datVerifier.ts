@@ -3,8 +3,9 @@ import { log } from './logger';
 import { Dat, Game, ROM } from './dat';
 import storage from './storage';
 import path from 'node:path';
-import { createHash } from 'node:crypto';
 import chd from './chd';
+import hash from './hash';
+import { guardValidString } from './guard';
 
 export class VerificationException extends Error {
     constructor(message: string) {
@@ -48,7 +49,7 @@ const CHDMAN_SUPPORTED_CUE_COMMANDS = new Set([
     'POSTGAP',
 ]);
 
-function stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(
+export function stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(
     cueText: string
 ): string {
     const strippedCueLines = cueText.split('\n').map(line => line.trim());
@@ -156,11 +157,6 @@ async function normalizeRedumpBincueDump(cueFilePath: string): Promise<void> {
     );
 }
 
-async function calculateFileSha1(filePath: string): Promise<string> {
-    const content = await storage().read(filePath);
-    return createHash('sha1').update(Buffer.from(content)).digest('hex');
-}
-
 async function verifyRedumpDumpFolder(
     dumpFolder: string,
     dat: Dat
@@ -178,7 +174,7 @@ async function verifyRedumpDumpFolder(
     for (const binFile of binFiles) {
         const fileName = path.basename(binFile);
         const fileSize = await storage().size(binFile);
-        const fileSha1 = await calculateFileSha1(binFile);
+        const fileSha1 = await hash.calculateFileSha1(binFile);
 
         /* Find matching ROM in DAT */
         const matchingRoms = dat.romsBySha1hex.get(fileSha1) || [];
@@ -213,6 +209,7 @@ async function verifyRedumpDumpFolder(
     let cueVerificationResult = CueVerificationResult.NO_CUE_NEEDED;
     if (cueFiles.length > 0) {
         const cueFile = cueFiles[0];
+        guardValidString(cueFile);
         const cueContent = await storage().read(cueFile);
         const cueText = new TextDecoder().decode(cueContent);
 
@@ -221,7 +218,7 @@ async function verifyRedumpDumpFolder(
         const matchingCueRom = game.roms.find(rom => rom.name === cueFileName);
 
         if (matchingCueRom) {
-            const cueSha1 = await calculateFileSha1(cueFile);
+            const cueSha1 = await hash.calculateFileSha1(cueFile);
             if (cueSha1 === matchingCueRom.sha1hex) {
                 cueVerificationResult =
                     CueVerificationResult.GENERATED_CUE_VERIFIED_EXACTLY;

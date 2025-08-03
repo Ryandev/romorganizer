@@ -35,7 +35,9 @@
     "PREGAP",
     "POSTGAP",
     "Bincue",
-    "poweriso"
+    "poweriso",
+    "networkcommand",
+    "weirdcommand"
   ],
   "patterns": [
     {

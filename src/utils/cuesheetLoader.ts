@@ -1,6 +1,6 @@
 import { log } from './logger';
 import storage from './storage';
-import { ZipArchive } from '../archive/zip';
+import { createArchive } from '../archive';
 import path from 'node:path';
 
 export class CuesheetLoaderException extends Error {
@@ -45,7 +45,7 @@ export async function loadCuesheetsFromZip(
 
     try {
         /* Extract the zip file */
-        const zipArchive = new ZipArchive(zipPath);
+        const zipArchive = createArchive(zipPath);
         const extractedDir = await zipArchive.extract();
 
         /* Find all .cue files in the extracted directory */
@@ -243,7 +243,7 @@ export async function isZipWithCuesheets(filePath: string): Promise<boolean> {
 
     try {
         /* Try to extract and check for .cue files */
-        const zipArchive = new ZipArchive(filePath);
+        const zipArchive = createArchive(filePath);
         const extractedDir = await zipArchive.extract();
 
         const allFiles = await storage().list(extractedDir, {
