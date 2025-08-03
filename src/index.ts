@@ -9,16 +9,6 @@ async function main(inputArguments: string[]) {
     const [command, ...subArguments] = inputArguments.length === 0 ? ['help'] : inputArguments;
     
     switch (command) {
-        /* Handle help flags - these will be caught by the switch statement in index.ts */
-        case 'help':
-        case '-h':
-        case '--help': {
-            const builder = await createHelpRunner(subArguments);
-            const runner = await builder.create();
-            const text = await runner.start();
-            console.log(text);
-            break;
-        }
         case 'compress': {
             const builder = await createCompressRunner(subArguments);
             const runner = await builder.create();
@@ -38,8 +28,14 @@ async function main(inputArguments: string[]) {
             );
             break;
         }
+        /* Handle help flags - these will be caught by the switch statement in index.ts */
+        /* help, -h, --help */
         default: {
-            throw new Error(`Unknown command: ${command}`);
+            const builder = await createHelpRunner(subArguments);
+            const runner = await builder.create();
+            const text = await runner.start();
+            console.log(text);
+            break;
         }
     }
 }

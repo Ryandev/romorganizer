@@ -4,7 +4,6 @@ import { createArchive } from '../archive';
 import * as mdf from '../utils/mdf';
 import { guard, guardFileExists } from '../utils/guard';
 import storage from '../utils/storage';
-import { loadCuesheetFromFile } from '../utils/cuesheet-loader';
 import path from 'node:path';
 import cueSheet from '../utils/cue-sheet';
 import iso from '../utils/iso';
@@ -16,33 +15,13 @@ import { fileExtension, groupedFiles } from './utils';
 
 const EXTRACT_OPERATIONS = new Map<
     string,
-    (sourceFile: string, allFiles?: string[]) => Promise<string[]>
+    (sourceFile: string) => Promise<string[]>
 >([
     [
         'ecm',
-        async (sourceFile: string, allFiles: string[] = []) => {
+        async (sourceFile: string) => {
             const ecmArchive = createArchive(sourceFile);
             const extractedFile = await ecmArchive.extract();
-            /* Find matching .cue file from .allFiles */
-            for (const file of allFiles.filter(file => file.endsWith('.cue'))) {
-                /* load cue file */
-                const cueFile = await loadCuesheetFromFile(file);
-                /* find matching track */
-                const cueFileMatches =
-                    `${cueFile.name}.bin` === path.basename(extractedFile);
-
-                if (cueFileMatches) {
-                    /* create chd file */
-                    const cueFilePath = path.join(
-                        path.dirname(extractedFile),
-                        path.basename(extractedFile, '.bin') + '.cue'
-                    );
-                    await storage().copy(file, cueFilePath);
-                    return [cueFilePath];
-                }
-            }
-
-            /* If no matching .cue file is found, return the extracted file */
             return [extractedFile];
         },
     ],
@@ -52,8 +31,8 @@ const EXTRACT_OPERATIONS = new Map<
             if (!sourceFile.endsWith('.7z')) {
                 return [];
             }
-            const extractedFile = await createArchive(sourceFile).extract();
-            const contents = await storage().list(extractedFile);
+            const extractedDirectory = await createArchive(sourceFile).extract();
+            const contents = await storage().list(extractedDirectory);
             return contents;
         },
     ],
@@ -206,10 +185,8 @@ export class RunnerFile implements IRunner<string[]> {
                         continue;
                     }
 
-                    const extractedFiles = await extractOperation(
-                        filePath,
-                        currentFiles
-                    );
+                    log.info(`Extracting file ${filePath} with operation ${extractOperation.name}`);
+                    const extractedFiles = await extractOperation(filePath);
                     /* Move extracted files back to current directory */
                     for (const extractedFile of extractedFiles) {
                         const newFilePath = path.join(
@@ -229,8 +206,11 @@ export class RunnerFile implements IRunner<string[]> {
             }
         }
 
+        const listings = await this.storage.list(workingDirectory);
+        log.info(`Extracted files: ${listings.join(', ')}`);
+
         /* Re-grab all the files in the working directory */
-        return await this.storage.list(workingDirectory);
+        return listings;
     }
 
     async start(): Promise<string[]> {

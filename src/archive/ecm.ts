@@ -24,7 +24,7 @@ export class EcmArchive extends BaseArchive {
         try {
             await this.ecmWasm.extract(this.filePath, outputFilePath);
             guardFileExists(outputFilePath);
-            log.info(`Extracted ${this.filePath}`);
+            log.info(`Extracted ${this.filePath} to ${outputFilePath}`);
             return outputFilePath;
         } catch (error) {
             throw new Error(
