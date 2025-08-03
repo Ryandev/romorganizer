@@ -23,13 +23,14 @@ const EXTRACT_OPERATIONS = new Map<
             const ecmArchive = createArchive(sourceFile);
             let extractedFile = await ecmArchive.extract();
             guardFileExists(extractedFile, `Extracted file missing, does not exist: ${extractedFile}`);
-            const cueFile = allFiles.find(file => file.endsWith('.cue'));
+            const cueFile = allFiles.find(file => file.toLowerCase().endsWith('.cue'));
             if ( cueFile ) {
                 /* Read the cue file & get the name of the expected bin file. */
                 /* If the bin filename does not match the cue file. Rename the bin file before returning */
                 const cueContent = await cueSheet.parseFromCueFile(cueFile);
                 const cueData = await cueSheet.deserializeCueSheet(cueContent);
-                const binFileName = cueData.files.map(file => file.filename).find(filename => filename.endsWith('.bin'));
+                const binFileName = cueData.files.map(file => file.filename).find(filename => filename.toLowerCase().endsWith('.bin'));
+                log.info(`Found cue file ${cueFile} & bin file ${binFileName}`);
                 if ( binFileName ) {
                     const binFilePath = path.join(path.dirname(cueFile), binFileName);
                     if ( binFilePath !== extractedFile ) {
