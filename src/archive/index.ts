@@ -24,12 +24,7 @@ export function createArchive(archiveFile: string): Archive {
             return new ZipArchive(archiveFile);
         }
         case 'ecm': {
-            /* Check if ECM support is available by trying to create EcmArchive */
-            try {
-                return new EcmArchive(archiveFile);
-            } catch {
-                throw new Error('ECM support is not available in the built version. Use the development version for ECM functionality.');
-            }
+            return new EcmArchive(archiveFile);
         }
         default: {
             throw new Error(`Unsupported file extension: ${fileExtension}`);

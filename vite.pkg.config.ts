@@ -23,10 +23,7 @@ export default defineConfig({
         'node:timers',
         'node:url',
         'node:crypto',
-        'node:zlib',
-        'deps/ecm/wasm/wrappers/ecm-wasm',
-        'deps/ecm/wasm/types',
-        'deps/ecm/wasm/index'
+        'node:zlib'
       ],
       output: {
         entryFileNames: '[name].js',
