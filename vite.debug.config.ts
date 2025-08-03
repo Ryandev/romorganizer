@@ -38,8 +38,6 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'command-line-args', 
-        'archiver', 
-        'extract-zip', 
         'zx',
         'node:fs',
         'node:fs/promises',
@@ -51,16 +49,7 @@ export default defineConfig({
         'node:timers',
         'node:url',
         'node:crypto',
-        'node:zlib',
-        'fs',
-        'path',
-        'os',
-        'child_process',
-        'util',
-        'events',
-        'url',
-        'crypto',
-        'zlib'
+        'node:zlib'
       ],
       output: {
         entryFileNames: '[name].js',
