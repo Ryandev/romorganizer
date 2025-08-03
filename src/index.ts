@@ -4,13 +4,9 @@ import createVerifyRunner from './runners/verify.builder.js';
 import createCompressRunner from './runners/compress.builder.js';
 
 async function main(inputArguments: string[]) {
-    /* Check for empty args first */
-    if (inputArguments.length === 0) {
-        throw new Error('No command provided. Use --help for usage information.');
-    }
-
+    /* Fallback to help if no arguments are provided */
     /* Check if first argument is a valid command */
-    const [command, ...subArguments] = inputArguments;
+    const [command, ...subArguments] = inputArguments.length === 0 ? ['help'] : inputArguments;
     
     switch (command) {
         /* Handle help flags - these will be caught by the switch statement in index.ts */
