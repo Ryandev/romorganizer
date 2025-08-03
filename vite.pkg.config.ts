@@ -1,10 +1,10 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
+import path from 'node:path';
 
 export default defineConfig({
       build: {
       lib: {
-        entry: resolve(__dirname, 'src/index.ts'),
+        entry: path.resolve(__dirname, 'src/index.ts'),
         name: 'RomOrganizer',
       fileName: 'index',
       formats: ['cjs']

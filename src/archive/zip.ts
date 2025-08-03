@@ -1,7 +1,7 @@
 import { log } from '../utils/logger';
 import { BaseArchive } from './base';
 import AdmZip from 'adm-zip';
-import { join, basename } from 'node:path';
+import path from 'node:path';
 import storage from '../utils/storage';
 
 export class ZipArchive extends BaseArchive {
@@ -103,8 +103,8 @@ export class ZipArchive extends BaseArchive {
 
         for (const item of items) {
             const itemZipPath = zipPath
-                ? join(zipPath, basename(item))
-                : basename(item);
+                ? path.join(zipPath, path.basename(item))
+                : path.basename(item);
 
             /* Skip the file being created to avoid circular reference */
             if (excludePath && item === excludePath) {

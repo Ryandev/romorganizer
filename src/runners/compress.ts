@@ -5,7 +5,7 @@ import * as mdf from '../utils/mdf';
 import { guard, guardFileExists } from '../utils/guard';
 import storage from '../utils/storage';
 import { loadCuesheetFromFile } from '../utils/cuesheetLoader';
-import path from 'path';
+import path from 'node:path';
 import cueSheet from '../utils/cueSheet';
 import iso from '../utils/iso';
 import { IStorage } from '../utils/storage.interface';

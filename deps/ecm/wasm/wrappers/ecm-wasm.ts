@@ -1,4 +1,4 @@
-import { join } from 'path';
+import path from 'node:path';
 import type { ECMModule, UNECMModule } from '../types.js';
 
 function guard(condition: boolean, message: string): asserts condition {
@@ -9,8 +9,8 @@ function guard(condition: boolean, message: string): asserts condition {
 
 function getWasmDir(): string {
   /* Check if we're running from the built version (dist directory) */
-  const distPath = join(process.cwd(), 'dist', 'deps', 'ecm', 'wasm', 'build');
-  const sourcePath = join(process.cwd(), 'deps', 'ecm', 'wasm', 'build');
+  const distPath = path.join(process.cwd(), 'dist', 'deps', 'ecm', 'wasm', 'build');
+  const sourcePath = path.join(process.cwd(), 'deps', 'ecm', 'wasm', 'build');
   
   /* For debugging, let's check both paths */
   console.log('Checking paths:');
@@ -20,7 +20,7 @@ function getWasmDir(): string {
   /* Try to use dist path if it exists and has the files */
   try {
     const { existsSync } = require('fs');
-    if (existsSync(join(distPath, 'unecm.js')) && existsSync(join(distPath, 'unecm.wasm'))) {
+    if (existsSync(path.join(distPath, 'unecm.js')) && existsSync(path.join(distPath, 'unecm.wasm'))) {
       console.log('Using dist path');
       return distPath;
     }
@@ -34,9 +34,9 @@ function getWasmDir(): string {
     const { fileURLToPath } = require('url');
     const executablePath = process.execPath;
     const executableDir = dirname(executablePath);
-    const packagedPath = join(executableDir, 'deps', 'ecm', 'wasm', 'build');
+    const packagedPath = path.join(executableDir, 'deps', 'ecm', 'wasm', 'build');
     
-    if (existsSync(join(packagedPath, 'unecm.js')) && existsSync(join(packagedPath, 'unecm.wasm'))) {
+    if (existsSync(path.join(packagedPath, 'unecm.js')) && existsSync(path.join(packagedPath, 'unecm.wasm'))) {
       console.log('Using packaged path');
       return packagedPath;
     }
@@ -70,7 +70,7 @@ function debugModule(module: any): void {
 
 async function loadECMModule(): Promise<ECMModule> {
   try {
-    const wasmPath = join(getWasmDir(), 'ecm.js');
+    const wasmPath = path.join(getWasmDir(), 'ecm.js');
     console.log('Loading ECM WASM from:', wasmPath);
     
     /* Try different import strategies for compatibility */
@@ -109,7 +109,7 @@ async function loadECMModule(): Promise<ECMModule> {
 
 async function loadUNECMModule(): Promise<UNECMModule> {
   try {
-    const wasmPath = join(getWasmDir(), 'unecm.js');
+    const wasmPath = path.join(getWasmDir(), 'unecm.js');
     console.log('Loading UNECM WASM from:', wasmPath);
     
     /* Try different import strategies for compatibility */
@@ -293,8 +293,8 @@ export class EcmWasm {
       const { join } = await import('path');
       const { tmpdir } = await import('os');
       
-      const tempDir = await mkdtemp(join(tmpdir(), 'ecm-verify-'));
-      const tempOutput = join(tempDir, 'temp_output.bin');
+      const tempDir = await mkdtemp(path.join(tmpdir(), 'ecm-verify-'));
+      const tempOutput = path.join(tempDir, 'temp_output.bin');
       
       try {
         await runUNECMCommand(this.unecmModule, inputPath, tempOutput);

@@ -1,15 +1,14 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
-import { copyFileSync, mkdirSync, existsSync } from 'fs';
-import { join } from 'path';
+import path from 'node:path';
+import { copyFileSync, mkdirSync, existsSync } from 'node:fs';
 
 export default defineConfig({
   plugins: [
     {
       name: 'copy-wasm-files',
       writeBundle() {
-        const wasmSourceDir = join(__dirname, 'deps', 'ecm', 'wasm', 'build');
-        const wasmDestDir = join(__dirname, 'dist', 'deps', 'ecm', 'wasm', 'build');
+        const wasmSourceDir = path.join(__dirname, 'deps', 'ecm', 'wasm', 'build');
+        const wasmDestDir = path.join(__dirname, 'dist', 'deps', 'ecm', 'wasm', 'build');
         
         /* Create destination directory */
         if (!existsSync(wasmDestDir)) {
@@ -19,8 +18,8 @@ export default defineConfig({
         /* Copy WASM files */
         const files = ['ecm.js', 'ecm.wasm', 'unecm.js', 'unecm.wasm'];
         files.forEach(file => {
-          const sourcePath = join(wasmSourceDir, file);
-          const destPath = join(wasmDestDir, file);
+          const sourcePath = path.join(wasmSourceDir, file);
+          const destPath = path.join(wasmDestDir, file);
           if (existsSync(sourcePath)) {
             copyFileSync(sourcePath, destPath);
             console.log(`Copied ${file} to dist`);
@@ -31,7 +30,7 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: path.resolve(__dirname, 'src/index.ts'),
       name: 'RomOrganizer',
       fileName: 'index',
       formats: ['es']

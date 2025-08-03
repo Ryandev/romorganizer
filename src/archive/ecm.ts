@@ -1,4 +1,4 @@
-import { basename, join } from 'path';
+import path from 'node:path';
 import { log } from '../utils/logger';
 import { BaseArchive } from './base';
 import storage from '../utils/storage';
@@ -17,9 +17,9 @@ export class EcmArchive extends BaseArchive {
         guardFileExists(this.filePath);
 
         const outputDirectory = await this.createTemporaryDirectory();
-        const inputFileName = basename(this.filePath);
+        const inputFileName = path.basename(this.filePath);
         const outputFileName = inputFileName.replace('.ecm', '');
-        const outputFilePath = join(outputDirectory, outputFileName);
+        const outputFilePath = path.join(outputDirectory, outputFileName);
 
         try {
             await this.ecmWasm.extract(this.filePath, outputFilePath);
@@ -61,9 +61,9 @@ export class EcmArchive extends BaseArchive {
         guardFileExists(filePath);
 
         const outputDirectory = await this.createTemporaryDirectory();
-        const inputFileName = basename(filePath);
-        const outputFileName = `${inputFileName}.ecm`;
-        const outputFilePath = join(outputDirectory, outputFileName);
+        const inputFileName = path.basename(filePath);
+const outputFileName = `${inputFileName}.ecm`;
+const outputFilePath = path.join(outputDirectory, outputFileName);
 
         try {
             await this.ecmWasm.compress(filePath, outputFilePath);

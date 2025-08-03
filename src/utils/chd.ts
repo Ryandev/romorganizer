@@ -2,7 +2,7 @@ import { $ } from 'zx';
 import { log } from './logger';
 import { guard, guardFileExists, guardCommandExists } from './guard';
 import storage from './storage';
-import path from 'path';
+import path from 'node:path';
 
 const CHD_FORMATS = ['cue', 'gdi', 'iso', 'img'] as const;
 type ChdFormat = (typeof CHD_FORMATS)[number];
@@ -59,8 +59,9 @@ async function createChdFile(options: {
             exitCode = code ?? 1;
             break;
         }
-        default:
+        default: {
             throw new Error(`No command found for ${inputFileExtension}`);
+        }
     }
     guard(
         exitCode === 0,
@@ -95,14 +96,17 @@ async function extractChdFile(options: {
     switch (format) {
         case 'cue':
         case 'gdi':
-        case 'iso':
+        case 'iso': {
             await $`chdman extractcd --force --input ${chdFilePath} --output ${outputFilePath}`;
             break;
-        case 'img':
+        }
+        case 'img': {
             await $`chdman extractraw --force --input ${chdFilePath} --output ${outputFilePath}`;
             break;
-        default:
+        }
+        default: {
             throw new Error(`No command found for ${format}`);
+        }
     }
 
     guardFileExists(

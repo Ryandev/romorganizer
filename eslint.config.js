@@ -44,17 +44,11 @@ export default [
       /* Unicorn rules - using recommended config with customizations for Node.js project */
       ...unicorn.configs.recommended.rules,
       'unicorn/filename-case': 'off',
-      'unicorn/no-console-spaces': 'off',
       'unicorn/prefer-add-event-listener': 'off',
-      'unicorn/prefer-modern-dom-apis': 'off',
       'unicorn/prefer-query-selector': 'off',
-      'unicorn/prefer-node-protocol': 'off',
       'unicorn/import-style': 'off',
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/prefer-module': 'off',
-      'unicorn/switch-case-braces': 'off',
-      'unicorn/no-unnecessary-array-flat-depth': 'off',
-      'unicorn/consistent-function-scoping': 'off'
     }
   },
   {
@@ -109,17 +103,11 @@ export default [
       /* Unicorn rules - using recommended config with customizations for Node.js project */
       ...unicorn.configs.recommended.rules,
       'unicorn/filename-case': 'off',
-      'unicorn/no-console-spaces': 'off',
       'unicorn/prefer-add-event-listener': 'off',
-      'unicorn/prefer-modern-dom-apis': 'off',
       'unicorn/prefer-query-selector': 'off',
-      'unicorn/prefer-node-protocol': 'off',
       'unicorn/import-style': 'off',
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/prefer-module': 'off',
-      'unicorn/switch-case-braces': 'off',
-      'unicorn/no-unnecessary-array-flat-depth': 'off',
-      'unicorn/consistent-function-scoping': 'off'
     }
   },
   {
@@ -201,5 +189,11 @@ export default [
       'deps/ecm/emsdk/**/*',
       'deps/ecm/wasm/build/**/*'
     ]
+  },
+  {
+    files: ['**/*.ts', '**/*.js'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [{ group: ['path'], message: 'Use node:path instead of path' }] }]
+    }
   }
 ]; 

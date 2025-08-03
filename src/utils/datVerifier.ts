@@ -258,16 +258,18 @@ export async function verifyChd(
 
         switch (verificationResult.cueVerificationResult) {
             case CueVerificationResult.NO_CUE_NEEDED:
-            case CueVerificationResult.GENERATED_CUE_VERIFIED_EXACTLY:
+            case CueVerificationResult.GENERATED_CUE_VERIFIED_EXACTLY: {
                 log.info(
                     `Dump verified correct and complete: "${verificationResult.game.name}"`
                 );
                 break;
-            case CueVerificationResult.GENERATED_CUE_MATCHES_ESSENTIALS_FROM_EXTRA_CUE:
+            }
+            case CueVerificationResult.GENERATED_CUE_MATCHES_ESSENTIALS_FROM_EXTRA_CUE: {
                 log.info(
                     `Dump .bin files verified correct and complete, and .cue essential structure matches: "${verificationResult.game.name}"`
                 );
                 break;
+            }
             case CueVerificationResult.GENERATED_CUE_MISMATCH_WITH_NO_EXTRA_CUE_PROVIDED: {
                 const message = `"${verificationResult.game.name}" .bin files verified and complete, but .cue does not match Datfile`;
 
@@ -278,10 +280,11 @@ export async function verifyChd(
                 }
                 break;
             }
-            default:
+            default: {
                 throw new VerificationException(
                     `"${verificationResult.game.name}" .cue file does not match essential structure from provided .cue file`
                 );
+            }
         }
 
         return verificationResult.game;

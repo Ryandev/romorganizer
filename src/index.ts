@@ -14,10 +14,9 @@ async function main(inputArguments: string[]) {
     
     switch (command) {
         /* Handle help flags - these will be caught by the switch statement in index.ts */
-        case 'help': 
+        case 'help':
         case '-h':
-        case '--help':
-        {
+        case '--help': {
             const builder = await createHelpRunner(subArguments);
             const runner = await builder.create();
             const text = await runner.start();
@@ -43,8 +42,9 @@ async function main(inputArguments: string[]) {
             );
             break;
         }
-        default:
+        default: {
             throw new Error(`Unknown command: ${command}`);
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 import { ZipArchive } from './zip';
-import { join } from 'node:path';
+import path from 'node:path';
 import storage from '../utils/storage';
-import type { IStorage } from '../utils/storage';
+import type { IStorage } from '../utils/storage.interface';
 
 describe('ZipArchive', () => {
     let testDir: string;
@@ -11,7 +11,7 @@ describe('ZipArchive', () => {
     beforeEach(async () => {
         storageInstance = await storage();
         testDir = await storageInstance.createTemporaryDirectory();
-        zipArchive = new ZipArchive(join(testDir, 'test.zip'));
+        zipArchive = new ZipArchive(path.join(testDir, 'test.zip'));
 
         /* Initialize temporaryFiles for testing */
         if (!globalThis.temporaryFiles) {
@@ -26,7 +26,7 @@ describe('ZipArchive', () => {
     describe('constructor', () => {
         it('should create a ZipArchive instance', () => {
             expect(zipArchive).toBeInstanceOf(ZipArchive);
-            expect(zipArchive.archiveFile()).toBe(join(testDir, 'test.zip'));
+            expect(zipArchive.archiveFile()).toBe(path.join(testDir, 'test.zip'));
         });
     });
 
@@ -36,10 +36,10 @@ describe('ZipArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(join(testDir, 'test1.txt'), testBuffer);
-            await storageInstance.write(join(testDir, 'test2.txt'), testBuffer);
+            await storageInstance.write(path.join(testDir, 'test1.txt'), testBuffer);
+            await storageInstance.write(path.join(testDir, 'test2.txt'), testBuffer);
 
-            const zipPath = join(testDir, 'output.zip');
+            const zipPath = path.join(testDir, 'output.zip');
             const zipArchive = new ZipArchive(zipPath);
 
             await zipArchive.compress(testDir);
@@ -60,10 +60,10 @@ describe('ZipArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(join(testDir, 'test1.txt'), testBuffer);
-            await storageInstance.write(join(testDir, 'test2.txt'), testBuffer);
+            await storageInstance.write(path.join(testDir, 'test1.txt'), testBuffer);
+            await storageInstance.write(path.join(testDir, 'test2.txt'), testBuffer);
 
-            const zipPath = join(testDir, 'test.zip');
+            const zipPath = path.join(testDir, 'test.zip');
             const zipArchive = new ZipArchive(zipPath);
 
             await zipArchive.compress(testDir);
@@ -92,9 +92,9 @@ describe('ZipArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(join(testDir, 'test.txt'), testBuffer);
+            await storageInstance.write(path.join(testDir, 'test.txt'), testBuffer);
 
-            const zipPath = join(testDir, 'test.zip');
+            const zipPath = path.join(testDir, 'test.zip');
             const zipArchive = new ZipArchive(zipPath);
 
             await zipArchive.compress(testDir);
@@ -109,7 +109,7 @@ describe('ZipArchive', () => {
             const testContent = 'This is not a zip file';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            const invalidZipPath = join(testDir, 'invalid.zip');
+            const invalidZipPath = path.join(testDir, 'invalid.zip');
             await storageInstance.write(invalidZipPath, testBuffer);
 
             const zipArchive = new ZipArchive(invalidZipPath);

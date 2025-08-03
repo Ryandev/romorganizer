@@ -1,7 +1,7 @@
 import { RarArchive } from './rar';
-import { join } from 'node:path';
+import path from 'node:path';
 import storage from '../utils/storage';
-import type { IStorage } from '../utils/storage';
+import type { IStorage } from '../utils/storage.interface';
 
 describe('RarArchive', () => {
     let testDir: string;
@@ -11,7 +11,7 @@ describe('RarArchive', () => {
     beforeEach(async () => {
         storageInstance = await storage();
         testDir = await storageInstance.createTemporaryDirectory();
-        rarArchive = new RarArchive(join(testDir, 'test.rar'));
+        rarArchive = new RarArchive(path.join(testDir, 'test.rar'));
 
         /* Initialize temporaryFiles for testing */
         if (!globalThis.temporaryFiles) {
@@ -26,7 +26,7 @@ describe('RarArchive', () => {
     describe('constructor', () => {
         it('should create a RarArchive instance', () => {
             expect(rarArchive).toBeInstanceOf(RarArchive);
-            expect(rarArchive.archiveFile()).toBe(join(testDir, 'test.rar'));
+            expect(rarArchive.archiveFile()).toBe(path.join(testDir, 'test.rar'));
         });
     });
 
@@ -36,8 +36,8 @@ describe('RarArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(join(testDir, 'test1.txt'), testBuffer);
-            await storageInstance.write(join(testDir, 'test2.txt'), testBuffer);
+            await storageInstance.write(path.join(testDir, 'test1.txt'), testBuffer);
+            await storageInstance.write(path.join(testDir, 'test2.txt'), testBuffer);
 
             /* On macOS, RAR commands are often blocked by security restrictions */
             /* Skip the actual compression test to avoid triggering security dialogs */
@@ -54,7 +54,7 @@ describe('RarArchive', () => {
             /* Since we can't easily create RAR files without the rar command, */
             /* this test will be skipped if no RAR file is available */
 
-            const rarPath = join(testDir, 'test.rar');
+            const rarPath = path.join(testDir, 'test.rar');
             const testRarArchive = new RarArchive(rarPath);
 
             /* This test might fail if no RAR file exists, which is expected */
@@ -77,7 +77,7 @@ describe('RarArchive', () => {
     describe('verify', () => {
         it('should verify a valid RAR file', async () => {
             /* Note: This test requires a valid RAR file to be present */
-            const rarPath = join(testDir, 'test.rar');
+            const rarPath = path.join(testDir, 'test.rar');
             const testRarArchive = new RarArchive(rarPath);
 
             /* This test might fail if no RAR file exists, which is expected */
@@ -95,7 +95,7 @@ describe('RarArchive', () => {
             const testContent = 'This is not a RAR file';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            const invalidRarPath = join(testDir, 'invalid.rar');
+            const invalidRarPath = path.join(testDir, 'invalid.rar');
             await storageInstance.write(invalidRarPath, testBuffer);
 
             /* Mock the verification to avoid hanging on invalid files */

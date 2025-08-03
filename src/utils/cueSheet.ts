@@ -6,7 +6,7 @@
 
 import type { BinFile } from './binmerge';
 import { writeFile } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import path from 'node:path';
 import { guardFileExists } from './guard';
 import { guard } from './guard';
 import { parse } from 'ini';
@@ -119,12 +119,12 @@ async function createCueFile(
     );
 
     /* Get the BIN file name (without path) */
-    const binFileName = basename(binFilePath);
+    const binFileName = path.basename(binFilePath);
 
-    if (!cueFilePath) {
-        const binFileNameWithoutExtension = basename(binFileName, '.bin');
-        cueFilePath = `${binFileNameWithoutExtension}.cue`;
-    }
+if (!cueFilePath) {
+    const binFileNameWithoutExtension = path.basename(binFileName, '.bin');
+    cueFilePath = `${binFileNameWithoutExtension}.cue`;
+}
 
     /* Create the CUE content */
     const cueContent = `FILE "${binFileName}" BINARY
@@ -159,7 +159,7 @@ async function parseFromCCDFile(filePath: string): Promise<string> {
 
     /* Find the image file */
     const dir = filePath.slice(0, filePath.lastIndexOf('/') + 1);
-    const baseName = basename(filePath, '.ccd');
+    const baseName = path.basename(filePath, '.ccd');
     const imageExtensions = ['.img', '.bin', '.iso'];
     let imageFile = '';
 
@@ -254,8 +254,8 @@ async function processCCDFiles(
             const cueContent = await parseFromCCDFile(ccdPath);
 
             /* Generate CUE file in the same directory */
-            const baseName = basename(ccdFile, '.ccd');
-            const cueFilePath = join(sourceDirectory, `${baseName}.cue`);
+            const baseName = path.basename(ccdFile, '.ccd');
+            const cueFilePath = path.join(sourceDirectory, `${baseName}.cue`);
 
             await storageInstance.write(
                 cueFilePath,
@@ -294,8 +294,8 @@ async function processBINFiles(
     for (const binFile of binFiles) {
         try {
             const binPath = binFile; /* binFile is already the full path */
-            const baseName = basename(binFile, '.bin');
-            const cueFilePath = join(sourceDirectory, `${baseName}.cue`);
+            const baseName = path.basename(binFile, '.bin');
+const cueFilePath = path.join(sourceDirectory, `${baseName}.cue`);
 
             /* Check if CUE file already exists */
             const cueExists = await storageInstance.exists(cueFilePath);

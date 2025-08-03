@@ -26,13 +26,13 @@ describe('promise', () => {
         });
 
         it('should work with async functions', async () => {
-            const asyncFunction = async () => {
-                await new Promise(resolve => setTimeout(resolve, 10));
-                return 'async success';
-            };
-
             const result = await withTimeout(asyncFunction(), 1000);
             expect(result).toBe('async success');
         });
     });
 });
+
+const asyncFunction = async () => {
+    await new Promise(resolve => setTimeout(resolve, 10));
+    return 'async success';
+};

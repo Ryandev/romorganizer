@@ -1,7 +1,7 @@
 import { SevenZipArchive } from './seven-zip';
-import { join } from 'node:path';
+import path from 'node:path';
 import storage from '../utils/storage';
-import type { IStorage } from '../utils/storage';
+import type { IStorage } from '../utils/storage.interface';
 
 describe('SevenZipArchive', () => {
     let testDir: string;
@@ -11,7 +11,7 @@ describe('SevenZipArchive', () => {
     beforeEach(async () => {
         storageInstance = await storage();
         testDir = await storageInstance.createTemporaryDirectory();
-        sevenZipArchive = new SevenZipArchive(join(testDir, 'test.7z'));
+        sevenZipArchive = new SevenZipArchive(path.join(testDir, 'test.7z'));
 
         /* Initialize temporaryFiles for testing */
         if (!globalThis.temporaryFiles) {
@@ -27,7 +27,7 @@ describe('SevenZipArchive', () => {
         it('should create a SevenZipArchive instance', () => {
             expect(sevenZipArchive).toBeInstanceOf(SevenZipArchive);
             expect(sevenZipArchive.archiveFile()).toBe(
-                join(testDir, 'test.7z')
+                path.join(testDir, 'test.7z')
             );
         });
     });
@@ -38,10 +38,10 @@ describe('SevenZipArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(join(testDir, 'test1.txt'), testBuffer);
-            await storageInstance.write(join(testDir, 'test2.txt'), testBuffer);
+            await storageInstance.write(path.join(testDir, 'test1.txt'), testBuffer);
+            await storageInstance.write(path.join(testDir, 'test2.txt'), testBuffer);
 
-            const sevenZipPath = join(testDir, 'output.7z');
+            const sevenZipPath = path.join(testDir, 'output.7z');
             const sevenZipArchive = new SevenZipArchive(sevenZipPath);
 
             /* This test might fail if 7z is not installed, which is expected */
@@ -68,10 +68,10 @@ describe('SevenZipArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(join(testDir, 'test1.txt'), testBuffer);
-            await storageInstance.write(join(testDir, 'test2.txt'), testBuffer);
+            await storageInstance.write(path.join(testDir, 'test1.txt'), testBuffer);
+            await storageInstance.write(path.join(testDir, 'test2.txt'), testBuffer);
 
-            const sevenZipPath = join(testDir, 'test.7z');
+            const sevenZipPath = path.join(testDir, 'test.7z');
             const sevenZipArchive = new SevenZipArchive(sevenZipPath);
 
             /* This test might fail if 7z is not installed, which is expected */
@@ -106,9 +106,9 @@ describe('SevenZipArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(join(testDir, 'test.txt'), testBuffer);
+            await storageInstance.write(path.join(testDir, 'test.txt'), testBuffer);
 
-            const sevenZipPath = join(testDir, 'test.7z');
+            const sevenZipPath = path.join(testDir, 'test.7z');
             const sevenZipArchive = new SevenZipArchive(sevenZipPath);
 
             /* This test might fail if 7z is not installed, which is expected */
@@ -129,7 +129,7 @@ describe('SevenZipArchive', () => {
             const testContent = 'This is not a 7z file';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            const invalidSevenZipPath = join(testDir, 'invalid.7z');
+            const invalidSevenZipPath = path.join(testDir, 'invalid.7z');
             await storageInstance.write(invalidSevenZipPath, testBuffer);
 
             const sevenZipArchive = new SevenZipArchive(invalidSevenZipPath);

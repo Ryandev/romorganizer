@@ -1,4 +1,4 @@
-import { join } from 'path';
+import path from 'node:path';
 import { $ } from 'zx';
 import { log } from '../utils/logger';
 import { guardFileExists, guardDirectoryExists } from '../utils/guard';
@@ -103,7 +103,7 @@ export abstract class BaseArchive implements Archive {
 
                 for (const subItem of subItemsWithChecks) {
                     if (subItem.name !== '.') {
-                        const destPath = join(outputDir, subItem.name);
+                        const destPath = path.join(outputDir, subItem.name);
                         await storageInstance.copy(subItem.path, destPath);
                         await storageInstance.remove(subItem.path);
                     }

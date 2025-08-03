@@ -288,7 +288,7 @@ async function _listDirectory(
         ...filteredListings.map((item: string) => path.join(filePath, item)),
 
         /* Listings recursive calls to #_listDirectory */
-        ...nestedListings.flat(1),
+        ...nestedListings.flat(),
     ]
         /* Make sure to remove the #filePath prefix from this dir,
          * this ensures we have a path although only a relative path from the chroot

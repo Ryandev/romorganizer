@@ -6,7 +6,7 @@ const {
     processDirectory,
 } = cueSheet;
 import type { BinFile } from './binmerge';
-import { join } from 'node:path';
+import path from 'node:path';
 import storage from './storage';
 import type { IStorage } from './storage.interface';
 import { guardFileDoesNotExist } from './guard';
@@ -249,8 +249,8 @@ describe('createCueFile', () => {
 
     it('should create a CUE file for a BIN file', async () => {
         /* Create a test BIN file */
-        const binFilePath = join(testDir, 'test.bin');
-        const cueFilePath = join(testDir, 'test.cue');
+        const binFilePath = path.join(testDir, 'test.bin');
+        const cueFilePath = path.join(testDir, 'test.cue');
         const testContent = new TextEncoder().encode('Test BIN content');
         await storageInstance.write(binFilePath, testContent);
 
@@ -270,7 +270,7 @@ describe('createCueFile', () => {
     });
 
     it('should throw error if BIN file does not exist', async () => {
-        const nonExistentBinPath = join(testDir, 'nonexistent.bin');
+        const nonExistentBinPath = path.join(testDir, 'nonexistent.bin');
         /* Remove the file if it exists */
         await storageInstance.remove(nonExistentBinPath).catch(() => {
             /* ignore */
@@ -279,7 +279,7 @@ describe('createCueFile', () => {
             nonExistentBinPath,
             `Bin file should not exist: ${nonExistentBinPath}`
         );
-        const cueFilePath = join(testDir, 'test.cue');
+        const cueFilePath = path.join(testDir, 'test.cue');
 
         await expect(
             cueSheet.createCueFile(nonExistentBinPath, cueFilePath)
@@ -288,8 +288,8 @@ describe('createCueFile', () => {
 
     it('should use correct BIN filename in CUE content', async () => {
         /* Create a test BIN file with a different name */
-        const binFilePath = join(testDir, 'game.bin');
-        const cueFilePath = join(testDir, 'game.cue');
+        const binFilePath = path.join(testDir, 'game.bin');
+        const cueFilePath = path.join(testDir, 'game.cue');
         const testContent = new TextEncoder().encode('Test BIN content');
         await storageInstance.write(binFilePath, testContent);
 
@@ -318,14 +318,14 @@ describe('parseFromCCDFile', () => {
 
     it('should convert CCD file to CUE format', async () => {
         /* Create a test CCD file */
-        const ccdFilePath = join(testDir, 'test.ccd');
+        const ccdFilePath = path.join(testDir, 'test.ccd');
         await storageInstance.write(
             ccdFilePath,
             new TextEncoder().encode(EXAMPLE_CCD_FILE)
         );
 
         /* Create a dummy image file to satisfy the function */
-        const imgFilePath = join(testDir, 'test.img');
+        const imgFilePath = path.join(testDir, 'test.img');
         await storageInstance.write(
             imgFilePath,
             new TextEncoder().encode('dummy image content')
@@ -346,7 +346,7 @@ describe('parseFromCCDFile', () => {
     });
 
     it('should throw error for non-CCD file', async () => {
-        const nonCcdPath = join(testDir, 'test.txt');
+        const nonCcdPath = path.join(testDir, 'test.txt');
         await storageInstance.write(
             nonCcdPath,
             new TextEncoder().encode('not a ccd file')
@@ -358,7 +358,7 @@ describe('parseFromCCDFile', () => {
     });
 
     it('should throw error if CCD file does not exist', async () => {
-        const nonExistentPath = join(testDir, 'nonexistent.ccd');
+        const nonExistentPath = path.join(testDir, 'nonexistent.ccd');
 
         await expect(parseFromCCDFile(nonExistentPath)).rejects.toThrow(
             'CCD file does not exist: ' + nonExistentPath
@@ -367,7 +367,7 @@ describe('parseFromCCDFile', () => {
 
     it('should throw error if no image file found', async () => {
         /* Create CCD file without corresponding image file */
-        const ccdFilePath = join(testDir, 'test.ccd');
+        const ccdFilePath = path.join(testDir, 'test.ccd');
         await storageInstance.write(
             ccdFilePath,
             new TextEncoder().encode(EXAMPLE_CCD_FILE)
@@ -394,8 +394,8 @@ describe('processDirectory', () => {
 
     it('should process CCD files in directory', async () => {
         /* Create test CCD and image files */
-        const ccdFilePath = join(testDir, 'test.ccd');
-        const imgFilePath = join(testDir, 'test.img');
+        const ccdFilePath = path.join(testDir, 'test.ccd');
+        const imgFilePath = path.join(testDir, 'test.img');
 
         await storageInstance.write(
             ccdFilePath,
@@ -415,7 +415,7 @@ describe('processDirectory', () => {
         expect(result.result[0]).toContain('test.cue');
 
         /* Verify CUE file was created */
-        const cueFilePath = join(testDir, 'test.cue');
+        const cueFilePath = path.join(testDir, 'test.cue');
         const cueExists = await storageInstance.exists(cueFilePath);
         expect(cueExists).toBe(true);
 
@@ -428,7 +428,7 @@ describe('processDirectory', () => {
 
     it('should process BIN files in directory', async () => {
         /* Create test BIN file */
-        const binFilePath = join(testDir, 'test.bin');
+        const binFilePath = path.join(testDir, 'test.bin');
         await storageInstance.write(
             binFilePath,
             new TextEncoder().encode('dummy bin content')
@@ -443,15 +443,15 @@ describe('processDirectory', () => {
         expect(result.result[0]).toContain('test.cue');
 
         /* Verify CUE file was created */
-        const cueFilePath = join(testDir, 'test.cue');
+        const cueFilePath = path.join(testDir, 'test.cue');
         const cueExists = await storageInstance.exists(cueFilePath);
         expect(cueExists).toBe(true);
     });
 
     it('should skip BIN files if CUE already exists', async () => {
         /* Create test BIN file and existing CUE file */
-        const binFilePath = join(testDir, 'test.bin');
-        const cueFilePath = join(testDir, 'test.cue');
+        const binFilePath = path.join(testDir, 'test.bin');
+        const cueFilePath = path.join(testDir, 'test.cue');
 
         await storageInstance.write(
             binFilePath,
@@ -472,9 +472,9 @@ describe('processDirectory', () => {
 
     it('should process multiple file types in priority order', async () => {
         /* Create both CCD and BIN files */
-        const ccdFilePath = join(testDir, 'test.ccd');
-        const imgFilePath = join(testDir, 'test.img');
-        const binFilePath = join(testDir, 'other.bin');
+        const ccdFilePath = path.join(testDir, 'test.ccd');
+        const imgFilePath = path.join(testDir, 'test.img');
+        const binFilePath = path.join(testDir, 'other.bin');
 
         await storageInstance.write(
             ccdFilePath,
@@ -505,7 +505,7 @@ describe('processDirectory', () => {
 
     it('should return false status when no processable files found', async () => {
         /* Create non-processable files */
-        const txtFilePath = join(testDir, 'test.txt');
+        const txtFilePath = path.join(testDir, 'test.txt');
         await storageInstance.write(
             txtFilePath,
             new TextEncoder().encode('text content')
@@ -520,7 +520,7 @@ describe('processDirectory', () => {
     });
 
     it('should throw error for non-existent directory', async () => {
-        const nonExistentDir = join(testDir, 'nonexistent');
+        const nonExistentDir = path.join(testDir, 'nonexistent');
 
         await expect(processDirectory(nonExistentDir)).rejects.toThrow(
             'Directory does not exist: ' + nonExistentDir

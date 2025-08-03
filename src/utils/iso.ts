@@ -4,7 +4,7 @@ import storage from './storage';
 import { doesCommandExist, isCommandExecutable } from './command';
 import { guard, guardFileExists } from './guard';
 import { withTimeout } from './promise';
-import path from 'path';
+import path from 'node:path';
 
 /* 5 minutes */
 const DEFAULT_TIMEOUT_MS = 300_000;

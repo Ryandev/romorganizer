@@ -1,7 +1,7 @@
 import chd from '../utils/chd';
 import { guardValidString } from '../utils/guard';
 import storage from '../utils/storage';
-import path from 'path';
+import path from 'node:path';
 import { Dat, Game } from '../utils/dat';
 import { CuesheetEntry } from '../utils/cuesheetLoader';
 import hash from '../utils/hash';

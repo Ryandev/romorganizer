@@ -1,8 +1,8 @@
-import { join } from 'path';
-import chd from './chd';
-import storage, { IStorage } from './storage';
-import fs from 'node:fs';
 import path from 'node:path';
+import chd from './chd';
+import storage from './storage';
+import type { IStorage } from './storage.interface';
+import fs from 'node:fs';
 
 /* Helper function to create a valid CD-ROM binary file */
 function createValidBinFile(sizeInSectors: number = 1): Uint8Array {
@@ -61,7 +61,7 @@ describe('chd', () => {
 
         for (const fileName of commonTestFiles) {
             try {
-                const filePath = path.join(process.cwd(), fileName);
+                const filePath = path.path.join(process.cwd(), fileName);
                 if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
                 }
@@ -74,8 +74,8 @@ describe('chd', () => {
     describe('create', () => {
         it('should create CHD file from cue format', async () => {
             /* Create test files */
-            const cueFilePath = join(testDir, 'test.cue');
-            const binFilePath = join(testDir, 'test.bin');
+            const cueFilePath = path.join(testDir, 'test.cue');
+            const binFilePath = path.join(testDir, 'test.bin');
 
             const cueContent =
                 'FILE "test.bin" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00';
@@ -108,7 +108,7 @@ describe('chd', () => {
 
         it('should create CHD file from gdi format', async () => {
             /* Create test files */
-            const gdiFilePath = join(testDir, 'test.gdi');
+            const gdiFilePath = path.join(testDir, 'test.gdi');
 
             const gdiContent = `1 0 4 2352 track01.bin 0
 2 1 0 2352 track02.bin 0`;
@@ -122,11 +122,11 @@ describe('chd', () => {
                 new TextEncoder().encode(gdiContent)
             );
             await storageInstance.write(
-                join(testDir, 'track01.bin'),
+                path.join(testDir, 'track01.bin'),
                 binContent
             );
             await storageInstance.write(
-                join(testDir, 'track02.bin'),
+                path.join(testDir, 'track02.bin'),
                 binContent
             );
 
@@ -148,7 +148,7 @@ describe('chd', () => {
 
         it('should create CHD file from iso format', async () => {
             /* Create test files */
-            const isoFilePath = join(testDir, 'test.iso');
+            const isoFilePath = path.join(testDir, 'test.iso');
 
             const isoContent =
                 createValidBinFile(
@@ -174,7 +174,7 @@ describe('chd', () => {
         }, 30_000);
 
         it('should throw error if input file does not exist', async () => {
-            const nonExistentPath = join(testDir, 'nonexistent.cue');
+            const nonExistentPath = path.join(testDir, 'nonexistent.cue');
 
             await expect(
                 chd.create({ inputFilePath: nonExistentPath, format: 'cue' })
@@ -183,7 +183,7 @@ describe('chd', () => {
 
         it('should throw error if input file extension does not match format', async () => {
             /* Create a file with wrong extension */
-            const wrongExtensionPath = join(testDir, 'test.txt');
+            const wrongExtensionPath = path.join(testDir, 'test.txt');
             const content = 'Some content';
             await storageInstance.write(
                 wrongExtensionPath,
@@ -205,7 +205,7 @@ describe('chd', () => {
     describe('extract', () => {
         it('should extract CHD file to cue format', async () => {
             /* Create a mock CHD file */
-            const chdFilePath = join(testDir, 'test.chd');
+            const chdFilePath = path.join(testDir, 'test.chd');
             const chdContent = new TextEncoder().encode('Mock CHD content');
             await storageInstance.write(chdFilePath, chdContent);
 
@@ -227,7 +227,7 @@ describe('chd', () => {
 
         it('should extract CHD file to gdi format', async () => {
             /* Create a mock CHD file */
-            const chdFilePath = join(testDir, 'test.chd');
+            const chdFilePath = path.join(testDir, 'test.chd');
             const chdContent = new TextEncoder().encode('Mock CHD content');
             await storageInstance.write(chdFilePath, chdContent);
 
@@ -249,7 +249,7 @@ describe('chd', () => {
 
         it('should extract CHD file to iso format', async () => {
             /* Create a mock CHD file */
-            const chdFilePath = join(testDir, 'test.chd');
+            const chdFilePath = path.join(testDir, 'test.chd');
             const chdContent = new TextEncoder().encode('Mock CHD content');
             await storageInstance.write(chdFilePath, chdContent);
 
@@ -270,7 +270,7 @@ describe('chd', () => {
         }, 30_000);
 
         it('should throw error if CHD file does not exist', async () => {
-            const nonExistentChdPath = join(testDir, 'nonexistent.chd');
+            const nonExistentChdPath = path.join(testDir, 'nonexistent.chd');
 
             await expect(
                 chd.extract({ chdFilePath: nonExistentChdPath, format: 'cue' })
@@ -281,7 +281,7 @@ describe('chd', () => {
     describe('verify', () => {
         it('should verify CHD file', async () => {
             /* Create a mock CHD file */
-            const chdFilePath = join(testDir, 'test.chd');
+            const chdFilePath = path.join(testDir, 'test.chd');
             const chdContent = new TextEncoder().encode('Mock CHD content');
             await storageInstance.write(chdFilePath, chdContent);
 
@@ -297,7 +297,7 @@ describe('chd', () => {
         }, 30_000);
 
         it('should throw error if CHD file does not exist', async () => {
-            const nonExistentChdPath = join(testDir, 'nonexistent.chd');
+            const nonExistentChdPath = path.join(testDir, 'nonexistent.chd');
 
             await expect(
                 chd.verify({ chdFilePath: nonExistentChdPath })
