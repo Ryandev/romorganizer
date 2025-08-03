@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Array of commands to run
+# Do not run lint,test as we have already checked in the pre-commit hook
+commands=(
+    "yarn spell:check"
+    "yarn audit:check"
+)
+
+# Loop through each command
+for cmd in "${commands[@]}"; do
+    echo "Running: $cmd"
+    
+    # Execute the command and capture exit code
+    eval "$cmd"
+    exit_code=$?
+    
+    if [ $exit_code -eq 0 ]; then
+        echo "✓ $cmd completed successfully"
+    else
+        echo "✗ $cmd failed with exit code $exit_code"
+        echo "Command that failed: $cmd"
+        echo "Please fix the issues above before pushing."
+        exit 1
+    fi
+done
+
+echo "All pre-push checks passed successfully!" 

@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Array of commands to run
+commands=(
+    # Exit 1 if any .orig files are found
+    "! find . -name '*.orig' -type f -print -quit | grep -q ."
+    "yarn lint"
+    "yarn test"
+)
+
+# Loop through each command
+for cmd in "${commands[@]}"; do
+    echo "Running: $cmd"
+    
+    # Execute the command and capture exit code
+    eval "$cmd"
+    exit_code=$?
+    
+    if [ $exit_code -eq 0 ]; then
+        echo "✓ $cmd completed successfully"
+    else
+        echo "✗ $cmd failed with exit code $exit_code"
+        echo "Command that failed: $cmd"
+        echo "Please fix the issues above before committing."
+        exit 1
+    fi
+done
+echo "All pre-commit checks passed successfully!"
+

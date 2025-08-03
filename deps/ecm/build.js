@@ -44,7 +44,7 @@ try {
 /* Build ecm.wasm */
 console.log('Building ecm.wasm...');
 try {
-  const ecmCommand = `"${emccPath}" "${join(ecmSrcDir, 'ecm.c')}" -o "${join(wasmBuildDir, 'ecm.js')}" \
+  const ecmCommand = `"${emccPath}" "${join(ecmSrcDir, 'ecm.c')}" -o "${join(wasmBuildDir, 'ecm.mjs')}" \
     -s MODULARIZE=1 \
     -s EXPORT_NAME="createECMModule" \
     -s EXPORTED_FUNCTIONS="['_ecmify']" \
@@ -72,7 +72,7 @@ try {
 /* Build unecm.wasm */
 console.log('Building unecm.wasm...');
 try {
-  const unecmCommand = `"${emccPath}" "${join(ecmSrcDir, 'unecm.c')}" -o "${join(wasmBuildDir, 'unecm.js')}" \
+  const unecmCommand = `"${emccPath}" "${join(ecmSrcDir, 'unecm.c')}" -o "${join(wasmBuildDir, 'unecm.mjs')}" \
     -I"${join(ecmRoot, 'src', 'include')}" \
     -s MODULARIZE=1 \
     -s EXPORT_NAME="createUNECMModule" \

@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, UserConfig } from 'vite';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createWasmCopyPlugin } from './scripts/copy-wasm-files.js';
@@ -6,11 +6,15 @@ import { createWasmCopyPlugin } from './scripts/copy-wasm-files.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default defineConfig({
+const wasmSourceDir = path.join(__dirname, 'deps', 'ecm', 'wasm', 'build');
+const wasmDestDir = path.join(__dirname, 'dist', 'build', 'deps', 'ecm', 'wasm', 'build');
+
+/* Base configuration that can be extended by other config files */
+export const baseConfig: UserConfig = {
   plugins: [
     createWasmCopyPlugin(
-      path.join(__dirname, 'deps', 'ecm', 'wasm', 'build'),
-      path.join(__dirname, 'dist', 'build', 'deps', 'ecm', 'wasm', 'build'),
+      wasmSourceDir,
+      wasmDestDir,
       'dist/build: '
     )
   ],
@@ -57,4 +61,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['deps/ecm/wasm/build/*.js']
   }
-}); 
+};
+
+/* Default configuration for standard build */
+export default defineConfig(baseConfig); 

@@ -8,29 +8,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const wasmSourceDir = path.join(__dirname, 'deps', 'ecm', 'wasm', 'build');
-const wasmDestDir = path.join(__dirname, 'dist', 'deps', 'ecm', 'wasm', 'build');
+const wasmDestDir = path.join(__dirname, 'dist', 'package', 'deps', 'ecm', 'wasm', 'build');
 
-/* Debug-specific configuration overrides */
-const debugConfig = {
+/* Package-specific configuration overrides */
+const packageConfig = {
   plugins: [
     createWasmCopyPlugin(
       wasmSourceDir,
       wasmDestDir,
-      'dist: '
+      'dist/package: '
     )
   ],
   build: {
-    outDir: 'dist',
-    sourcemap: true,
+    lib: {
+      formats: ['cjs']
+    },
+    outDir: 'dist/package',
+    sourcemap: false,
     minify: false
-  },
-  define: {
-    __DEV__: true
-  },
-  ssr: {
-    noExternal: ['deps/ecm/wasm/build/*.js']
   }
 };
 
-/* Merge base config with debug-specific overrides */
-export default defineConfig(mergeConfig(baseConfig, debugConfig)); 
+/* Merge base config with package-specific overrides */
+export default defineConfig(mergeConfig(baseConfig, packageConfig)); 
