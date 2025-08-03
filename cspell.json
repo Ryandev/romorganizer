@@ -31,6 +31,7 @@
     "cuefiles",
     "cuesheet",
     "cuesheets",
+    "isrc",
     "extractraw",
     "createraw",
     "PREGAP",
@@ -38,7 +39,7 @@
     "Bincue",
     "poweriso",
     "networkcommand",
-    "weirdcommand"
+    "weirdcommand",
   ],
   "patterns": [
     {
