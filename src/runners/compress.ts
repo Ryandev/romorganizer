@@ -2,7 +2,7 @@ import { log } from '../utils/logger';
 import chd from '../utils/chd';
 import { createArchive } from '../archive';
 import * as mdf from '../utils/mdf';
-import { guard, guardFileExists } from '../utils/guard';
+import { guard, guardDirectoryExists, guardFileExists } from '../utils/guard';
 import storage from '../utils/storage';
 import path from 'node:path';
 import cueSheet from '../utils/cue-sheet';
@@ -22,6 +22,7 @@ const EXTRACT_OPERATIONS = new Map<
         async (sourceFile: string) => {
             const ecmArchive = createArchive(sourceFile);
             const extractedFile = await ecmArchive.extract();
+            guardFileExists(extractedFile, `Extracted file missing, does not exist: ${extractedFile}`);
             return [extractedFile];
         },
     ],
@@ -32,6 +33,7 @@ const EXTRACT_OPERATIONS = new Map<
                 return [];
             }
             const extractedDirectory = await createArchive(sourceFile).extract();
+            guardDirectoryExists(extractedDirectory, `Extracted directory missing, does not exist: ${extractedDirectory}`);
             const contents = await storage().list(extractedDirectory);
             return contents;
         },
@@ -46,6 +48,7 @@ const EXTRACT_OPERATIONS = new Map<
                 chdFilePath: sourceFile,
                 format: 'cue',
             });
+            guardFileExists(extractedFile, `Extracted file missing, does not exist: ${extractedFile}`);
             return [extractedFile];
         },
     ],
@@ -56,6 +59,7 @@ const EXTRACT_OPERATIONS = new Map<
                 return [];
             }
             const extractedDirectory = await createArchive(sourceFile).extract();
+            guardDirectoryExists(extractedDirectory, `Extracted directory missing, does not exist: ${extractedDirectory}`);
             const contents = await storage().list(extractedDirectory);
             return contents;
         },
@@ -67,6 +71,7 @@ const EXTRACT_OPERATIONS = new Map<
                 return [];
             }
             const outputDirectory = await createArchive(sourceFile).extract();
+            guardDirectoryExists(outputDirectory, `Output directory missing, does not exist: ${outputDirectory}`);
             const contents = await storage().list(outputDirectory);
             return contents;
         },
@@ -89,6 +94,7 @@ const EXTRACT_OPERATIONS = new Map<
                 cueFilePath,
                 new TextEncoder().encode(cueContent)
             );
+            guardFileExists(cueFilePath, `CUE file missing, does not exist: ${cueFilePath}`);
             return [cueFilePath];
         },
     ],
@@ -100,6 +106,7 @@ const EXTRACT_OPERATIONS = new Map<
             }
             /* Convert MDF to ISO first, then extract ISO to get BIN/CUE */
             const isoFile = await mdf.convertToIso(sourceFile);
+            guardFileExists(isoFile, `ISO file missing, does not exist: ${isoFile}`);
             return [isoFile];
         },
     ],
@@ -136,6 +143,7 @@ const EXTRACT_OPERATIONS = new Map<
             }
             /* Convert ISO to bin/cue using poweriso */
             const binFile = await iso.convert(sourceFile, 'bin');
+            guardFileExists(binFile, `Bin file missing, does not exist: ${binFile}`);
             return [binFile];
         },
     ],
