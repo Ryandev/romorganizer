@@ -10,7 +10,7 @@
 
 import { log } from './logger';
 import { guard } from './guard';
-import cueSheet from './cueSheet';
+import cueSheet from './cue-sheet';
 
 export interface TrackIndex {
     id: number;

@@ -13,11 +13,11 @@ jest.mock('./verify.help', () => ({
     VERIFY_HELP_TEXT: 'Mock verify help text',
 }));
 
-jest.mock('../utils/datLoader', () => ({
+jest.mock('../utils/dat-loader', () => ({
     loadDatFromPath: jest.fn(),
 }));
 
-jest.mock('../utils/cuesheetLoader', () => ({
+jest.mock('../utils/cuesheet-loader', () => ({
     loadCuesheetsFromZip: jest.fn(),
 }));
 
@@ -32,8 +32,8 @@ jest.mock('../utils/logger', () => ({
 describe('verify.builder', () => {
     const mockParseVerifyArguments = require('./verify.cli').parseVerifyArguments;
     const MockVerifyRunnerDirectory = require('./verify').VerifyRunnerDirectory;
-    const mockLoadDatFromPath = require('../utils/datLoader').loadDatFromPath;
-    const mockLoadCuesheetsFromZip = require('../utils/cuesheetLoader').loadCuesheetsFromZip;
+    const mockLoadDatFromPath = require('../utils/dat-loader').loadDatFromPath;
+    const mockLoadCuesheetsFromZip = require('../utils/cuesheet-loader').loadCuesheetsFromZip;
     const mockLog = require('../utils/logger').log;
 
     beforeEach(() => {

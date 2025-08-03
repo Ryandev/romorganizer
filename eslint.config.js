@@ -43,10 +43,6 @@ export default [
       
       /* Unicorn rules - using recommended config with customizations for Node.js project */
       ...unicorn.configs.recommended.rules,
-      'unicorn/filename-case': 'off',
-      'unicorn/prefer-add-event-listener': 'off',
-      'unicorn/prefer-query-selector': 'off',
-      'unicorn/import-style': 'off',
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/prefer-module': 'off',
     }
@@ -102,10 +98,6 @@ export default [
       
       /* Unicorn rules - using recommended config with customizations for Node.js project */
       ...unicorn.configs.recommended.rules,
-      'unicorn/filename-case': 'off',
-      'unicorn/prefer-add-event-listener': 'off',
-      'unicorn/prefer-query-selector': 'off',
-      'unicorn/import-style': 'off',
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/prefer-module': 'off',
     }

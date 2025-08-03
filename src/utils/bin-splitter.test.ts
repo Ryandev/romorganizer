@@ -1,4 +1,4 @@
-import { BinSplitterException, TrackInfo, SplitResult } from './binSplitter';
+import { BinSplitterException, TrackInfo, SplitResult } from './bin-splitter';
 
 describe('BinSplitter', () => {
     describe('BinSplitterException', () => {

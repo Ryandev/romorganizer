@@ -1,4 +1,4 @@
-import { loadDatFromPath } from './datLoader';
+import { loadDatFromPath } from './dat-loader';
 
 /* Mock the existing loadDat function */
 jest.mock('./dat', () => ({

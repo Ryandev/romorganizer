@@ -6,7 +6,7 @@ import {
     convertChdToNormalizedRedumpDumpFolder,
     verifyChd,
     stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue
-} from './datVerifier';
+} from './dat-verifier';
 import { log } from './logger';
 import storage from './storage';
 import chd from './chd';

@@ -1,4 +1,4 @@
-import cueSheet from './cueSheet';
+import cueSheet from './cue-sheet';
 const {
     generateMergedCueSheet,
     generateSplitCueSheet,

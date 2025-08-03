@@ -3,7 +3,7 @@ import { guardValidString } from '../utils/guard';
 import storage from '../utils/storage';
 import path from 'node:path';
 import { Dat, Game } from '../utils/dat';
-import { CuesheetEntry } from '../utils/cuesheetLoader';
+import { CuesheetEntry } from '../utils/cuesheet-loader';
 import hash from '../utils/hash';
 import { IRunner } from './interface';
 import { log } from "../utils/logger";

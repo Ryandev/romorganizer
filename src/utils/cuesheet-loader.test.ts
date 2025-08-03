@@ -1,7 +1,7 @@
 import {
     findCuesheetEntryForGame,
     findAndLoadCuesheetForGame,
-} from './cuesheetLoader';
+} from './cuesheet-loader';
 
 describe('CuesheetLoader', () => {
     describe('findCuesheetEntryForGame', () => {

@@ -7,7 +7,7 @@ import {
     split,
     type BinFile,
 } from './binmerge';
-import cuesheet from './cueSheet';
+import cuesheet from './cue-sheet';
 const { generateMergedCueSheet, generateSplitCueSheet } = cuesheet;
 
 /* Mock the logger */

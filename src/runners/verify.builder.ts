@@ -2,8 +2,8 @@ import { IRunner, RunnerBuilder } from "./interface";
 import { VerifyRunnerDirectory } from "./verify";
 import { parseVerifyArguments } from "./verify.cli";
 import { VERIFY_HELP_TEXT } from "./verify.help";
-import { loadDatFromPath } from "../utils/datLoader";
-import { loadCuesheetsFromZip } from "../utils/cuesheetLoader";
+import { loadDatFromPath } from "../utils/dat-loader";
+import { loadCuesheetsFromZip } from "../utils/cuesheet-loader";
 import { log } from "../utils/logger";
 
 export default function builder(parameters: string[]): RunnerBuilder<string[]> {
