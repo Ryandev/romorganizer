@@ -1,119 +1,121 @@
 {
-    "name": "romorganizer",
-    "version": "0.1.0",
-    "description": "A tool to convert archive files (7z, rar, zip) to CHD format",
-    "main": "dist/build/index.js",
-    "type": "module",
-    "bin": "./dist/build/index.js",
-    "scripts": {
-        "setup": "node scripts/setup.js",
-        "clean": "rm -rf dist",
-        "spell:check": "cspell \"src/**/*.ts\"",
-        "pretty:fix": "prettier --write src/**/*.{ts,js,json}",
-        "pretty:check": "prettier --check src/**/*.{ts,js,json}",
-        "lint": "eslint src/**/*.ts",
-        "lint:fix": "eslint src/**/*.ts --fix",
-        "test": "jest",
-        "test:watch": "jest --watch",
-        "dev": "vite",
-        "start": "node dist/build/index.js",
-        "prebuild": "npm run clean",
-        "build": "yarn build:deps && vite build",
-        "build:deps": "node deps/build.js",
-        "build:debug": "yarn build:deps && vite build --config vite.debug.config.ts",
-        "package": "yarn build && ncc build dist/build/index.js -o dist/package && node scripts/fix-package.js && mv dist/package/index.js dist/package/index.mjs && chmod +x dist/package/index.mjs",
-        "build:pkg": "yarn build:deps && vite build --config vite.pkg.config.ts",
-        "build:native": "yarn build:pkg && npx @yao-pkg/pkg -t node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64,node20-win-x64 -o dist/native/romorganizer dist/package/index.js",
-        "package:native": "npx @yao-pkg/pkg -t node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64,node20-win-x64 -o dist/native/romorganizer dist/package/index.js",
-        "audit:check": "yarn npm audit --recursive --severity critical --environment production --json"
-    },
-    "yao-pkg": {
-        "entry": "dist/package/index.js",
-        "output": "dist/native/romorganizer",
-        "targets": [
-            "node20-macos-arm64",
-            "node20-macos-x64",
-            "node20-linux-arm64",
-            "node20-linux-x64",
-            "node20-win-x64"
-        ],
-        "ignore": [
-            "**/*.test.ts",
-            "**/*.test.js",
-            "**/*.test.json",
-            "**/*.test.md",
-            "**/*.test.txt",
-            "dist/bin"
-        ],
-        "assets": [
-            "deps/ecm/wasm/build/*.wasm",
-            "deps/ecm/wasm/build/*.js"
-        ]
-    },
-    "keywords": [
-        "7z",
-        "rar",
-        "zip",
-        "chd",
-        "archive",
-        "converter",
-        "gaming"
+  "name": "romorganizer",
+  "version": "0.1.0",
+  "description": "A tool to convert archive files (7z, rar, zip) to CHD format",
+  "main": "dist/build/index.js",
+  "type": "module",
+  "bin": "./dist/build/index.js",
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "clean": "rm -rf dist",
+    "spell:check": "cspell \"src/**/*.ts\"",
+    "pretty:fix": "prettier --write src/**/*.{ts,js,json}",
+    "pretty:check": "prettier --check src/**/*.{ts,js,json}",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "dev": "vite",
+    "start": "node dist/build/index.js",
+    "prebuild": "npm run clean",
+    "build": "yarn build:deps && vite build",
+    "build:deps": "node deps/build.js",
+    "build:debug": "yarn build:deps && vite build --config vite.debug.config.ts",
+    "package": "yarn build && ncc build dist/build/index.js -o dist/package && node scripts/fix-package.js && mv dist/package/index.js dist/package/index.mjs && chmod +x dist/package/index.mjs",
+    "build:pkg": "yarn build:deps && vite build --config vite.pkg.config.ts",
+    "build:native": "yarn build:pkg && npx @yao-pkg/pkg -t node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64,node20-win-x64 -o dist/native/romorganizer dist/package/index.js",
+    "package:native": "npx @yao-pkg/pkg -t node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64,node20-win-x64 -o dist/native/romorganizer dist/package/index.js",
+    "audit:check": "yarn npm audit --recursive --severity critical --environment production --json",
+    "prepare": "husky"
+  },
+  "yao-pkg": {
+    "entry": "dist/package/index.js",
+    "output": "dist/native/romorganizer",
+    "targets": [
+      "node20-macos-arm64",
+      "node20-macos-x64",
+      "node20-linux-arm64",
+      "node20-linux-x64",
+      "node20-win-x64"
     ],
-    "author": "",
-    "license": "MIT",
-    "dependencies": {
-        "adm-zip": "^0.5.16",
-        "command-line-args": "^6.0.1",
-        "fast-xml-parser": "^5.2.5",
-        "ini": "^5.0.0",
-        "jszip": "^3.10.1",
-        "zod": "^4.0.14",
-        "zx": "^8.1.1"
-    },
-    "devDependencies": {
-        "@types/adm-zip": "^0",
-        "@types/command-line-args": "^5.2.3",
-        "@types/emscripten": "^0",
-        "@types/ini": "^4.1.1",
-        "@types/jest": "^30.0.0",
-        "@types/node": "^24.1.0",
-        "@typescript-eslint/eslint-plugin": "^8.38.0",
-        "@typescript-eslint/parser": "^8.38.0",
-        "@vercel/ncc": "^0.38.3",
-        "cspell": "^9.2.0",
-        "emscripten": "0.0.2-beta",
-        "eslint": "^9.31.0",
-        "eslint-plugin-unicorn": "^60.0.0",
-        "jest": "^30.0.5",
-        "node-gyp": "^10.0.1",
-        "prettier": "^3.6.2",
-        "ts-jest": "^29.4.0",
-        "ts-node": "^10.9.2",
-        "tslib": "^2.8.1",
-        "tsx": "^4.6.0",
-        "typescript": "^5.3.0",
-        "vite": "^7.0.6"
-    },
-    "engineStrict": true,
-    "engines": {
-        "node": ">=20.0"
-    },
-    "corepack": {
-        "enabled": true
-    },
-    "packageManager": "yarn@4.6.0",
+    "ignore": [
+      "**/*.test.ts",
+      "**/*.test.js",
+      "**/*.test.json",
+      "**/*.test.md",
+      "**/*.test.txt",
+      "dist/bin"
+    ],
+    "assets": [
+      "deps/ecm/wasm/build/*.wasm",
+      "deps/ecm/wasm/build/*.js"
+    ]
+  },
+  "keywords": [
+    "7z",
+    "rar",
+    "zip",
+    "chd",
+    "archive",
+    "converter",
+    "gaming"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "command-line-args": "^6.0.1",
+    "fast-xml-parser": "^5.2.5",
+    "ini": "^5.0.0",
+    "jszip": "^3.10.1",
+    "zod": "^4.0.14",
+    "zx": "^8.1.1"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0",
+    "@types/command-line-args": "^5.2.3",
+    "@types/emscripten": "^0",
+    "@types/ini": "^4.1.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "@vercel/ncc": "^0.38.3",
+    "cspell": "^9.2.0",
+    "emscripten": "0.0.2-beta",
+    "eslint": "^9.31.0",
+    "eslint-plugin-unicorn": "^60.0.0",
+    "husky": "^9.1.7",
+    "jest": "^30.0.5",
+    "node-gyp": "^10.0.1",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0",
+    "vite": "^7.0.6"
+  },
+  "engineStrict": true,
+  "engines": {
+    "node": ">=20.0"
+  },
+  "corepack": {
+    "enabled": true
+  },
+  "packageManager": "yarn@4.6.0",
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "supportedArchitectures": {
     "os": [
-        "darwin",
-        "linux"
+      "darwin",
+      "linux"
     ],
-    "supportedArchitectures": {
-        "os": [
-            "darwin",
-            "linux"
-        ],
-        "cpu": [
-            "x64",
-            "arm64"
-        ]
-    }
+    "cpu": [
+      "x64",
+      "arm64"
+    ]
+  }
 }

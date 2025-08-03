@@ -10,7 +10,8 @@
     "plba",
     "pmin",
     "psec",
-    "pframe"
+    "pframe",
+    "CDTEXTFILE"
   ],
   "ignoreWords": [
     "chdman",
