@@ -4,6 +4,8 @@ const {
     generateSplitCueSheet,
     parseFromCCDFile,
     processDirectory,
+    deserializeCueSheet,
+    serializeCueSheet,
 } = cueSheet;
 import type { BinFile } from './binmerge';
 import path from 'node:path';
@@ -86,6 +88,12 @@ PLBA=0
 MODE=2
 INDEX 1=0
 `;
+
+const EXAMPLE_CUE_FILE = `
+FILE "My Test File.BIN" BINARY
+  TRACK 01 MODE2/2352 
+    INDEX 01 00:00:00
+`
 
 describe('CueSheet Generation', () => {
     describe('generateMergedCueSheet', () => {
@@ -525,5 +533,264 @@ describe('processDirectory', () => {
         await expect(processDirectory(nonExistentDir)).rejects.toThrow(
             'Directory does not exist: ' + nonExistentDir
         );
+    });
+});
+
+describe('CUE File Serialization and Deserialization', () => {
+    describe('deserializeCueSheet', () => {
+        it('should parse EXAMPLE_CUE_FILE correctly', () => {
+            const cueSheet = deserializeCueSheet(EXAMPLE_CUE_FILE);
+
+            /* Verify file structure */
+            expect(cueSheet.files).toHaveLength(1);
+            expect(cueSheet.files[0].filename).toBe('My Test File.BIN');
+            expect(cueSheet.files[0].type).toBe('BINARY');
+
+            /* Verify track structure */
+            expect(cueSheet.files[0].tracks).toHaveLength(1);
+            expect(cueSheet.files[0].tracks[0].number).toBe(1);
+            expect(cueSheet.files[0].tracks[0].type).toBe('MODE2/2352');
+
+            /* Verify index structure */
+            expect(cueSheet.files[0].tracks[0].indexes).toHaveLength(1);
+            expect(cueSheet.files[0].tracks[0].indexes[0].id).toBe(1);
+            expect(cueSheet.files[0].tracks[0].indexes[0].timestamp).toBe('00:00:00');
+        });
+
+        it('should parse CUE file with multiple tracks', () => {
+            const multiTrackCue = `
+FILE "game.bin" BINARY
+  TRACK 01 AUDIO
+    INDEX 01 00:00:00
+  TRACK 02 AUDIO
+    INDEX 01 00:02:30
+    INDEX 02 00:04:15
+  TRACK 03 MODE1/2352
+    INDEX 01 00:06:00
+`;
+
+            const cueSheet = deserializeCueSheet(multiTrackCue);
+
+            expect(cueSheet.files).toHaveLength(1);
+            expect(cueSheet.files[0].filename).toBe('game.bin');
+            expect(cueSheet.files[0].tracks).toHaveLength(3);
+
+            /* Verify first track */
+            expect(cueSheet.files[0].tracks[0].number).toBe(1);
+            expect(cueSheet.files[0].tracks[0].type).toBe('AUDIO');
+            expect(cueSheet.files[0].tracks[0].indexes).toHaveLength(1);
+            expect(cueSheet.files[0].tracks[0].indexes[0].timestamp).toBe('00:00:00');
+
+            /* Verify second track with multiple indexes */
+            expect(cueSheet.files[0].tracks[1].number).toBe(2);
+            expect(cueSheet.files[0].tracks[1].type).toBe('AUDIO');
+            expect(cueSheet.files[0].tracks[1].indexes).toHaveLength(2);
+            expect(cueSheet.files[0].tracks[1].indexes[0].timestamp).toBe('00:02:30');
+            expect(cueSheet.files[0].tracks[1].indexes[1].timestamp).toBe('00:04:15');
+
+            /* Verify third track */
+            expect(cueSheet.files[0].tracks[2].number).toBe(3);
+            expect(cueSheet.files[0].tracks[2].type).toBe('MODE1/2352');
+        });
+
+        it('should parse CUE file with metadata', () => {
+            const cueWithMetadata = `
+TITLE "Test Album"
+PERFORMER "Test Artist"
+SONGWRITER "Test Composer"
+CATALOG 1234567890123
+ISRC ABC123456789
+REM COMMENT "Test comment"
+FILE "album.bin" BINARY
+  TRACK 01 AUDIO
+    INDEX 01 00:00:00
+`;
+
+            const cueSheet = deserializeCueSheet(cueWithMetadata);
+
+            /* Verify metadata */
+            expect(cueSheet.metadata).toBeDefined();
+            expect(cueSheet.metadata?.title).toBe('Test Album');
+            expect(cueSheet.metadata?.performer).toBe('Test Artist');
+            expect(cueSheet.metadata?.songwriter).toBe('Test Composer');
+            expect(cueSheet.metadata?.catalog).toBe('1234567890123');
+            expect(cueSheet.metadata?.isrc).toBe('ABC123456789');
+            expect(cueSheet.metadata?.comment).toBe('Test comment');
+
+            /* Verify file structure */
+            expect(cueSheet.files).toHaveLength(1);
+            expect(cueSheet.files[0].filename).toBe('album.bin');
+        });
+
+        it('should handle CUE file with multiple files', () => {
+            const multiFileCue = `
+FILE "track1.bin" BINARY
+  TRACK 01 AUDIO
+    INDEX 01 00:00:00
+FILE "track2.bin" BINARY
+  TRACK 02 AUDIO
+    INDEX 01 00:00:00
+`;
+
+            const cueSheet = deserializeCueSheet(multiFileCue);
+
+            expect(cueSheet.files).toHaveLength(2);
+            expect(cueSheet.files[0].filename).toBe('track1.bin');
+            expect(cueSheet.files[1].filename).toBe('track2.bin');
+            expect(cueSheet.files[0].tracks).toHaveLength(1);
+            expect(cueSheet.files[1].tracks).toHaveLength(1);
+        });
+
+        it('should handle empty lines and whitespace', () => {
+            const cueWithWhitespace = `
+
+FILE "test.bin" BINARY
+
+  TRACK 01 AUDIO
+
+    INDEX 01 00:00:00
+
+`;
+
+            const cueSheet = deserializeCueSheet(cueWithWhitespace);
+
+            expect(cueSheet.files).toHaveLength(1);
+            expect(cueSheet.files[0].filename).toBe('test.bin');
+            expect(cueSheet.files[0].tracks).toHaveLength(1);
+            expect(cueSheet.files[0].tracks[0].indexes).toHaveLength(1);
+        });
+    });
+
+    describe('serializeCueSheet', () => {
+        it('should serialize EXAMPLE_CUE_FILE structure correctly', () => {
+            const cueSheet = deserializeCueSheet(EXAMPLE_CUE_FILE);
+            const serialized = serializeCueSheet(cueSheet);
+
+            /* Verify the serialized content matches the original */
+            expect(serialized).toContain('FILE "My Test File.BIN" BINARY');
+            expect(serialized).toContain('TRACK 01 MODE2/2352');
+            expect(serialized).toContain('INDEX 01 00:00:00');
+        });
+
+        it('should serialize CUE sheet with metadata', () => {
+            const cueSheet = {
+                files: [{
+                    filename: 'album.bin',
+                    type: 'BINARY',
+                    tracks: [{
+                        number: 1,
+                        type: 'AUDIO',
+                        indexes: [{
+                            id: 1,
+                            timestamp: '00:00:00'
+                        }]
+                    }]
+                }],
+                metadata: {
+                    title: 'Test Album',
+                    performer: 'Test Artist',
+                    songwriter: 'Test Composer',
+                    catalog: '1234567890123',
+                    isrc: 'ABC123456789',
+                    comment: 'Test comment'
+                }
+            };
+
+            const serialized = serializeCueSheet(cueSheet);
+
+            expect(serialized).toContain('TITLE "Test Album"');
+            expect(serialized).toContain('PERFORMER "Test Artist"');
+            expect(serialized).toContain('SONGWRITER "Test Composer"');
+            expect(serialized).toContain('CATALOG 1234567890123');
+            expect(serialized).toContain('ISRC ABC123456789');
+            expect(serialized).toContain('REM COMMENT "Test comment"');
+            expect(serialized).toContain('FILE "album.bin" BINARY');
+            expect(serialized).toContain('TRACK 01 AUDIO');
+            expect(serialized).toContain('INDEX 01 00:00:00');
+        });
+
+        it('should serialize CUE sheet without metadata', () => {
+            const cueSheet = {
+                files: [{
+                    filename: 'game.bin',
+                    type: 'BINARY',
+                    tracks: [{
+                        number: 1,
+                        type: 'MODE1/2352',
+                        indexes: [{
+                            id: 1,
+                            timestamp: '00:00:00'
+                        }]
+                    }]
+                }]
+            };
+
+            const serialized = serializeCueSheet(cueSheet);
+
+            expect(serialized).toContain('FILE "game.bin" BINARY');
+            expect(serialized).toContain('TRACK 01 MODE1/2352');
+            expect(serialized).toContain('INDEX 01 00:00:00');
+            expect(serialized).not.toContain('TITLE');
+            expect(serialized).not.toContain('PERFORMER');
+        });
+
+        it('should serialize multiple tracks with proper formatting', () => {
+            const cueSheet = {
+                files: [{
+                    filename: 'album.bin',
+                    type: 'BINARY',
+                    tracks: [
+                        {
+                            number: 1,
+                            type: 'AUDIO',
+                            indexes: [{
+                                id: 1,
+                                timestamp: '00:00:00'
+                            }]
+                        },
+                        {
+                            number: 2,
+                            type: 'AUDIO',
+                            indexes: [
+                                { id: 1, timestamp: '00:02:30' },
+                                { id: 2, timestamp: '00:04:15' }
+                            ]
+                        }
+                    ]
+                }]
+            };
+
+            const serialized = serializeCueSheet(cueSheet);
+
+            expect(serialized).toContain('TRACK 01 AUDIO');
+            expect(serialized).toContain('TRACK 02 AUDIO');
+            expect(serialized).toContain('INDEX 01 00:00:00');
+            expect(serialized).toContain('INDEX 01 00:02:30');
+            expect(serialized).toContain('INDEX 02 00:04:15');
+        });
+
+        it('should round-trip serialize and deserialize correctly', () => {
+            const originalCue = `
+TITLE "Test Album"
+PERFORMER "Test Artist"
+FILE "album.bin" BINARY
+  TRACK 01 AUDIO
+    INDEX 01 00:00:00
+  TRACK 02 AUDIO
+    INDEX 01 00:02:30
+    INDEX 02 00:04:15
+`;
+
+            const cueSheet = deserializeCueSheet(originalCue);
+            const serialized = serializeCueSheet(cueSheet);
+            const roundTripCueSheet = deserializeCueSheet(serialized);
+
+            /* Verify the round-trip preserves the structure */
+            expect(roundTripCueSheet.files).toHaveLength(cueSheet.files.length);
+            expect(roundTripCueSheet.files[0].filename).toBe(cueSheet.files[0].filename);
+            expect(roundTripCueSheet.files[0].tracks).toHaveLength(cueSheet.files[0].tracks.length);
+            expect(roundTripCueSheet.metadata?.title).toBe(cueSheet.metadata?.title);
+            expect(roundTripCueSheet.metadata?.performer).toBe(cueSheet.metadata?.performer);
+        });
     });
 });

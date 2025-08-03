@@ -33,6 +33,7 @@ const EXTRACT_OPERATIONS = new Map<
                 if ( binFileName ) {
                     const binFilePath = path.join(path.dirname(cueFile), binFileName);
                     if ( binFilePath !== extractedFile ) {
+                        log.info(`Renaming extracted ecm file ${extractedFile} to ${binFilePath}`);
                         await storage().move(extractedFile, binFilePath);
                         extractedFile = binFilePath;
                     }
