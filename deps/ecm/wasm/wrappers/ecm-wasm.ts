@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { existsSync } from 'node:fs';
 import type { ECMModule, UNECMModule } from '../types.js';
 
 function guard(condition: boolean, message: string): asserts condition {
@@ -19,7 +20,6 @@ function getWasmDir(): string {
   
   /* Try to use dist path if it exists and has the files */
   try {
-    const { existsSync } = require('fs');
     if (existsSync(path.join(distPath, 'unecm.js')) && existsSync(path.join(distPath, 'unecm.wasm'))) {
       console.log('Using dist path');
       return distPath;
@@ -39,6 +39,17 @@ function getWasmDir(): string {
     if (existsSync(path.join(packagedPath, 'unecm.js')) && existsSync(path.join(packagedPath, 'unecm.wasm'))) {
       console.log('Using packaged path');
       return packagedPath;
+    }
+  } catch (e) {
+    /* Ignore errors */
+  }
+  
+  /* Check if we're running from the bundled package (ncc output) or current working directory */
+  try {
+    const packagePath = path.join(process.cwd(), 'deps', 'ecm', 'wasm', 'build');
+    if (existsSync(path.join(packagePath, 'unecm.js')) && existsSync(path.join(packagePath, 'unecm.wasm'))) {
+      console.log('Using package/current working directory path');
+      return packagePath;
     }
   } catch (e) {
     /* Ignore errors */

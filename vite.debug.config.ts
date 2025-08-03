@@ -1,32 +1,18 @@
 import { defineConfig } from 'vite';
 import path from 'node:path';
-import { copyFileSync, mkdirSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { createWasmCopyPlugin } from './scripts/copy-wasm-files.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [
-    {
-      name: 'copy-wasm-files',
-      writeBundle() {
-        const wasmSourceDir = path.join(__dirname, 'deps', 'ecm', 'wasm', 'build');
-        const wasmDestDir = path.join(__dirname, 'dist', 'deps', 'ecm', 'wasm', 'build');
-        
-        /* Create destination directory */
-        if (!existsSync(wasmDestDir)) {
-          mkdirSync(wasmDestDir, { recursive: true });
-        }
-        
-        /* Copy WASM files */
-        const files = ['ecm.js', 'ecm.wasm', 'unecm.js', 'unecm.wasm'];
-        files.forEach(file => {
-          const sourcePath = path.join(wasmSourceDir, file);
-          const destPath = path.join(wasmDestDir, file);
-          if (existsSync(sourcePath)) {
-            copyFileSync(sourcePath, destPath);
-            console.log(`Copied ${file} to dist`);
-          }
-        });
-      }
-    }
+    createWasmCopyPlugin(
+      path.join(__dirname, 'deps', 'ecm', 'wasm', 'build'),
+      path.join(__dirname, 'dist', 'deps', 'ecm', 'wasm', 'build'),
+      'dist: '
+    )
   ],
   build: {
     lib: {
