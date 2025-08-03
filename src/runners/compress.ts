@@ -361,26 +361,29 @@ export class RunnerDirectory implements IRunner<string[]> {
                     log.error(`Error creating runner for ${files}: ${runner.message}`);
                     continue;
                 }
+
                 const outputFilePaths = await runner.start();
-                const chdFilePath = outputFilePaths.find(filePath => filePath.endsWith('.chd'));
-                if (chdFilePath && await storage().exists(chdFilePath) && !this.overwrite) {
-                    log.info(
-                        `Skipping ${files} - output file already exists in output directory`
-                    );
-                    continue;
-                }
-                const results = await runner.start();
-                log.info(`Processing ${results.length} results from ${files}`);
-                for (const result of results) {
-                    const outputFileName = path.basename(result);
+                const chdFilePaths = outputFilePaths.filter(filePath => filePath.endsWith('.chd'));
+
+                for ( const chdFilePath of chdFilePaths ) {
+                    const outputFileName = path.basename(chdFilePath);
                     const outputPath = path.join(this.outputDir, outputFileName);
+                    const outputPathExists = await storage().exists(outputPath);
         
-                    await storage().move(result, outputPath);
-                    outputFiles.push(result);
-                }
-                if (this.removeSource) {
-                    await Promise.all(files.map(file => storage().remove(file)));
-                    log.info(`Removed source files: ${files.join(', ')}`);
+                    if (outputPathExists && !this.overwrite) {
+                        log.info(
+                            `Skipping ${files} - output file already exists in output directory`
+                        );
+                        continue;
+                    }
+
+                    await storage().move(chdFilePath, outputPath);
+                    outputFiles.push(outputPath);
+
+                    if (this.removeSource) {
+                        await Promise.all(files.map(file => storage().remove(file)));
+                        log.info(`Removed source files: ${files.join(', ')}`);
+                    }    
                 }
             }
         

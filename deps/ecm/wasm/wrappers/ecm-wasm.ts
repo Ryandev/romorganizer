@@ -18,7 +18,7 @@ function _findWasmDir() {
   ];
 
   for (const candidate of candidates) {
-    if ( candidate !== '.' && candidate.length > 0 ) {
+    if ( candidate === '.' || candidate.length <= 1 ) {
       continue;
     }
 
@@ -31,15 +31,21 @@ function _findWasmDir() {
       wasmFile: path.join(candidate, 'ecm.wasm'),
     };
 
-    if (existsSync(unecm.jsFile) && 
-    existsSync(unecm.wasmFile) && 
-    existsSync(ecm.jsFile) && 
-    existsSync(ecm.wasmFile)) {
+    const exists = [
+      existsSync(unecm.jsFile),
+      existsSync(unecm.wasmFile),
+      existsSync(ecm.jsFile),
+      existsSync(ecm.wasmFile),
+    ];
+
+    if (exists.every(Boolean)) {
       return { unecm, ecm, path: candidate };
+    } else {
+      console.log('WASM files not found in: ' + candidate + ', ' + exists.map(Boolean).join(', '));
     }
   }
 
-  throw new Error('Could not find WASM directory with required files');
+  throw new Error('Could not find WASM directory with required files, after searching: ' + candidates.join(', '));
 }
 
 function debugModule(module: any): void {
