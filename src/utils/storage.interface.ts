@@ -19,12 +19,20 @@ export interface IStorageListOptions {
      * Default: false
      */
     avoidHiddenFiles?: boolean;
+
+    /**
+     * When true, includes directories in the listing.
+     * When false, only includes files.
+     * Default: false
+     */
+    includeDirectories?: boolean;
 }
 
 export const StorageOptionListDefaults: Required<IStorageListOptions> = {
     recursive: true,
     removePrefix: false,
     avoidHiddenFiles: false,
+    includeDirectories: false,
 };
 
 /**
@@ -65,6 +73,7 @@ export interface IStorage {
      * @param options.recursive - When true, includes all subdirectories and their contents
      * @param options.removePrefix - When true, returns relative paths from the specified directory; when false, returns absolute paths
      * @param options.avoidHiddenFiles - When true, excludes hidden files and directories (those starting with '.')
+     * @param options.includeDirectories - When true, includes directories in the listing
      * @returns Promise resolving to array of file/directory paths
      * @throws {Error} If the path doesn't exist or cannot be accessed
      */

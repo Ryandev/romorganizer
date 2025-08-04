@@ -1,5 +1,6 @@
 import path from 'node:path';
 import storage from './storage.js';
+import { IStorageListOptions } from './storage.interface.js';
 
 /* Test the avoidHiddenFiles logic directly without complex mocking */
 describe('avoidHiddenFiles functionality', () => {
@@ -286,5 +287,183 @@ describe('environment-based temp directory', () => {
             'function'
         );
         expect(storageInstance.identifier).toBe('local');
+    });
+});
+
+/* Test includeDirectories functionality */
+describe('includeDirectories functionality', () => {
+    let testDir: string;
+    let storageInstance: ReturnType<typeof storage>;
+
+    beforeAll(async () => {
+        storageInstance = storage();
+        testDir = await storageInstance.createTemporaryDirectory();
+        
+        /* Create test structure with files and directories */
+        await storageInstance.createDirectory(path.join(testDir, 'subdir1'));
+        await storageInstance.createDirectory(path.join(testDir, 'subdir2'));
+        await storageInstance.createDirectory(path.join(testDir, '.hiddenDir'));
+        
+        /* Create files */
+        await storageInstance.write(path.join(testDir, 'file1.txt'), new ArrayBuffer(10));
+        await storageInstance.write(path.join(testDir, 'file2.txt'), new ArrayBuffer(10));
+        await storageInstance.write(path.join(testDir, '.hidden.txt'), new ArrayBuffer(10));
+        await storageInstance.write(path.join(testDir, 'subdir1', 'nested.txt'), new ArrayBuffer(10));
+        await storageInstance.write(path.join(testDir, 'subdir2', 'deep.txt'), new ArrayBuffer(10));
+    });
+
+    afterAll(async () => {
+        if (testDir && await storageInstance.exists(testDir)) {
+            await storageInstance.remove(testDir);
+        }
+    });
+
+    test('should include directories when includeDirectories is true', async () => {
+        const contents = await storageInstance.list(testDir, {
+            includeDirectories: true,
+            avoidHiddenFiles: false,
+        });
+
+        /* Should include both files and directories */
+        expect(contents).toContain(path.join(testDir, 'file1.txt'));
+        expect(contents).toContain(path.join(testDir, 'file2.txt'));
+        expect(contents).toContain(path.join(testDir, '.hidden.txt'));
+        expect(contents).toContain(path.join(testDir, 'subdir1'));
+        expect(contents).toContain(path.join(testDir, 'subdir2'));
+        expect(contents).toContain(path.join(testDir, '.hiddenDir'));
+    });
+
+    test('should exclude directories when includeDirectories is false', async () => {
+        const contents = await storageInstance.list(testDir, {
+            includeDirectories: false,
+            avoidHiddenFiles: false,
+        });
+
+        /* Should only include files, not directories */
+        expect(contents).toContain(path.join(testDir, 'file1.txt'));
+        expect(contents).toContain(path.join(testDir, 'file2.txt'));
+        expect(contents).toContain(path.join(testDir, '.hidden.txt'));
+        expect(contents).not.toContain(path.join(testDir, 'subdir1'));
+        expect(contents).not.toContain(path.join(testDir, 'subdir2'));
+        expect(contents).not.toContain(path.join(testDir, '.hiddenDir'));
+    });
+
+    test('should exclude directories by default (includeDirectories defaults to false)', async () => {
+        const contents = await storageInstance.list(testDir, {
+            avoidHiddenFiles: false,
+        });
+
+        /* Should only include files by default */
+        expect(contents).toContain(path.join(testDir, 'file1.txt'));
+        expect(contents).toContain(path.join(testDir, 'file2.txt'));
+        expect(contents).toContain(path.join(testDir, '.hidden.txt'));
+        expect(contents).not.toContain(path.join(testDir, 'subdir1'));
+        expect(contents).not.toContain(path.join(testDir, 'subdir2'));
+        expect(contents).not.toContain(path.join(testDir, '.hiddenDir'));
+    });
+
+    test('should work with recursive listing and includeDirectories true', async () => {
+        const contents = await storageInstance.list(testDir, {
+            recursive: true,
+            includeDirectories: true,
+            avoidHiddenFiles: false,
+        });
+
+        /* Should include all files and directories recursively */
+        expect(contents).toContain(path.join(testDir, 'file1.txt'));
+        expect(contents).toContain(path.join(testDir, 'file2.txt'));
+        expect(contents).toContain(path.join(testDir, '.hidden.txt'));
+        expect(contents).toContain(path.join(testDir, 'subdir1'));
+        expect(contents).toContain(path.join(testDir, 'subdir2'));
+        expect(contents).toContain(path.join(testDir, '.hiddenDir'));
+        expect(contents).toContain(path.join(testDir, 'subdir1', 'nested.txt'));
+        expect(contents).toContain(path.join(testDir, 'subdir2', 'deep.txt'));
+    });
+
+    test('should work with recursive listing and includeDirectories false', async () => {
+        const contents = await storageInstance.list(testDir, {
+            recursive: true,
+            includeDirectories: false,
+            avoidHiddenFiles: false,
+        });
+
+        /* Should include all files recursively but not directories */
+        expect(contents).toContain(path.join(testDir, 'file1.txt'));
+        expect(contents).toContain(path.join(testDir, 'file2.txt'));
+        expect(contents).toContain(path.join(testDir, '.hidden.txt'));
+        expect(contents).toContain(path.join(testDir, 'subdir1', 'nested.txt'));
+        expect(contents).toContain(path.join(testDir, 'subdir2', 'deep.txt'));
+        expect(contents).not.toContain(path.join(testDir, 'subdir1'));
+        expect(contents).not.toContain(path.join(testDir, 'subdir2'));
+        expect(contents).not.toContain(path.join(testDir, '.hiddenDir'));
+    });
+
+    test('should work with avoidHiddenFiles and includeDirectories true', async () => {
+        const contents = await storageInstance.list(testDir, {
+            includeDirectories: true,
+            avoidHiddenFiles: true,
+        });
+
+        /* Should include visible files and directories, exclude hidden ones */
+        expect(contents).toContain(path.join(testDir, 'file1.txt'));
+        expect(contents).toContain(path.join(testDir, 'file2.txt'));
+        expect(contents).toContain(path.join(testDir, 'subdir1'));
+        expect(contents).toContain(path.join(testDir, 'subdir2'));
+        expect(contents).not.toContain(path.join(testDir, '.hidden.txt'));
+        expect(contents).not.toContain(path.join(testDir, '.hiddenDir'));
+    });
+
+    test('should work with avoidHiddenFiles and includeDirectories false', async () => {
+        const contents = await storageInstance.list(testDir, {
+            includeDirectories: false,
+            avoidHiddenFiles: true,
+        });
+
+        /* Should include only visible files, exclude directories and hidden items */
+        expect(contents).toContain(path.join(testDir, 'file1.txt'));
+        expect(contents).toContain(path.join(testDir, 'file2.txt'));
+        expect(contents).not.toContain(path.join(testDir, '.hidden.txt'));
+        expect(contents).not.toContain(path.join(testDir, 'subdir1'));
+        expect(contents).not.toContain(path.join(testDir, 'subdir2'));
+        expect(contents).not.toContain(path.join(testDir, '.hiddenDir'));
+    });
+
+    test('should handle empty directory with includeDirectories true', async () => {
+        const emptyDir = await storageInstance.createTemporaryDirectory();
+        
+        const contents = await storageInstance.list(emptyDir, {
+            includeDirectories: true,
+        });
+
+        expect(contents).toEqual([]);
+        
+        /* Clean up */
+        await storageInstance.remove(emptyDir);
+    });
+
+    test('should handle empty directory with includeDirectories false', async () => {
+        const emptyDir = await storageInstance.createTemporaryDirectory();
+        
+        const contents = await storageInstance.list(emptyDir, {
+            includeDirectories: false,
+        });
+
+        expect(contents).toEqual([]);
+        
+        /* Clean up */
+        await storageInstance.remove(emptyDir);
+    });
+
+    test('should verify includeDirectories option is properly typed in interface', () => {
+        /* This test verifies the TypeScript interface includes the includeDirectories option */
+        const options: IStorageListOptions = {
+            includeDirectories: true,
+            recursive: false,
+            avoidHiddenFiles: false,
+        };
+
+        expect(options.includeDirectories).toBe(true);
+        expect(options.recursive).toBe(false);
+        expect(options.avoidHiddenFiles).toBe(false);
     });
 });

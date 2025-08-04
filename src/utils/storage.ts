@@ -31,6 +31,7 @@ export enum FileMode {
 const DEFAULT_ARGS = {
     recursive: true,
     removePrefix: false,
+    includeDirectories: false,
 } as const;
 
 function _logException(error: unknown) {
@@ -246,6 +247,7 @@ async function _listDirectory(
               recursive: boolean;
               removePrefix: boolean;
               avoidHiddenFiles: boolean;
+              includeDirectories: boolean;
           }
         | undefined
 ): Promise<FilePath[]> {
@@ -259,37 +261,31 @@ async function _listDirectory(
         ? fsListings.filter(item => !item.startsWith('.'))
         : fsListings;
 
-    const nestedListings: string[][] = [];
+    const items: FilePath[] = [];
 
-    if (options?.recursive ?? false) {
-        const entryPaths = filteredListings.map(item =>
-            path.join(filePath, item)
-        );
-        const isDirectories = await Promise.all(
-            entryPaths.map(entry => _isDirectory(entry))
-        );
-        const recursiveListings = await Promise.all(
-            isDirectories.map((isDirectory, index) =>
-                isDirectory
-                    ? _listDirectory(entryPaths[index], {
-                          recursive: options?.recursive ?? false,
-                          removePrefix: false,
-                          avoidHiddenFiles: options?.avoidHiddenFiles ?? false,
-                      })
-                    : Promise.resolve([])
-            )
-        );
-
-        nestedListings.push(...recursiveListings);
+    for ( const listingFileName of filteredListings ) {
+        const listingPath = path.join(filePath, listingFileName);
+        const isDirectory = await _isDirectory(listingPath);
+        if ( isDirectory ) {
+            if ( options?.includeDirectories ?? true ) {
+                items.push(listingPath);
+            }
+        /* Listings recursive calls to #_listDirectory */
+        if ( options?.recursive ?? false ) {
+                const recursiveListings = await _listDirectory(listingPath, {
+                    recursive: options?.recursive ?? false,
+                    removePrefix: false,
+                    avoidHiddenFiles: options?.avoidHiddenFiles ?? false,
+                    includeDirectories: options?.includeDirectories ?? false,
+                });
+                items.push(...recursiveListings);
+            }
+        } else {
+            items.push(listingPath);
+        }
     }
 
-    const items: FilePath[] = [
-        /* Listings from #fs.readdir */
-        ...filteredListings.map((item: string) => path.join(filePath, item)),
-
-        /* Listings recursive calls to #_listDirectory */
-        ...nestedListings.flat(),
-    ]
+    const returnItems = items
         /* Make sure to remove the #filePath prefix from this dir,
          * this ensures we have a path although only a relative path from the chroot
          */
@@ -299,7 +295,7 @@ async function _listDirectory(
                 : outputFilePath
         );
 
-    return items;
+    return returnItems;
 }
 
 function _createDirectory(directoryPath: FilePath): Promise<void> {
@@ -401,6 +397,7 @@ async function _copyRecursiveSync(
             recursive: false,
             removePrefix: false,
             avoidHiddenFiles: false,
+            includeDirectories: false,
         });
         const copyTasks = listings.map(childItemName =>
             _copyRecursiveSync(
@@ -443,6 +440,7 @@ function storage(
                 removePrefix?: boolean;
                 recursive?: boolean;
                 avoidHiddenFiles?: boolean;
+                includeDirectories?: boolean;
             }
         ) => {
             const results = await _listDirectory(filePath, {
@@ -450,6 +448,7 @@ function storage(
                 removePrefix:
                     options?.removePrefix ?? parameters.removePrefix ?? false,
                 avoidHiddenFiles: options?.avoidHiddenFiles ?? false,
+                includeDirectories: options?.includeDirectories ?? parameters.includeDirectories ?? false,
             });
 
             const operators: ((item: string) => string)[] = [];

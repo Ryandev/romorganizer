@@ -52,7 +52,12 @@ const EXTRACT_OPERATIONS = new Map<
             }
             const extractedDirectory = await createArchive(sourceFile).extract();
             guardDirectoryExists(extractedDirectory, `Extracted directory missing, does not exist: ${extractedDirectory}`);
-            const contents = await storage().list(extractedDirectory);
+            const contents = await storage().list(extractedDirectory, {
+                recursive: true,
+                avoidHiddenFiles: true,
+                includeDirectories: false,
+            });
+            guard(contents.length > 0, `No files found in extracted directory: ${extractedDirectory}`);
             return contents;
         },
     ],
@@ -78,7 +83,12 @@ const EXTRACT_OPERATIONS = new Map<
             }
             const extractedDirectory = await createArchive(sourceFile).extract();
             guardDirectoryExists(extractedDirectory, `Extracted directory missing, does not exist: ${extractedDirectory}`);
-            const contents = await storage().list(extractedDirectory);
+            const contents = await storage().list(extractedDirectory, {
+                recursive: true,
+                avoidHiddenFiles: true,
+                includeDirectories: false,
+            });
+            guard(contents.length > 0, `No files found in extracted directory: ${extractedDirectory}`);
             return contents;
         },
     ],
@@ -90,7 +100,12 @@ const EXTRACT_OPERATIONS = new Map<
             }
             const outputDirectory = await createArchive(sourceFile).extract();
             guardDirectoryExists(outputDirectory, `Output directory missing, does not exist: ${outputDirectory}`);
-            const contents = await storage().list(outputDirectory);
+            const contents = await storage().list(outputDirectory, {
+                recursive: true,
+                avoidHiddenFiles: true,
+                includeDirectories: false,
+            });
+            guard(contents.length > 0, `No files found in extracted directory: ${outputDirectory}`);
             return contents;
         },
     ],
@@ -213,12 +228,14 @@ export class RunnerFile implements IRunner<string[]> {
 
                     log.info(`Extracting file ${filePath} with operation ${extractOperation.name}`);
                     const extractedFiles = await extractOperation(filePath, currentFiles);
+                    log.info(`Extracted files: ${extractedFiles}`);
                     /* Move extracted files back to current directory */
                     for (const extractedFile of extractedFiles) {
                         const newFilePath = path.join(
                             workingDirectory,
                             path.basename(extractedFile)
                         );
+                        log.info(`Moving extracted file ${extractedFile} to ${newFilePath}`);
                         await this.storage.move(extractedFile, newFilePath);
                         currentFiles.push(newFilePath);
                     }
@@ -362,35 +379,39 @@ export class RunnerDirectory implements IRunner<string[]> {
             log.info(`Found ${fileGroups.length} files in source directory`);
         
             for (const files of fileGroups) {
+                log.info(`Processing files: ${files}`);
                 const runner = this._createRunner(files, this.overwrite);
                 if (runner instanceof Error) {
                     log.error(`Error creating runner for ${files}: ${runner.message}`);
                     continue;
                 }
 
-                const expectedOutputFileName = `${path.basename(files[0] ?? '')}.chd`;
+                const sourceFileExtension = fileExtension(files[0] ?? '');
+                const sourceFileNameNoExtension = path.basename(files[0] ?? '', `.${sourceFileExtension}`);
+                const expectedOutputFileName = `${sourceFileNameNoExtension}.chd`;
                 const expectedOutputFilePath = path.join(this.outputDir, expectedOutputFileName);
+
                 if ( await storage().exists(expectedOutputFilePath) && !this.overwrite ) {
-                    log.info(`Skipping ${files} - output file already exists in output directory`);
+                    log.info(`Skipping ${files} - output file: ${expectedOutputFilePath} already exists in output directory`);
                     continue;
                 }
 
                 const outputFilePaths = await runner.start();
 
-                for ( const [index, outputFilePath] of Object.entries(outputFilePaths) ) {
+                for ( const [index, outputFilePath] of Object.entries(outputFilePaths.filter(filePath => filePath.endsWith('.chd'))) ) {
+                    const outputFileExtension = fileExtension(outputFilePath);
                     /* Attempt to rename the output file to the expected output file name
                        If there are multiple output files, append the index to the file name */
-                    const outputFileExtension = fileExtension(outputFilePath);
-                    let targetFileName = `${path.basename(expectedOutputFileName)}.${outputFileExtension}`;
+                    let targetFileName = `${sourceFileNameNoExtension}.${outputFileExtension}`;
                     if ( outputFilePaths.length > 1 ) {
-                        targetFileName = `${path.basename(expectedOutputFileName)}.${index}.${outputFileExtension}`;
+                        targetFileName = `${sourceFileNameNoExtension}.${index}.${outputFileExtension}`;
                     }
                     const targetPath = path.join(this.outputDir, targetFileName);
                     const targetPathExists = await storage().exists(targetPath);
         
                     if (targetPathExists && !this.overwrite) {
                         log.info(
-                            `Skipping ${files} - output file already exists in output directory`
+                            `Skipping ${files} - output file ${targetPath} already exists in output directory`
                         );
                         continue;
                     }
@@ -405,6 +426,7 @@ export class RunnerDirectory implements IRunner<string[]> {
                 }
             }
         
+            log.info(`Output files: ${outputFiles.join(', ')}`);
             return outputFiles;
     }
 }

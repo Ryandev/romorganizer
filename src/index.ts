@@ -47,6 +47,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         const inputArguments = process.argv.slice(2);
         try {
             await main(inputArguments);
+            process.exit(0);
         } catch (error) {
             log.error('An error occurred');
             log.error(

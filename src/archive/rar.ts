@@ -3,7 +3,7 @@ import { log } from '../utils/logger';
 import { BaseArchive } from './base';
 import storage from '../utils/storage';
 import { doesCommandExist, isCommandExecutable } from '../utils/command';
-import { guard } from '../utils/guard';
+import { guard, guardDirectoryExists } from '../utils/guard';
 import { withTimeout } from '../utils/promise';
 
 /* 5 minutes */
@@ -17,7 +17,7 @@ const MAP_EXTRACT_COMMANDS = [
             filePath: string,
             outputDir: string,
             timeoutMs: number = DEFAULT_TIMEOUT_MS
-        ) => withTimeout($`unrar x ${filePath} ${outputDir}`, timeoutMs),
+        ) => withTimeout($`unrar x ${filePath} -ad ${outputDir}`, timeoutMs),
     },
     {
         name: 'unrar-free',
@@ -135,7 +135,7 @@ export class RarArchive extends BaseArchive {
             const output = await extractCommand(this.filePath, outputDir);
             guard(output.exitCode === 0, 'Extraction failed');
             log.info(`✓ Successfully extracted using ${primaryCommand}`);
-            await this.moveContentsFromSubdirectories(outputDir);
+            guardDirectoryExists(outputDir, `Output directory missing, does not exist: ${outputDir}`);
             log.info(`Done extracting ${this.filePath} to ${outputDir}`);
             return outputDir;
         } catch (error) {
