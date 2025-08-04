@@ -37,15 +37,18 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Download Yarn
+      run: corepack prepare
+
+    - name: Setup Yarn
+      run: corepack enable
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'yarn'
         corepack: true
-
-    - name: Setup Yarn
-      run: corepack prepare --activate
 
     - name: Install dependencies
       run: yarn install --frozen-lockfile
