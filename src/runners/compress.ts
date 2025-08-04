@@ -376,22 +376,27 @@ export class RunnerDirectory implements IRunner<string[]> {
                 }
 
                 const outputFilePaths = await runner.start();
-                const chdFilePaths = outputFilePaths.filter(filePath => filePath.endsWith('.chd'));
 
-                for ( const chdFilePath of chdFilePaths ) {
-                    const outputFileName = path.basename(chdFilePath);
-                    const outputPath = path.join(this.outputDir, outputFileName);
-                    const outputPathExists = await storage().exists(outputPath);
+                for ( const [index, outputFilePath] of Object.entries(outputFilePaths) ) {
+                    /* Attempt to rename the output file to the expected output file name
+                       If there are multiple output files, append the index to the file name */
+                    const outputFileExtension = fileExtension(outputFilePath);
+                    let targetFileName = `${path.basename(expectedOutputFileName)}.${outputFileExtension}`;
+                    if ( outputFilePaths.length > 1 ) {
+                        targetFileName = `${path.basename(expectedOutputFileName)}.${index}.${outputFileExtension}`;
+                    }
+                    const targetPath = path.join(this.outputDir, targetFileName);
+                    const targetPathExists = await storage().exists(targetPath);
         
-                    if (outputPathExists && !this.overwrite) {
+                    if (targetPathExists && !this.overwrite) {
                         log.info(
                             `Skipping ${files} - output file already exists in output directory`
                         );
                         continue;
                     }
 
-                    await storage().move(chdFilePath, outputPath);
-                    outputFiles.push(outputPath);
+                    await storage().move(outputFilePath, targetPath);
+                    outputFiles.push(targetPath);
 
                     if (this.removeSource) {
                         await Promise.all(files.map(file => storage().remove(file)));
