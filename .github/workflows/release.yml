@@ -21,7 +21,7 @@ jobs:
         corepack: true
 
     - name: Setup Yarn
-      run: corepack prepare yarn@4.6.0 --activate
+      run: corepack prepare --activate
 
     - name: Install dependencies
       run: yarn install --frozen-lockfile
@@ -39,7 +39,7 @@ jobs:
       run: yarn package
 
     - name: Build native executables
-      run: yarn build:native
+      run: yarn package
 
     - name: Create release assets
       run: |
