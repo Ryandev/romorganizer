@@ -86,7 +86,7 @@ Verifies if a file is a valid ECM file.
 
 ### EcmArchive Class
 
-Extends `BaseArchive` and provides integration with the archive system.
+provides integration with the archive system.
 
 #### Methods
 

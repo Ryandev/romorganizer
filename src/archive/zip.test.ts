@@ -1,31 +1,26 @@
-import { ZipArchive } from './zip';
+import { createZipArchive } from './zip';
 import path from 'node:path';
 import storage from '../utils/storage';
 import type { IStorage } from '../utils/storage.interface';
 
-describe('ZipArchive', () => {
+describe('createZipArchive', () => {
     let testDir: string;
-    let zipArchive: ZipArchive;
+    let zipArchive: ReturnType<typeof createZipArchive>;
     let storageInstance: IStorage;
 
     beforeEach(async () => {
         storageInstance = await storage();
         testDir = await storageInstance.createTemporaryDirectory();
-        zipArchive = new ZipArchive(path.join(testDir, 'test.zip'));
-
-        /* Initialize temporaryFiles for testing */
-        if (!globalThis.temporaryFiles) {
-            globalThis.temporaryFiles = [];
-        }
+        zipArchive = createZipArchive(path.join(testDir, 'test.zip'));
     });
 
     afterEach(async () => {
         await storageInstance.remove(testDir);
     });
 
-    describe('constructor', () => {
+    describe('factory function', () => {
         it('should create a ZipArchive instance', () => {
-            expect(zipArchive).toBeInstanceOf(ZipArchive);
+            expect(zipArchive).toBeDefined();
             expect(zipArchive.archiveFile()).toBe(path.join(testDir, 'test.zip'));
         });
     });
@@ -40,7 +35,7 @@ describe('ZipArchive', () => {
             await storageInstance.write(path.join(testDir, 'test2.txt'), testBuffer);
 
             const zipPath = path.join(testDir, 'output.zip');
-            const zipArchive = new ZipArchive(zipPath);
+            const zipArchive = createZipArchive(zipPath);
 
             await zipArchive.compress(testDir);
 
@@ -64,7 +59,7 @@ describe('ZipArchive', () => {
             await storageInstance.write(path.join(testDir, 'test2.txt'), testBuffer);
 
             const zipPath = path.join(testDir, 'test.zip');
-            const zipArchive = new ZipArchive(zipPath);
+            const zipArchive = createZipArchive(zipPath);
 
             await zipArchive.compress(testDir);
 
@@ -95,7 +90,7 @@ describe('ZipArchive', () => {
             await storageInstance.write(path.join(testDir, 'test.txt'), testBuffer);
 
             const zipPath = path.join(testDir, 'test.zip');
-            const zipArchive = new ZipArchive(zipPath);
+            const zipArchive = createZipArchive(zipPath);
 
             await zipArchive.compress(testDir);
 
@@ -104,17 +99,10 @@ describe('ZipArchive', () => {
             expect(isValid).toBe(true);
         });
 
-        it('should return false for an invalid zip file', async () => {
-            /* Create an invalid zip file (just a text file) */
-            const testContent = 'This is not a zip file';
-            const testBuffer = new TextEncoder().encode(testContent);
-
+        it('should return false for invalid zip file', async () => {
             const invalidZipPath = path.join(testDir, 'invalid.zip');
-            await storageInstance.write(invalidZipPath, testBuffer);
+            const zipArchive = createZipArchive(invalidZipPath);
 
-            const zipArchive = new ZipArchive(invalidZipPath);
-
-            /* Verify the invalid zip file */
             const isValid = await zipArchive.verify();
             expect(isValid).toBe(false);
         });

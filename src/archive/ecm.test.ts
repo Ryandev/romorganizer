@@ -1,4 +1,4 @@
-import { EcmArchive } from './ecm';
+import { createEcmArchive } from './ecm';
 import { EcmWasm } from '../../deps/ecm/wasm';
 import { log } from '../utils/logger';
 import storage from '../utils/storage';
@@ -35,14 +35,14 @@ jest.mock('../utils/guard', () => ({
     guardFileExists: jest.fn(),
 }));
 
-describe('EcmArchive', () => {
+describe('createEcmArchive', () => {
     const mockLog = log as jest.Mocked<typeof log>;
     const MockEcmWasm = EcmWasm as jest.MockedClass<typeof EcmWasm>;
     const mockStorage = storage as jest.MockedFunction<typeof storage>;
     const mockGuardFileExists = guardFileExists as jest.MockedFunction<typeof guardFileExists>;
 
     let mockEcmWasmInstance: any;
-    let ecmArchive: EcmArchive;
+    let ecmArchive: ReturnType<typeof createEcmArchive>;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -54,17 +54,18 @@ describe('EcmArchive', () => {
         };
         MockEcmWasm.mockImplementation(() => mockEcmWasmInstance);
         
-        ecmArchive = new EcmArchive('/test/file.ecm');
+        ecmArchive = createEcmArchive('/test/file.ecm');
     });
 
-    describe('constructor', () => {
+    describe('factory function', () => {
         it('should create EcmArchive instance with file path', () => {
             /* Act */
-            const archive = new EcmArchive('/test/file.ecm');
+            const archive = createEcmArchive('/test/file.ecm');
 
             /* Assert */
-            expect(archive).toBeInstanceOf(EcmArchive);
-            expect(MockEcmWasm).toHaveBeenCalledTimes(2); /* Once in constructor, once in beforeEach */
+            expect(archive).toBeDefined();
+            expect(archive.archiveFile()).toBe('/test/file.ecm');
+            expect(MockEcmWasm).toHaveBeenCalledTimes(2); /* Once in factory, once in beforeEach */
         });
 
         it('should create EcmWasm instance', () => {

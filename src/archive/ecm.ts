@@ -1,79 +1,95 @@
 import path from 'node:path';
 import { log } from '../utils/logger';
-import { BaseArchive } from './base';
+import { Archive } from './interface';
 import storage from '../utils/storage';
 import { EcmWasm } from '../../deps/ecm/wasm';
-import { guardFileExists } from '../utils/guard';
+import { guardFileExists, guardDirectoryExists } from '../utils/guard';
 
-export class EcmArchive extends BaseArchive {
-    private ecmWasm: EcmWasm;
+/* Helper function to create temporary directory */
+async function createTemporaryDirectory(): Promise<string> {
+    const storageInstance = await storage();
+    return await storageInstance.createTemporaryDirectory();
+}
 
-    constructor(filePath: string) {
-        super(filePath);
-        this.ecmWasm = new EcmWasm();
-    }
+/**
+ * Creates an ECM archive handler that implements the Archive interface
+ * @param filePath - Path to the ECM file
+ * @returns An object implementing the Archive interface for ECM files
+ */
+export function createEcmArchive(filePath: string): Archive {
+    const ecmWasm = new EcmWasm();
 
-    async extract(): Promise<string> {
-        guardFileExists(this.filePath);
+    return {
+        archiveFile(): string {
+            return filePath;
+        },
 
-        const outputDirectory = await this.createTemporaryDirectory();
-        const inputFileName = path.basename(this.filePath);
-        const outputFileName = inputFileName.replace('.ecm', '');
-        const outputFilePath = path.join(outputDirectory, outputFileName);
+        async extract(): Promise<string> {
+            guardFileExists(filePath, `file does not exist: ${filePath}`);
 
-        try {
-            await this.ecmWasm.extract(this.filePath, outputFilePath);
-            guardFileExists(outputFilePath);
-            log.info(`Extracted ${this.filePath} to ${outputFilePath}`);
-            return outputFilePath;
-        } catch (error) {
-            throw new Error(
-                `ECM extraction failed: ${error instanceof Error ? error.message : String(error)}`
-            );
-        }
-    }
+            const outputDirectory = await createTemporaryDirectory();
+            const inputFileName = path.basename(filePath);
+            const outputFileName = inputFileName.replace('.ecm', '');
+            const outputFilePath = path.join(outputDirectory, outputFileName);
 
-    async verify(): Promise<boolean> {
-        log.info(`Verifying ${this.filePath}...`);
+            try {
+                await ecmWasm.extract(filePath, outputFilePath);
+                guardFileExists(outputFilePath);
+                log.info(`Extracted ${filePath} to ${outputFilePath}`);
+                return outputFilePath;
+            } catch (error) {
+                throw new Error(
+                    `ECM extraction failed: ${error instanceof Error ? error.message : String(error)}`
+                );
+            }
+        },
 
-        try {
-            const storageInstance = await storage();
-            if (!(await storageInstance.exists(this.filePath))) {
-                log.warn(`✗ ${this.filePath} does not exist`);
+        async verify(): Promise<boolean> {
+            guardFileExists(filePath, `file does not exist: ${filePath}`);
+            log.info(`Verifying ${filePath}...`);
+
+            try {
+                const storageInstance = await storage();
+                if (!(await storageInstance.exists(filePath))) {
+                    log.warn(`✗ ${filePath} does not exist`);
+                    return false;
+                }
+
+                /* Use WASM implementation to verify the ECM file */
+                const isValid = await ecmWasm.verify(filePath);
+                if (isValid) {
+                    log.info(`✓ ${filePath} appears to be a valid ECM file`);
+                } else {
+                    log.warn(`✗ ${filePath} is not a valid ECM file`);
+                }
+                return isValid;
+            } catch (error) {
+                log.warn(`✗ ${filePath} is not accessible: ${error}`);
                 return false;
             }
+        },
 
-            /* Use WASM implementation to verify the ECM file */
-            const isValid = await this.ecmWasm.verify(this.filePath);
-            if (isValid) {
-                log.info(`✓ ${this.filePath} appears to be a valid ECM file`);
-            } else {
-                log.warn(`✗ ${this.filePath} is not a valid ECM file`);
-            }
-            return isValid;
-        } catch (error) {
-            log.warn(`✗ ${this.filePath} is not accessible: ${error}`);
-            return false;
-        }
-    }
-
-    async compress(filePath: string): Promise<string> {
-        guardFileExists(filePath);
-
-        const outputDirectory = await this.createTemporaryDirectory();
-        const inputFileName = path.basename(filePath);
-const outputFileName = `${inputFileName}.ecm`;
-const outputFilePath = path.join(outputDirectory, outputFileName);
-
-        try {
-            await this.ecmWasm.compress(filePath, outputFilePath);
-            guardFileExists(outputFilePath);
-            log.info(`Encoded ${filePath}`);
-            return outputFilePath;
-        } catch (error) {
-            throw new Error(
-                `ECM compression failed: ${error instanceof Error ? error.message : String(error)}`
+        async compress(contentsDirectory: string): Promise<string> {
+            guardDirectoryExists(
+                contentsDirectory,
+                `Contents directory does not exist: ${contentsDirectory}`
             );
-        }
-    }
+
+            const outputDirectory = await createTemporaryDirectory();
+            const inputFileName = path.basename(contentsDirectory);
+            const outputFileName = `${inputFileName}.ecm`;
+            const outputFilePath = path.join(outputDirectory, outputFileName);
+
+            try {
+                await ecmWasm.compress(contentsDirectory, outputFilePath);
+                guardFileExists(outputFilePath);
+                log.info(`Encoded ${contentsDirectory}`);
+                return outputFilePath;
+            } catch (error) {
+                throw new Error(
+                    `ECM compression failed: ${error instanceof Error ? error.message : String(error)}`
+                );
+            }
+        },
+    };
 }

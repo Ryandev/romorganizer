@@ -1,31 +1,26 @@
-import { RarArchive } from './rar';
+import { createRarArchive } from './rar';
 import path from 'node:path';
 import storage from '../utils/storage';
 import type { IStorage } from '../utils/storage.interface';
 
-describe('RarArchive', () => {
+describe('createRarArchive', () => {
     let testDir: string;
-    let rarArchive: RarArchive;
+    let rarArchive: ReturnType<typeof createRarArchive>;
     let storageInstance: IStorage;
 
     beforeEach(async () => {
         storageInstance = await storage();
         testDir = await storageInstance.createTemporaryDirectory();
-        rarArchive = new RarArchive(path.join(testDir, 'test.rar'));
-
-        /* Initialize temporaryFiles for testing */
-        if (!globalThis.temporaryFiles) {
-            globalThis.temporaryFiles = [];
-        }
+        rarArchive = createRarArchive(path.join(testDir, 'test.rar'));
     });
 
     afterEach(async () => {
         await storageInstance.remove(testDir);
     });
 
-    describe('constructor', () => {
+    describe('factory function', () => {
         it('should create a RarArchive instance', () => {
-            expect(rarArchive).toBeInstanceOf(RarArchive);
+            expect(rarArchive).toBeDefined();
             expect(rarArchive.archiveFile()).toBe(path.join(testDir, 'test.rar'));
         });
     });
@@ -55,7 +50,7 @@ describe('RarArchive', () => {
             /* this test will be skipped if no RAR file is available */
 
             const rarPath = path.join(testDir, 'test.rar');
-            const testRarArchive = new RarArchive(rarPath);
+            const testRarArchive = createRarArchive(rarPath);
 
             /* This test might fail if no RAR file exists, which is expected */
             try {
@@ -78,7 +73,7 @@ describe('RarArchive', () => {
         it('should verify a valid RAR file', async () => {
             /* Note: This test requires a valid RAR file to be present */
             const rarPath = path.join(testDir, 'test.rar');
-            const testRarArchive = new RarArchive(rarPath);
+            const testRarArchive = createRarArchive(rarPath);
 
             /* This test might fail if no RAR file exists, which is expected */
             try {
@@ -98,15 +93,10 @@ describe('RarArchive', () => {
             const invalidRarPath = path.join(testDir, 'invalid.rar');
             await storageInstance.write(invalidRarPath, testBuffer);
 
-            /* Mock the verification to avoid hanging on invalid files */
-            /* Since this test is about invalid files, we'll just verify the file exists */
-            /* and that the verification process handles it gracefully */
-            const fileExists = await storageInstance.exists(invalidRarPath);
-            expect(fileExists).toBe(true);
+            const testRarArchive = createRarArchive(invalidRarPath);
 
-            /* The actual verification might hang on invalid files, so we'll skip it */
-            /* and just verify that the file was created correctly */
-            expect(testBuffer.length).toBeGreaterThan(0);
+            const isValid = await testRarArchive.verify();
+            expect(isValid).toBe(false);
         });
     });
 });

@@ -47,6 +47,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         const inputArguments = process.argv.slice(2);
         try {
             await main(inputArguments);
+            /* eslint-disable-next-line unicorn/no-process-exit */
             process.exit(0);
         } catch (error) {
             log.error('An error occurred');

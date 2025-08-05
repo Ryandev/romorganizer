@@ -1,8 +1,10 @@
 import { $ } from 'zx';
 import { log } from '../utils/logger';
-import { BaseArchive } from './base';
+import { Archive } from './interface';
 import storage from '../utils/storage';
 import { doesCommandExist, isCommandExecutable } from '../utils/command';
+import { moveContentsFromSubdirectories } from '../utils/archive-utils';
+import { guardFileExists, guardDirectoryExists } from '../utils/guard';
 
 const MAP_EXTRACT_COMMANDS = {
     '7z': (filePath: string, outputDir: string) =>
@@ -86,84 +88,100 @@ const ERROR_7Z_COMPRESS_NOT_INSTALLED = new Error(
     `7z compression failed. Please ensure 7-Zip is installed:\n- Windows: Download from https://7-zip.org/\n- macOS: brew install p7zip\n- Linux: sudo apt install p7zip-full`
 );
 
-export class SevenZipArchive extends BaseArchive {
-    constructor(filePath: string) {
-        super(filePath);
-    }
+/* Helper function to create temporary directory */
+async function createTemporaryDirectory(): Promise<string> {
+    return await storage().createTemporaryDirectory();
+}
 
-    async extract(): Promise<string> {
-        this.validatePaths();
-        const outputDir = await this.createTemporaryDirectory();
-        try {
-            log.info(`Extracting ${this.filePath} to ${outputDir}`);
-            const viableCommands = await _getInstalledCommands();
-            const primaryCommand = viableCommands[0];
-            if (!primaryCommand) {
-                throw ERROR_7Z_NOT_INSTALLED;
-            }
-            const extractCommand = MAP_EXTRACT_COMMANDS[primaryCommand];
-            await extractCommand(this.filePath, outputDir);
-            log.info(`✓ Successfully extracted using ${primaryCommand}`);
-            await this.moveContentsFromSubdirectories(outputDir);
-            log.info(`Done extracting ${this.filePath} to ${outputDir}`);
-            return outputDir;
-        } catch (error) {
-            throw new Error(
-                `Failed to extract ${this.filePath} to ${outputDir}: ${error}`
-            );
-        }
-    }
+/**
+ * Creates a 7-Zip archive handler that implements the Archive interface
+ * @param filePath - Path to the 7-Zip file
+ * @returns An object implementing the Archive interface for 7-Zip files
+ */
+export function createSevenZipArchive(filePath: string): Archive {
+    return {
+        archiveFile(): string {
+            return filePath;
+        },
 
-    async verify(): Promise<boolean> {
-        log.info(`Verifying ${this.filePath}...`);
-        try {
-            /* Check if the file exists first */
-            const storageInstance = await storage();
-            if (!(await storageInstance.exists(this.filePath))) {
-                log.warn(`✗ ${this.filePath} does not exist`);
-                return false;
-            }
-            const viableCommands = await _getInstalledVerifyCommands();
-            const primaryCommand = viableCommands[0];
-            if (!primaryCommand) {
-                log.warn(`✗ No 7z commands available for verification`);
-                return false;
-            }
-            const verifyCommand = MAP_VERIFY_COMMANDS[primaryCommand];
+        async extract(): Promise<string> {
+            guardFileExists(filePath, `file does not exist: ${filePath}`);
+            const outputDir = await createTemporaryDirectory();
             try {
-                await verifyCommand(this.filePath);
-                log.info(`✓ Successfully verified using ${primaryCommand}`);
-                return true;
-            } catch {
-                log.warn(
-                    `✗ ${this.filePath} is corrupted or invalid: Verification failed with ${primaryCommand}`
+                log.info(`Extracting ${filePath} to ${outputDir}`);
+                const viableCommands = await _getInstalledCommands();
+                const primaryCommand = viableCommands[0];
+                if (!primaryCommand) {
+                    throw ERROR_7Z_NOT_INSTALLED;
+                }
+                const extractCommand = MAP_EXTRACT_COMMANDS[primaryCommand];
+                await extractCommand(filePath, outputDir);
+                log.info(`✓ Successfully extracted using ${primaryCommand}`);
+                await moveContentsFromSubdirectories(outputDir, filePath);
+                log.info(`Done extracting ${filePath} to ${outputDir}`);
+                return outputDir;
+            } catch (error) {
+                throw new Error(
+                    `Failed to extract ${filePath} to ${outputDir}: ${error}`
                 );
+            }
+        },
+
+        async verify(): Promise<boolean> {
+            guardFileExists(filePath, `file does not exist: ${filePath}`);
+            log.info(`Verifying ${filePath}...`);
+            try {
+                /* Check if the file exists first */
+                const storageInstance = await storage();
+                if (!(await storageInstance.exists(filePath))) {
+                    log.warn(`✗ ${filePath} does not exist`);
+                    return false;
+                }
+                const viableCommands = await _getInstalledVerifyCommands();
+                const primaryCommand = viableCommands[0];
+                if (!primaryCommand) {
+                    log.warn(`✗ No 7z commands available for verification`);
+                    return false;
+                }
+                const verifyCommand = MAP_VERIFY_COMMANDS[primaryCommand];
+                try {
+                    await verifyCommand(filePath);
+                    log.info(`✓ Successfully verified using ${primaryCommand}`);
+                    return true;
+                } catch {
+                    log.warn(
+                        `✗ ${filePath} is corrupted or invalid: Verification failed with ${primaryCommand}`
+                    );
+                    return false;
+                }
+            } catch (error) {
+                log.warn(`✗ ${filePath} is corrupted or invalid: ${error}`);
                 return false;
             }
-        } catch (error) {
-            log.warn(`✗ ${this.filePath} is corrupted or invalid: ${error}`);
-            return false;
-        }
-    }
+        },
 
-    async compress(contentsDirectory: string): Promise<string> {
-        this.validateCompressPaths(contentsDirectory);
-        try {
-            log.info(`Compressing ${contentsDirectory} to ${this.filePath}`);
-            const viableCommands = await _getInstalledCompressCommands();
-            const primaryCommand = viableCommands[0];
-            if (!primaryCommand) {
-                throw ERROR_7Z_COMPRESS_NOT_INSTALLED;
-            }
-            const compressCommand = MAP_COMPRESS_COMMANDS[primaryCommand];
-            await compressCommand(this.filePath, contentsDirectory);
-            log.info(`✓ Successfully compressed using ${primaryCommand}`);
-            log.info(`✓ Successfully compressed to ${this.filePath}`);
-            return this.filePath;
-        } catch (error) {
-            throw new Error(
-                `Failed to compress ${contentsDirectory} to ${this.filePath}: ${error}`
+        async compress(contentsDirectory: string): Promise<string> {
+            guardDirectoryExists(
+                contentsDirectory,
+                `Contents directory does not exist: ${contentsDirectory}`
             );
-        }
-    }
+            try {
+                log.info(`Compressing ${contentsDirectory} to ${filePath}`);
+                const viableCommands = await _getInstalledCompressCommands();
+                const primaryCommand = viableCommands[0];
+                if (!primaryCommand) {
+                    throw ERROR_7Z_COMPRESS_NOT_INSTALLED;
+                }
+                const compressCommand = MAP_COMPRESS_COMMANDS[primaryCommand];
+                await compressCommand(filePath, contentsDirectory);
+                log.info(`✓ Successfully compressed using ${primaryCommand}`);
+                log.info(`✓ Successfully compressed to ${filePath}`);
+                return filePath;
+            } catch (error) {
+                throw new Error(
+                    `Failed to compress ${contentsDirectory} to ${filePath}: ${error}`
+                );
+            }
+        },
+    };
 }
