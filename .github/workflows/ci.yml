@@ -42,11 +42,11 @@ jobs:
 
     - name: Install system dependencies (macOS)
       if: runner.os == 'macOS'
-      run: brew install rom-tools
+      run: brew install rom-tools rar p7zip
 
     - name: Install system dependencies (Ubuntu)
       if: runner.os == 'Linux'
-      run: sudo apt-get update && sudo apt-get install -y mame-tools
+      run: sudo apt-get update && sudo apt-get install -y mame-tools unrar-free p7zip-full
 
     - name: Verify chdman installation
       run: |
@@ -59,6 +59,32 @@ jobs:
         else
           echo "✅ chdman is installed and available"
           chdman --version || echo "chdman version check failed"
+        fi
+
+    - name: Verify 7z installation
+      run: |
+        if ! command -v 7z &> /dev/null; then
+          echo "❌ 7z is not installed or not in PATH"
+          echo "Available commands:"
+          which -a 7z || echo "7z not found"
+          echo "PATH: $PATH"
+          exit 1
+        else
+          echo "✅ 7z is installed and available"
+          7z --version || echo "7z version check failed"
+        fi
+
+    - name: Verify unrar installation
+      run: |
+        if ! command -v unrar &> /dev/null; then
+          echo "❌ unrar is not installed or not in PATH"
+          echo "Available commands:"
+          which -a unrar || echo "unrar not found"
+          echo "PATH: $PATH"
+          exit 1
+        else
+          echo "✅ unrar is installed and available"
+          unrar --version || echo "unrar version check failed"
         fi
 
     - name: Run linter
