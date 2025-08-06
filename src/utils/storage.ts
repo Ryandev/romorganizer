@@ -1,18 +1,14 @@
-import type { Stats } from 'node:fs';
 import {
     access,
-    close,
     constants,
     copyFile,
-    fsync,
     lstat,
     mkdir,
     mkdtemp,
-    open,
     readFile,
     rm,
     writeFile,
-} from 'node:fs';
+} from 'node:fs/promises';
 import { readdir as readDirectoryAsync } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -21,7 +17,6 @@ import { log } from './logger';
 import { getTemporaryDirectory } from './environment.js';
 
 type FilePath = string;
-type FileDescriptor = number;
 
 export enum FileMode {
     Read = 0,
@@ -38,206 +33,62 @@ function _logException(error: unknown) {
     log.error(`Storage error: ${error}`);
 }
 
-function _openFileDescriptor(
-    filePath: string,
-    openMode: FileMode[] = [FileMode.Read]
-): Promise<FileDescriptor> {
-    const modeMap: Record<FileMode, string> = {
-        [FileMode.Read]: 'r',
-        [FileMode.Write]: 'w',
-    };
-
-    return new Promise((resolve, reject) => {
-        const flags = openMode.map(mode => modeMap[mode]).join('');
-        open(filePath, flags, (error, fd) => {
-            if (error) {
-                _logException(error);
-                reject(error);
-            } else {
-                resolve(fd);
-            }
-        });
-    });
-}
-
-function _flushFileDescriptor(fd: FileDescriptor): Promise<void> {
-    return new Promise((resolve, reject) => {
-        fsync(fd, error => {
-            if (error) {
-                _logException(error);
-                reject(error);
-            } else {
-                resolve();
-            }
-        });
-    });
-}
-
-function _closeFileDescriptor(fd: FileDescriptor): Promise<void> {
-    return new Promise((resolve, reject) => {
-        close(fd, error => {
-            if (error) {
-                _logException(error);
-                reject(error);
-            } else {
-                resolve();
-            }
-        });
-    });
-}
-
-function _writeFile(
-    file: FilePath | FileDescriptor,
-    contents: ArrayBuffer
-): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const buffer = Buffer.from(contents);
-        writeFile(file, buffer, error => {
-            if (error) {
-                _logException(error);
-                reject(error);
-            } else {
-                resolve();
-            }
-        });
-    });
-}
-
-function _readFile(file: FilePath | FileDescriptor): Promise<ArrayBuffer> {
-    return new Promise((resolve, reject) => {
-        readFile(file, (error, buffer) => {
-            if (error) {
-                _logException(error);
-                reject(error);
-            } else {
-                resolve(
-                    buffer.buffer.slice(
-                        buffer.byteOffset,
-                        buffer.byteOffset + buffer.byteLength
-                    )
-                );
-            }
-        });
-    });
-}
-
 async function _write(
     filePath: FilePath,
     contents: ArrayBuffer
 ): Promise<void> {
-    const fd = await _openFileDescriptor(filePath, [FileMode.Write]);
-
-    const errors: Error[] = [];
-
-    await _writeFile(fd, contents).catch((error: Error) => errors.push(error));
-    await _flushFileDescriptor(fd).catch((error: Error) => errors.push(error));
-
-    await _closeFileDescriptor(fd);
-
-    const lastError = errors.at(-1);
-
-    if (lastError) {
-        _logException(lastError);
-        throw lastError;
+    try {
+        const buffer = Buffer.from(contents);
+        await writeFile(filePath, buffer);
+    } catch (error) {
+        _logException(error);
+        throw error;
     }
 }
 
 async function _read(filePath: FilePath): Promise<ArrayBuffer> {
-    const fd = await _openFileDescriptor(filePath, [FileMode.Read]);
-
-    await _flushFileDescriptor(fd);
-
-    const result = await _readFile(fd).catch((error: Error) => error);
-
-    await _closeFileDescriptor(fd);
-
-    if (result instanceof Error) {
-        _logException(result);
-        throw result;
-    } else {
-        return result;
+    try {
+        const buffer = await readFile(filePath);
+        return buffer.buffer.slice(
+            buffer.byteOffset,
+            buffer.byteOffset + buffer.byteLength
+        );
+    } catch (error) {
+        _logException(error);
+        throw error;
     }
 }
 
-function _exists(filePath: FilePath): Promise<boolean> {
-    return new Promise(resolve => {
-        access(filePath, constants.R_OK, error => {
-            if (error) {
-                resolve(false);
-            } else {
-                resolve(true);
-            }
-        });
-    });
+async function _exists(filePath: FilePath): Promise<boolean> {
+    try {
+        await access(filePath, constants.R_OK);
+        return true;
+    } catch {
+        return false;
+    }
 }
 
-function _pathStats(filePath: FilePath): Promise<Stats> {
-    return new Promise((resolve, reject) => {
-        lstat(filePath, (error, stats) => {
-            if (error) {
-                _logException(error);
-                reject(error);
-            } else {
-                resolve(stats);
-            }
-        });
+async function _isDirectory(filePath: FilePath): Promise<boolean> {
+    const exists = await _exists(filePath);
+    if (!exists) {
+        return false;
+    }
+
+    const stats = await lstat(filePath).catch(() => {
+        /* Ignore */
     });
+
+    return stats?.isDirectory() ?? false;
 }
 
-function _isDirectory(filePath: FilePath): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-        _exists(filePath)
-            .then(async exists => {
-                const defaultStats: Partial<Stats> = {
-                    isDirectory: () => false,
-                };
+async function _isFile(filePath: FilePath): Promise<boolean> {
+    const exists = await _exists(filePath);
+    if (!exists) {
+        return false;
+    }
 
-                if (!exists) {
-                    return defaultStats;
-                }
-
-                const stats = await _pathStats(filePath).catch(() => {
-                    /* Ignore */
-                });
-
-                return stats ?? defaultStats;
-            })
-            .then(stats => {
-                const { isDirectory } = stats;
-                const result =
-                    isDirectory === undefined ? false : isDirectory.call(stats);
-                resolve(result);
-            })
-            .catch((error: Error) => {
-                reject(error);
-            });
-    });
-}
-
-function _isFile(filePath: FilePath): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-        _exists(filePath)
-            .then(exists => {
-                if (exists) {
-                    return _pathStats(filePath);
-                }
-
-                const noDirectoryStats: Partial<Stats> = {
-                    isDirectory: () => false,
-                };
-
-                return noDirectoryStats;
-            })
-            .then(stats => {
-                const { isFile } = stats;
-                const result =
-                    isFile === undefined ? false : isFile.call(stats);
-                resolve(result);
-            })
-            .catch((error: Error) => {
-                reject(error);
-            });
-    });
+    const stats = await lstat(filePath);
+    return stats.isFile();
 }
 
 async function _listDirectory(
@@ -298,63 +149,48 @@ async function _listDirectory(
     return returnItems;
 }
 
-function _createDirectory(directoryPath: FilePath): Promise<void> {
+async function _createDirectory(directoryPath: FilePath): Promise<void> {
     if (directoryPath.length <= 1) {
-        return Promise.resolve();
+        return;
     }
 
-    return new Promise((resolve, reject) => {
-        mkdir(directoryPath, { recursive: true }, error => {
-            if (error) {
-                _logException(error);
-                reject(error);
-            } else {
-                resolve();
-            }
-        });
-    });
+    try {
+        await mkdir(directoryPath, { recursive: true });
+    } catch (error) {
+        _logException(error);
+        throw error;
+    }
 }
 
-function _remove(filePath: FilePath): Promise<void> {
-    return new Promise((resolve, reject) => {
-        rm(filePath, { recursive: true }, error => {
-            if (error) {
-                _logException(error);
-                reject(error);
-            } else {
-                resolve();
-            }
-        });
-    });
+async function _remove(filePath: FilePath): Promise<void> {
+    try {
+        await rm(filePath, { recursive: true });
+    } catch (error) {
+        _logException(error);
+        throw error;
+    }
 }
 
-function _size(filePath: string): Promise<number> {
-    return new Promise((resolve, reject) => {
-        lstat(filePath, (error, stats) => {
-            if (error) {
-                _logException(error);
-                reject(error);
-            } else {
-                resolve(stats.size);
-            }
-        });
-    });
+async function _size(filePath: string): Promise<number> {
+    try {
+        const stats = await lstat(filePath);
+        return stats.size;
+    } catch (error) {
+        _logException(error);
+        throw error;
+    }
 }
 
-function _copyFile(
+async function _copyFile(
     sourceFile: FilePath,
     destinationFile: FilePath
 ): Promise<void> {
-    return new Promise((resolve, reject) => {
-        copyFile(sourceFile, destinationFile, (error: Error | null) => {
-            if (error) {
-                _logException(error);
-                reject(error);
-            } else {
-                resolve();
-            }
-        });
-    });
+    try {
+        await copyFile(sourceFile, destinationFile);
+    } catch (error) {
+        _logException(error);
+        throw error;
+    }
 }
 
 async function _move(source: FilePath, destination: FilePath): Promise<void> {
@@ -412,18 +248,14 @@ async function _copyRecursiveSync(
     }
 }
 
-function _createTemporaryDirectory(prefix: FilePath): Promise<FilePath> {
-    return new Promise((resolve, reject) => {
+async function _createTemporaryDirectory(prefix: FilePath): Promise<FilePath> {
+    try {
         const tempBase = getTemporaryDirectory() || tmpdir();
-        mkdtemp(path.join(tempBase, prefix), (error, directoryPath) => {
-            if (error) {
-                _logException(error);
-                reject(error);
-            } else {
-                resolve(directoryPath);
-            }
-        });
-    });
+        return await mkdtemp(path.join(tempBase, prefix));
+    } catch (error) {
+        _logException(error);
+        throw error;
+    }
 }
 
 function storage(
