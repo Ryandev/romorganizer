@@ -2,7 +2,7 @@ import { IStorage } from './storage.interface';
 import { log } from './logger';
 
 /* Decorate to add auto deletion of temporary files from createTemporaryDirectory when object is deallocated */
-function withCleanup(storage: IStorage): IStorage {
+function withCleanup(storage: IStorage): IStorage & { cleanup: () => Promise<void> } {
     const temporaryDirectories: string[] = [];
 
     /* Override createTemporaryDirectory to track created directories */
@@ -48,7 +48,7 @@ function withCleanup(storage: IStorage): IStorage {
         configurable: false,
     });
 
-    return decoratedStorage;
+    return decoratedStorage as IStorage & { cleanup: () => Promise<void> };
 }
 
 export default {
