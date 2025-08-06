@@ -1,0 +1,91 @@
+name: Setup Environment
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        default: '20'
+        type: string
+      package-manager:
+        description: 'Package manager to use'
+        required: false
+        default: 'yarn'
+        type: string
+
+jobs:
+  setup:
+    name: Setup Environment
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ inputs.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: ${{ inputs.package-manager }}
+        corepack: ${{ inputs.package-manager == 'yarn' }}
+
+    - name: Setup Yarn
+      run: corepack prepare yarn@4.6.0 --activate
+
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+
+    - name: Setup development environment
+      run: yarn setup
+
+    - name: Install system dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: brew install rom-tools rar p7zip
+
+    - name: Install system dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y mame-tools unrar-free p7zip-full
+
+    - name: Verify chdman installation
+      run: |
+        if ! command -v chdman &> /dev/null; then
+          echo "❌ chdman is not installed or not in PATH"
+          echo "Available commands:"
+          which -a chdman || echo "chdman not found"
+          echo "PATH: $PATH"
+          exit 1
+        else
+          echo "✅ chdman is installed and available"
+          chdman --version || echo "chdman version check failed"
+        fi
+
+    - name: Verify 7z installation
+      run: |
+        if ! command -v 7z &> /dev/null; then
+          echo "❌ 7z is not installed or not in PATH"
+          echo "Available commands:"
+          which -a 7z || echo "7z not found"
+          echo "PATH: $PATH"
+          exit 1
+        else
+          echo "✅ 7z is installed and available"
+          7z --version || echo "7z version check failed"
+        fi
+
+    - name: Verify unrar installation
+      run: |
+        if ! command -v unrar &> /dev/null; then
+          echo "❌ unrar is not installed or not in PATH"
+          echo "Available commands:"
+          which -a unrar || echo "unrar not found"
+          echo "PATH: $PATH"
+          exit 1
+        else
+          echo "✅ unrar is installed and available"
+          unrar --version || echo "unrar version check failed"
+        fi 
