@@ -19,13 +19,16 @@ jobs:
         package-manager: [yarn, npm]
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Setup Environment
-      uses: ./.github/workflows/setup.yml
+      uses: ./.github/actions/setup
       with:
         node-version: ${{ matrix.node-version }}
         package-manager: ${{ matrix.package-manager }}
-        install-system-deps: true
-        verify-tools: true
+        install-system-deps: 'true'
+        verify-tools: 'true'
 
     - name: Run linter
       run: yarn lint
@@ -68,13 +71,16 @@ jobs:
         package-manager: [yarn, npm]
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Setup Environment
-      uses: ./.github/workflows/setup.yml
+      uses: ./.github/actions/setup
       with:
         node-version: '20'
         package-manager: ${{ matrix.package-manager }}
-        install-system-deps: false
-        verify-tools: false
+        install-system-deps: 'false'
+        verify-tools: 'false'
 
     - name: Run security audit
       run: yarn audit
@@ -88,13 +94,16 @@ jobs:
         package-manager: [yarn, npm]
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Setup Environment
-      uses: ./.github/workflows/setup.yml
+      uses: ./.github/actions/setup
       with:
         node-version: '20'
         package-manager: ${{ matrix.package-manager }}
-        install-system-deps: false
-        verify-tools: false
+        install-system-deps: 'false'
+        verify-tools: 'false'
 
     - name: Type check
       run: yarn tsc --noEmit

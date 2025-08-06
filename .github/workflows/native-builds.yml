@@ -34,13 +34,16 @@ jobs:
             platform: macos
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Setup Environment
-      uses: ./.github/workflows/setup.yml
+      uses: ./.github/actions/setup
       with:
         node-version: '20'
         package-manager: 'yarn'
-        install-system-deps: true
-        verify-tools: true
+        install-system-deps: 'true'
+        verify-tools: 'true'
 
     - name: Run tests
       run: yarn test
