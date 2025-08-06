@@ -54,17 +54,17 @@ jobs:
     - name: List generated executables
       run: |
         echo "Generated executables:"
-        ls -la romorganizer*
+        ls -la dist/native/romorganizer*
         echo "File sizes:"
-        du -h romorganizer*
+        du -h dist/native/romorganizer*
 
     - name: Test native executables
       run: |
         echo "Testing native executables..."
         if [ "${{ matrix.platform }}" = "linux" ]; then
-          ./romorganizer-linux-x64 --help
+          ./dist/native/romorganizer-linux-x64 --help
         elif [ "${{ matrix.platform }}" = "macos" ]; then
-          ./romorganizer-macos-arm64 --help
+          ./dist/native/romorganizer-macos-arm64 --help
         fi
 
     - name: Upload native build artifacts
@@ -72,17 +72,18 @@ jobs:
       with:
         name: native-builds-${{ matrix.platform }}
         path: |
-          romorganizer-*
+          dist/native/romorganizer-*
         retention-days: 30
 
     - name: Create platform-specific archive
       run: |
+        cd dist/native
         if [ "${{ matrix.platform }}" = "linux" ]; then
-          tar -czf romorganizer-linux.tar.gz romorganizer-linux-*
-          zip -r romorganizer-linux.zip romorganizer-linux-*
+          tar -czf ../../romorganizer-linux.tar.gz romorganizer-linux-*
+          zip -r ../../romorganizer-linux.zip romorganizer-linux-*
         elif [ "${{ matrix.platform }}" = "macos" ]; then
-          tar -czf romorganizer-macos.tar.gz romorganizer-macos-*
-          zip -r romorganizer-macos.zip romorganizer-macos-*
+          tar -czf ../../romorganizer-macos.tar.gz romorganizer-macos-*
+          zip -r ../../romorganizer-macos.zip romorganizer-macos-*
         fi
 
     - name: Upload platform archives
