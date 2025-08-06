@@ -1,0 +1,45 @@
+# Cursor Rules
+
+## Code Style
+- Use TypeScript for all new code
+- Use ES modules (import/export) syntax
+- Use `yarn dlx` instead of `npx` for executing packages
+- Prefer `yarn` over `npm` for package management
+- Use `/* */` style comments instead of `//` comments
+
+## File Organization
+- Keep source files in `src/` directory
+- Keep test files alongside source files with `.test.ts` extension
+- Keep build scripts in `scripts/` directory
+- Keep configuration files in root directory
+
+## Naming Conventions
+- Use kebab-case for file names
+- Use camelCase for variables and functions
+- Use PascalCase for classes and interfaces
+- Use UPPER_SNAKE_CASE for constants
+
+## Code Quality
+- Write meaningful commit messages
+- Add JSDoc comments for public APIs
+- Use descriptive variable names
+- Keep functions small and focused
+- Prefer composition over inheritance
+
+## Testing
+- Write unit tests for all new functionality
+- Use Jest as the testing framework
+- Aim for high test coverage
+- Mock external dependencies
+
+## Performance
+- Optimize for readability over premature optimization
+- Use async/await for asynchronous operations
+- Avoid blocking operations in main thread
+- Profile before optimizing
+
+## Security
+- Validate all user inputs
+- Use parameterized queries for database operations
+- Keep dependencies updated
+- Follow OWASP security guidelines 
