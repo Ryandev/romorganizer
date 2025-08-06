@@ -26,7 +26,6 @@
     "audit:check": "yarn npm audit --recursive --severity critical --environment production --json",
     "package": "yarn build:package && yarn dlx @yao-pkg/pkg dist/package/index.js --targets node20-macos-arm64,node20-macos-x64,node20-linux-arm64,node20-linux-x64,node20-win-x64 --output dist/native/romorganizer"
   },
-
   "keywords": [
     "7z",
     "rar",
@@ -43,7 +42,6 @@
     "command-line-args": "^6.0.1",
     "fast-xml-parser": "^5.2.5",
     "ini": "^5.0.0",
-    "jszip": "^3.10.1",
     "zod": "^4.0.14",
     "zx": "^8.1.1"
   },
@@ -53,17 +51,15 @@
     "@types/emscripten": "^0",
     "@types/ini": "^4.1.1",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.1.0",
+    "@types/node": "^24.2.0",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
-    "@vercel/ncc": "^0.38.3",
     "cspell": "^9.2.0",
     "emscripten": "0.0.2-beta",
     "eslint": "^9.31.0",
     "eslint-plugin-unicorn": "^60.0.0",
     "husky": "^9.1.7",
     "jest": "^30.0.5",
-    "node-gyp": "^10.0.1",
     "pkg": "^5.8.1",
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.0",
