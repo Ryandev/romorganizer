@@ -22,12 +22,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Setup Node.js ${{ inputs.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ inputs.node-version }}
-        cache: ${{ inputs.package-manager }}
-
     - name: Enable Corepack
       shell: bash
       run: corepack enable
@@ -35,6 +29,12 @@ runs:
     - name: Setup Yarn
       shell: bash
       run: corepack prepare yarn@4.6.0 --activate
+
+    - name: Setup Node.js ${{ inputs.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: ${{ inputs.package-manager }}
 
     - name: Install dependencies
       shell: bash
