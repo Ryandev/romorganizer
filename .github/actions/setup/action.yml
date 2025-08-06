@@ -24,7 +24,6 @@ runs:
   steps:
     - name: Setup Node.js ${{ inputs.node-version }}
       uses: actions/setup-node@v4
-      shell: bash
       with:
         node-version: ${{ inputs.node-version }}
         cache: ${{ inputs.package-manager }}
