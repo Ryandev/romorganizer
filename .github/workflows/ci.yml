@@ -49,6 +49,14 @@ jobs:
           npm run setup
         fi
 
+    - name: Install system dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: brew install rom-tools
+
+    - name: Install system dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y mame-tools
+
     - name: Run linter
       run: |
         if [ "${{ matrix.package-manager }}" = "yarn" ]; then
