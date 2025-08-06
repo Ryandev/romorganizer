@@ -34,27 +34,13 @@ jobs:
             platform: macos
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Download Yarn
-      run: corepack prepare
-
-    - name: Setup Yarn
-      run: corepack enable
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Setup Environment
+      uses: ./.github/workflows/setup.yml
       with:
         node-version: '20'
-        cache: 'yarn'
-        corepack: true
-
-    - name: Install dependencies
-      run: yarn install --frozen-lockfile
-
-    - name: Setup development environment
-      run: yarn setup
+        package-manager: 'yarn'
+        install-system-deps: true
+        verify-tools: true
 
     - name: Run tests
       run: yarn test
