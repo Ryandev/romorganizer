@@ -1,4 +1,3 @@
-
 export interface Archive {
     archiveFile: () => string;
     extract(): Promise<string>;

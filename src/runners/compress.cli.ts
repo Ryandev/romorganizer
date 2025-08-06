@@ -3,7 +3,9 @@ import { guardDirectoryExists } from '../utils/guard.js';
 import { z } from 'zod';
 
 /* Static method for argument parsing without creating a full runner instance */
-export function parseCompressArguments(args: string[]): z.infer<typeof CompressSchema> {
+export function parseCompressArguments(
+    args: string[]
+): z.infer<typeof CompressSchema> {
     /* Check for help flag */
     if (args.includes('--help') || args.includes('-h')) {
         throw new Error('Help requested');
@@ -25,7 +27,7 @@ export function parseCompressArguments(args: string[]): z.infer<typeof CompressS
         useDatFileName: parsedOptions['use-dat-file-name'],
         rename: parsedOptions['rename'],
         overwrite: parsedOptions['overwrite'],
-        force: false, /* compress doesn't use force */
+        force: false /* compress doesn't use force */,
     };
 
     /* Validate using Zod schema */
@@ -89,7 +91,7 @@ const compressOptionDefinitions: commandLineArgs.OptionDefinition[] = [
         type: Boolean,
         multiple: false,
         defaultValue: false,
-    }
+    },
 ];
 
 /* Zod schema for compress command arguments */

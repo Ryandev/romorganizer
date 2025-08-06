@@ -33,8 +33,14 @@ describe('createSevenZipArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(path.join(testDir, 'test1.txt'), testBuffer);
-            await storageInstance.write(path.join(testDir, 'test2.txt'), testBuffer);
+            await storageInstance.write(
+                path.join(testDir, 'test1.txt'),
+                testBuffer
+            );
+            await storageInstance.write(
+                path.join(testDir, 'test2.txt'),
+                testBuffer
+            );
 
             const sevenZipPath = path.join(testDir, 'output.7z');
             const sevenZipArchive = createSevenZipArchive(sevenZipPath);
@@ -63,8 +69,14 @@ describe('createSevenZipArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(path.join(testDir, 'test1.txt'), testBuffer);
-            await storageInstance.write(path.join(testDir, 'test2.txt'), testBuffer);
+            await storageInstance.write(
+                path.join(testDir, 'test1.txt'),
+                testBuffer
+            );
+            await storageInstance.write(
+                path.join(testDir, 'test2.txt'),
+                testBuffer
+            );
 
             const sevenZipPath = path.join(testDir, 'test.7z');
             const sevenZipArchive = createSevenZipArchive(sevenZipPath);
@@ -101,7 +113,10 @@ describe('createSevenZipArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(path.join(testDir, 'test.txt'), testBuffer);
+            await storageInstance.write(
+                path.join(testDir, 'test.txt'),
+                testBuffer
+            );
 
             const sevenZipPath = path.join(testDir, 'test.7z');
             const sevenZipArchive = createSevenZipArchive(sevenZipPath);

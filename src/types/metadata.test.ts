@@ -1,9 +1,9 @@
-import metadata, { 
-    FileMetadataSchema, 
-    GameMetadataSchema, 
-    DatMetadataSchema, 
-    CuesheetMetadataSchema, 
-    MetadataFileSchema
+import metadata, {
+    FileMetadataSchema,
+    GameMetadataSchema,
+    DatMetadataSchema,
+    CuesheetMetadataSchema,
+    MetadataFileSchema,
 } from './metadata';
 import storage from '../utils/storage';
 
@@ -56,8 +56,8 @@ describe('metadata.ts', () => {
         it('should reject invalid file metadata', () => {
             /* Arrange */
             const invalidMetadata = {
-                name: 123, /* Should be string */
-                size: '1024', /* Should be number */
+                name: 123 /* Should be string */,
+                size: '1024' /* Should be number */,
                 sha1hex: 'a1b2c3d4e5f6',
             };
 
@@ -108,8 +108,8 @@ describe('metadata.ts', () => {
         it('should reject invalid game metadata', () => {
             /* Arrange */
             const invalidMetadata = {
-                name: 123, /* Should be string */
-                files: 'not an array', /* Should be array */
+                name: 123 /* Should be string */,
+                files: 'not an array' /* Should be array */,
             };
 
             /* Act & Assert */
@@ -159,7 +159,8 @@ describe('metadata.ts', () => {
             /* Arrange */
             const validMetadata = {
                 name: 'test.cue',
-                content: 'FILE "test.bin" BINARY\n  TRACK 01 MODE1/2352\n    INDEX 01 00:00:00',
+                content:
+                    'FILE "test.bin" BINARY\n  TRACK 01 MODE1/2352\n    INDEX 01 00:00:00',
             };
 
             /* Act */
@@ -267,8 +268,10 @@ describe('metadata.ts', () => {
                 status: 'match' as const,
                 timestamp: '2023-01-01T00:00:00.000Z',
             };
-            const mockFileContent = new TextEncoder().encode(JSON.stringify(mockMetadata));
-            
+            const mockFileContent = new TextEncoder().encode(
+                JSON.stringify(mockMetadata)
+            );
+
             mockStorage.mockReturnValue({
                 read: jest.fn().mockResolvedValue(mockFileContent),
             } as any);
@@ -278,7 +281,9 @@ describe('metadata.ts', () => {
 
             /* Assert */
             expect(result).toEqual(mockMetadata);
-            expect(mockStorage().read).toHaveBeenCalledWith('/test/metadata.json');
+            expect(mockStorage().read).toHaveBeenCalledWith(
+                '/test/metadata.json'
+            );
         });
 
         it('should handle storage errors', async () => {
@@ -289,19 +294,23 @@ describe('metadata.ts', () => {
             } as any);
 
             /* Act & Assert */
-            await expect(metadata.readFile('/test/metadata.json')).rejects.toThrow('Storage error');
+            await expect(
+                metadata.readFile('/test/metadata.json')
+            ).rejects.toThrow('Storage error');
         });
 
         it('should handle invalid JSON', async () => {
             /* Arrange */
             const invalidJson = new TextEncoder().encode('invalid json');
-            
+
             mockStorage.mockReturnValue({
                 read: jest.fn().mockResolvedValue(invalidJson),
             } as any);
 
             /* Act & Assert */
-            await expect(metadata.readFile('/test/metadata.json')).rejects.toThrow();
+            await expect(
+                metadata.readFile('/test/metadata.json')
+            ).rejects.toThrow();
         });
     });
 
@@ -317,7 +326,7 @@ describe('metadata.ts', () => {
                 status: 'match' as const,
                 timestamp: '2023-01-01T00:00:00.000Z',
             };
-            
+
             mockStorage.mockReturnValue({
                 write: jest.fn().mockResolvedValue(undefined),
             } as any);
@@ -336,20 +345,25 @@ describe('metadata.ts', () => {
             /* Arrange */
             const invalidMetadata = {
                 game: {
-                    name: 123, /* Should be string */
+                    name: 123 /* Should be string */,
                     files: [],
                 },
                 message: 'Test message',
                 status: 'match' as const,
                 timestamp: '2023-01-01T00:00:00.000Z',
             };
-            
+
             mockStorage.mockReturnValue({
                 write: jest.fn().mockResolvedValue(undefined),
             } as any);
 
             /* Act & Assert */
-            await expect(metadata.writeFile(invalidMetadata as any, '/test/metadata.json')).rejects.toThrow();
+            await expect(
+                metadata.writeFile(
+                    invalidMetadata as any,
+                    '/test/metadata.json'
+                )
+            ).rejects.toThrow();
             expect(mockStorage().write).not.toHaveBeenCalled();
         });
 
@@ -365,13 +379,15 @@ describe('metadata.ts', () => {
                 timestamp: '2023-01-01T00:00:00.000Z',
             };
             const error = new Error('Storage error');
-            
+
             mockStorage.mockReturnValue({
                 write: jest.fn().mockRejectedValue(error),
             } as any);
 
             /* Act & Assert */
-            await expect(metadata.writeFile(mockMetadata, '/test/metadata.json')).rejects.toThrow('Storage error');
+            await expect(
+                metadata.writeFile(mockMetadata, '/test/metadata.json')
+            ).rejects.toThrow('Storage error');
         });
     });
 });

@@ -298,22 +298,37 @@ describe('includeDirectories functionality', () => {
     beforeAll(async () => {
         storageInstance = storage();
         testDir = await storageInstance.createTemporaryDirectory();
-        
+
         /* Create test structure with files and directories */
         await storageInstance.createDirectory(path.join(testDir, 'subdir1'));
         await storageInstance.createDirectory(path.join(testDir, 'subdir2'));
         await storageInstance.createDirectory(path.join(testDir, '.hiddenDir'));
-        
+
         /* Create files */
-        await storageInstance.write(path.join(testDir, 'file1.txt'), new ArrayBuffer(10));
-        await storageInstance.write(path.join(testDir, 'file2.txt'), new ArrayBuffer(10));
-        await storageInstance.write(path.join(testDir, '.hidden.txt'), new ArrayBuffer(10));
-        await storageInstance.write(path.join(testDir, 'subdir1', 'nested.txt'), new ArrayBuffer(10));
-        await storageInstance.write(path.join(testDir, 'subdir2', 'deep.txt'), new ArrayBuffer(10));
+        await storageInstance.write(
+            path.join(testDir, 'file1.txt'),
+            new ArrayBuffer(10)
+        );
+        await storageInstance.write(
+            path.join(testDir, 'file2.txt'),
+            new ArrayBuffer(10)
+        );
+        await storageInstance.write(
+            path.join(testDir, '.hidden.txt'),
+            new ArrayBuffer(10)
+        );
+        await storageInstance.write(
+            path.join(testDir, 'subdir1', 'nested.txt'),
+            new ArrayBuffer(10)
+        );
+        await storageInstance.write(
+            path.join(testDir, 'subdir2', 'deep.txt'),
+            new ArrayBuffer(10)
+        );
     });
 
     afterAll(async () => {
-        if (testDir && await storageInstance.exists(testDir)) {
+        if (testDir && (await storageInstance.exists(testDir))) {
             await storageInstance.remove(testDir);
         }
     });
@@ -430,26 +445,26 @@ describe('includeDirectories functionality', () => {
 
     test('should handle empty directory with includeDirectories true', async () => {
         const emptyDir = await storageInstance.createTemporaryDirectory();
-        
+
         const contents = await storageInstance.list(emptyDir, {
             includeDirectories: true,
         });
 
         expect(contents).toEqual([]);
-        
+
         /* Clean up */
         await storageInstance.remove(emptyDir);
     });
 
     test('should handle empty directory with includeDirectories false', async () => {
         const emptyDir = await storageInstance.createTemporaryDirectory();
-        
+
         const contents = await storageInstance.list(emptyDir, {
             includeDirectories: false,
         });
 
         expect(contents).toEqual([]);
-        
+
         /* Clean up */
         await storageInstance.remove(emptyDir);
     });

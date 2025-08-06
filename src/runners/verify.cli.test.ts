@@ -7,8 +7,10 @@ jest.mock('../utils/guard', () => ({
 }));
 
 describe('verify.cli', () => {
-    const mockCommandLineArgs = require('command-line-args') as jest.MockedFunction<any>;
-    const mockGuardDirectoryExists = require('../utils/guard').guardDirectoryExists as jest.MockedFunction<any>;
+    const mockCommandLineArgs =
+        require('command-line-args') as jest.MockedFunction<any>;
+    const mockGuardDirectoryExists = require('../utils/guard')
+        .guardDirectoryExists as jest.MockedFunction<any>;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -25,18 +27,22 @@ describe('verify.cli', () => {
                 'dat-file': '/test/datfile.dat',
                 'cuesheets-file': '/test/cuesheets.zip',
                 'temp-dir': '/test/temp',
-                'rename': true,
-                'force': false,
+                rename: true,
+                force: false,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
 
             /* Act */
             const result = parseVerifyArguments([
-                '--source-dir', '/test/source',
-                '--dat-file', '/test/datfile.dat',
-                '--cuesheets-file', '/test/cuesheets.zip',
-                '--temp-dir', '/test/temp',
-                '--rename'
+                '--source-dir',
+                '/test/source',
+                '--dat-file',
+                '/test/datfile.dat',
+                '--cuesheets-file',
+                '/test/cuesheets.zip',
+                '--temp-dir',
+                '/test/temp',
+                '--rename',
             ]);
 
             /* Assert */
@@ -53,16 +59,23 @@ describe('verify.cli', () => {
                 overwrite: false,
                 force: false,
             });
-            expect(mockCommandLineArgs).toHaveBeenCalledWith(expect.any(Array), {
-                argv: [
-                    '--source-dir', '/test/source',
-                    '--dat-file', '/test/datfile.dat',
-                    '--cuesheets-file', '/test/cuesheets.zip',
-                    '--temp-dir', '/test/temp',
-                    '--rename'
-                ],
-                partial: true,
-            });
+            expect(mockCommandLineArgs).toHaveBeenCalledWith(
+                expect.any(Array),
+                {
+                    argv: [
+                        '--source-dir',
+                        '/test/source',
+                        '--dat-file',
+                        '/test/datfile.dat',
+                        '--cuesheets-file',
+                        '/test/cuesheets.zip',
+                        '--temp-dir',
+                        '/test/temp',
+                        '--rename',
+                    ],
+                    partial: true,
+                }
+            );
         });
 
         it('should parse short arguments correctly', () => {
@@ -71,17 +84,20 @@ describe('verify.cli', () => {
                 'source-dir': '/test/source',
                 'dat-file': '/test/datfile.dat',
                 'cuesheets-file': '/test/cuesheets.zip',
-                'rename': false,
-                'force': true,
+                rename: false,
+                force: true,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
 
             /* Act */
             const result = parseVerifyArguments([
-                '-s', '/test/source',
-                '-d', '/test/datfile.dat',
-                '-c', '/test/cuesheets.zip',
-                '-f'
+                '-s',
+                '/test/source',
+                '-d',
+                '/test/datfile.dat',
+                '-c',
+                '/test/cuesheets.zip',
+                '-f',
             ]);
 
             /* Assert */
@@ -111,9 +127,12 @@ describe('verify.cli', () => {
 
             /* Act */
             const result = parseVerifyArguments([
-                '--source-dir', '/test/source',
-                '--dat-file', '/test/datfile.dat',
-                '--cuesheets-file', '/test/cuesheets.zip'
+                '--source-dir',
+                '/test/source',
+                '--dat-file',
+                '/test/datfile.dat',
+                '--cuesheets-file',
+                '/test/cuesheets.zip',
             ]);
 
             /* Assert */
@@ -153,8 +172,15 @@ describe('verify.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseVerifyArguments(['--dat-file', '/test/datfile.dat', '--cuesheets-file', '/test/cuesheets.zip']);
-            }).toThrow(/sourceDir: Invalid input: expected string, received undefined/);
+                parseVerifyArguments([
+                    '--dat-file',
+                    '/test/datfile.dat',
+                    '--cuesheets-file',
+                    '/test/cuesheets.zip',
+                ]);
+            }).toThrow(
+                /sourceDir: Invalid input: expected string, received undefined/
+            );
         });
 
         it('should throw error for missing dat file', () => {
@@ -167,8 +193,15 @@ describe('verify.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseVerifyArguments(['--source-dir', '/test/source', '--cuesheets-file', '/test/cuesheets.zip']);
-            }).toThrow(/datFile: Invalid input: expected string, received undefined/);
+                parseVerifyArguments([
+                    '--source-dir',
+                    '/test/source',
+                    '--cuesheets-file',
+                    '/test/cuesheets.zip',
+                ]);
+            }).toThrow(
+                /datFile: Invalid input: expected string, received undefined/
+            );
         });
 
         it('should throw error for missing cuesheets file', () => {
@@ -181,8 +214,15 @@ describe('verify.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseVerifyArguments(['--source-dir', '/test/source', '--dat-file', '/test/datfile.dat']);
-            }).toThrow(/cuesheetsFile: Invalid input: expected string, received undefined/);
+                parseVerifyArguments([
+                    '--source-dir',
+                    '/test/source',
+                    '--dat-file',
+                    '/test/datfile.dat',
+                ]);
+            }).toThrow(
+                /cuesheetsFile: Invalid input: expected string, received undefined/
+            );
         });
 
         it('should throw error for non-existent source directory', () => {
@@ -199,8 +239,17 @@ describe('verify.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseVerifyArguments(['--source-dir', '/nonexistent/source', '--dat-file', '/test/datfile.dat', '--cuesheets-file', '/test/cuesheets.zip']);
-            }).toThrow('sourceDir: Source directory does not exist or is not accessible');
+                parseVerifyArguments([
+                    '--source-dir',
+                    '/nonexistent/source',
+                    '--dat-file',
+                    '/test/datfile.dat',
+                    '--cuesheets-file',
+                    '/test/cuesheets.zip',
+                ]);
+            }).toThrow(
+                'sourceDir: Source directory does not exist or is not accessible'
+            );
         });
 
         it('should handle empty arguments array', () => {
@@ -211,7 +260,9 @@ describe('verify.cli', () => {
             /* Act & Assert */
             expect(() => {
                 parseVerifyArguments([]);
-            }).toThrow(/sourceDir: Invalid input: expected string, received undefined/);
+            }).toThrow(
+                /sourceDir: Invalid input: expected string, received undefined/
+            );
         });
 
         it('should handle boolean flags correctly', () => {
@@ -220,18 +271,21 @@ describe('verify.cli', () => {
                 'source-dir': '/test/source',
                 'dat-file': '/test/datfile.dat',
                 'cuesheets-file': '/test/cuesheets.zip',
-                'rename': true,
-                'force': true,
+                rename: true,
+                force: true,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
 
             /* Act */
             const result = parseVerifyArguments([
-                '--source-dir', '/test/source',
-                '--dat-file', '/test/datfile.dat',
-                '--cuesheets-file', '/test/cuesheets.zip',
+                '--source-dir',
+                '/test/source',
+                '--dat-file',
+                '/test/datfile.dat',
+                '--cuesheets-file',
+                '/test/cuesheets.zip',
                 '--rename',
-                '--force'
+                '--force',
             ]);
 
             /* Assert */
@@ -245,18 +299,21 @@ describe('verify.cli', () => {
                 'source-dir': '/test/source',
                 'dat-file': '/test/datfile.dat',
                 'cuesheets-file': '/test/cuesheets.zip',
-                'rename': true,
-                'force': true,
+                rename: true,
+                force: true,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
 
             /* Act */
             const result = parseVerifyArguments([
-                '-s', '/test/source',
-                '-d', '/test/datfile.dat',
-                '-c', '/test/cuesheets.zip',
+                '-s',
+                '/test/source',
+                '-d',
+                '/test/datfile.dat',
+                '-c',
+                '/test/cuesheets.zip',
                 '-n',
-                '-f'
+                '-f',
             ]);
 
             /* Assert */
@@ -275,9 +332,12 @@ describe('verify.cli', () => {
 
             /* Act */
             const result = parseVerifyArguments([
-                '--source-dir', '/test/source',
-                '--dat-file', '/test/datfile.dat',
-                '--cuesheets-file', '/test/cuesheets.zip'
+                '--source-dir',
+                '/test/source',
+                '--dat-file',
+                '/test/datfile.dat',
+                '--cuesheets-file',
+                '/test/cuesheets.zip',
             ]);
 
             /* Assert */
@@ -311,8 +371,15 @@ describe('verify.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseVerifyArguments(['--source-dir', '', '--dat-file', '', '--cuesheets-file', '']);
+                parseVerifyArguments([
+                    '--source-dir',
+                    '',
+                    '--dat-file',
+                    '',
+                    '--cuesheets-file',
+                    '',
+                ]);
             }).toThrow(/sourceDir: Source directory is required/);
         });
     });
-}); 
+});

@@ -17,8 +17,8 @@ import storage from './storage';
  */
 export interface CueTrackIndex {
     id: number;
-    timestamp: string; /* MM:SS:FF format */
-    fileOffset?: number; /* Optional sector offset */
+    timestamp: string /* MM:SS:FF format */;
+    fileOffset?: number /* Optional sector offset */;
 }
 
 /**
@@ -26,7 +26,7 @@ export interface CueTrackIndex {
  */
 export interface CueTrack {
     number: number;
-    type: string; /* AUDIO, MODE1/2352, etc. */
+    type: string /* AUDIO, MODE1/2352, etc. */;
     indexes: CueTrackIndex[];
 }
 
@@ -35,7 +35,7 @@ export interface CueTrack {
  */
 export interface CueFile {
     filename: string;
-    type: string; /* Usually "BINARY" */
+    type: string /* Usually "BINARY" */;
     tracks: CueTrack[];
 }
 
@@ -69,7 +69,10 @@ interface ProcessingResult {
  * @returns CueSheet - The parsed CUE file structure
  */
 function deserializeCueSheet(cueContent: string): CueSheet {
-    const lines = cueContent.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    const lines = cueContent
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
     const cueSheet: CueSheet = { files: [] };
     let currentFile: CueFile | undefined;
     let currentTrack: CueTrack | undefined;
@@ -81,7 +84,7 @@ function deserializeCueSheet(cueContent: string): CueSheet {
             currentFile = {
                 filename: fileMatch[1],
                 type: fileMatch[2].toUpperCase(),
-                tracks: []
+                tracks: [],
             };
             cueSheet.files.push(currentFile);
             currentTrack = undefined;
@@ -94,18 +97,20 @@ function deserializeCueSheet(cueContent: string): CueSheet {
             currentTrack = {
                 number: Number.parseInt(trackMatch[1], 10),
                 type: trackMatch[2].toUpperCase(),
-                indexes: []
+                indexes: [],
             };
             currentFile.tracks.push(currentTrack);
             continue;
         }
 
         /* Parse INDEX line */
-        const indexMatch = line.match(/^INDEX\s+(\d+)\s+(\d{1,2}:\d{2}:\d{2})$/i);
+        const indexMatch = line.match(
+            /^INDEX\s+(\d+)\s+(\d{1,2}:\d{2}:\d{2})$/i
+        );
         if (indexMatch && indexMatch[1] && indexMatch[2] && currentTrack) {
             const index: CueTrackIndex = {
                 id: Number.parseInt(indexMatch[1], 10),
-                timestamp: indexMatch[2]
+                timestamp: indexMatch[2],
             };
             currentTrack.indexes.push(index);
             continue;
@@ -194,10 +199,10 @@ function serializeCueSheet(cueSheet: CueSheet): string {
     /* Write files and tracks */
     for (const file of cueSheet.files) {
         output += `FILE "${file.filename}" ${file.type}\n`;
-        
+
         for (const track of file.tracks) {
             output += `  TRACK ${track.number.toString().padStart(2, '0')} ${track.type}\n`;
-            
+
             for (const index of track.indexes) {
                 output += `    INDEX ${index.id.toString().padStart(2, '0')} ${index.timestamp}\n`;
             }
@@ -308,10 +313,10 @@ async function createCueFile(
     /* Get the BIN file name (without path) */
     const binFileName = path.basename(binFilePath);
 
-if (!cueFilePath) {
-    const binFileNameWithoutExtension = path.basename(binFileName, '.bin');
-    cueFilePath = `${binFileNameWithoutExtension}.cue`;
-}
+    if (!cueFilePath) {
+        const binFileNameWithoutExtension = path.basename(binFileName, '.bin');
+        cueFilePath = `${binFileNameWithoutExtension}.cue`;
+    }
 
     /* Create the CUE content */
     const cueContent = `FILE "${binFileName}" BINARY
@@ -482,7 +487,7 @@ async function processBINFiles(
         try {
             const binPath = binFile; /* binFile is already the full path */
             const baseName = path.basename(binFile, '.bin');
-const cueFilePath = path.join(sourceDirectory, `${baseName}.cue`);
+            const cueFilePath = path.join(sourceDirectory, `${baseName}.cue`);
 
             /* Check if CUE file already exists */
             const cueExists = await storageInstance.exists(cueFilePath);

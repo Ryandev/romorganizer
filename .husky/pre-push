@@ -6,6 +6,7 @@
 commands=(
     "yarn spell:check"
     "yarn audit:check"
+    "yarn pretty:check"
 )
 
 # Loop through each command

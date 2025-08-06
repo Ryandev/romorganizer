@@ -440,5 +440,4 @@ describe('Guard Functions', () => {
             );
         });
     });
-
 });

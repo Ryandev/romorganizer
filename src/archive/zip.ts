@@ -8,7 +8,10 @@ import { IStorage } from '../utils/storage.interface';
 import { moveContentsFromSubdirectories } from '../utils/archive-utils';
 import { guardFileExists, guardDirectoryExists } from '../utils/guard';
 
-async function _extract(filePath: string, storageInstance: IStorage & { cleanup: () => Promise<void> }): Promise<string> {
+async function _extract(
+    filePath: string,
+    storageInstance: IStorage & { cleanup: () => Promise<void> }
+): Promise<string> {
     guardFileExists(filePath, `file does not exist: ${filePath}`);
 
     const outputDir = await storageInstance.createTemporaryDirectory();
@@ -16,10 +19,7 @@ async function _extract(filePath: string, storageInstance: IStorage & { cleanup:
         log.info(`Extracting ${filePath} to ${outputDir}`);
 
         const zip = new AdmZip(filePath);
-        zip.extractAllTo(
-            outputDir,
-            true
-        ); /* true = overwrite existing files */
+        zip.extractAllTo(outputDir, true); /* true = overwrite existing files */
 
         await moveContentsFromSubdirectories(outputDir, filePath);
         log.info(`Done extracting ${filePath} to ${outputDir}`);
@@ -31,7 +31,10 @@ async function _extract(filePath: string, storageInstance: IStorage & { cleanup:
     }
 }
 
-async function _verify(filePath: string, storageInstance: IStorage & { cleanup: () => Promise<void> }): Promise<boolean> {
+async function _verify(
+    filePath: string,
+    storageInstance: IStorage & { cleanup: () => Promise<void> }
+): Promise<boolean> {
     log.info(`Verifying ${filePath}...`);
 
     try {
@@ -59,7 +62,11 @@ async function _verify(filePath: string, storageInstance: IStorage & { cleanup: 
     }
 }
 
-async function _compress(filePath: string, contentsDirectory: string, storageInstance: IStorage & { cleanup: () => Promise<void> }): Promise<string> {
+async function _compress(
+    filePath: string,
+    contentsDirectory: string,
+    storageInstance: IStorage & { cleanup: () => Promise<void> }
+): Promise<string> {
     guardDirectoryExists(
         contentsDirectory,
         `Contents directory does not exist: ${contentsDirectory}`
@@ -100,7 +107,7 @@ async function addDirectoryToZip(
     excludePath?: string,
     storageInstance?: IStorage & { cleanup: () => Promise<void> }
 ): Promise<void> {
-    const storageInst = storageInstance || await storage();
+    const storageInst = storageInstance || (await storage());
     const items = await storageInst.list(sourcePath, {
         removePrefix: false,
     });
@@ -145,7 +152,7 @@ async function addDirectoryToZip(
 export function createZipArchive(filePath: string): Archive {
     const archive = {
         _storageInstance: storageDecorator.withCleanup(storage()),
-        
+
         archiveFile(): string {
             return filePath;
         },
@@ -159,7 +166,11 @@ export function createZipArchive(filePath: string): Archive {
         },
 
         async compress(contentsDirectory: string): Promise<string> {
-            return _compress(filePath, contentsDirectory, this._storageInstance);
+            return _compress(
+                filePath,
+                contentsDirectory,
+                this._storageInstance
+            );
         },
     } as const;
 

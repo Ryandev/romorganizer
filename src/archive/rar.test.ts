@@ -21,7 +21,9 @@ describe('createRarArchive', () => {
     describe('factory function', () => {
         it('should create a RarArchive instance', () => {
             expect(rarArchive).toBeDefined();
-            expect(rarArchive.archiveFile()).toBe(path.join(testDir, 'test.rar'));
+            expect(rarArchive.archiveFile()).toBe(
+                path.join(testDir, 'test.rar')
+            );
         });
     });
 
@@ -31,8 +33,14 @@ describe('createRarArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(path.join(testDir, 'test1.txt'), testBuffer);
-            await storageInstance.write(path.join(testDir, 'test2.txt'), testBuffer);
+            await storageInstance.write(
+                path.join(testDir, 'test1.txt'),
+                testBuffer
+            );
+            await storageInstance.write(
+                path.join(testDir, 'test2.txt'),
+                testBuffer
+            );
 
             /* On macOS, RAR commands are often blocked by security restrictions */
             /* Skip the actual compression test to avoid triggering security dialogs */

@@ -7,8 +7,10 @@ jest.mock('../utils/guard', () => ({
 }));
 
 describe('compress.cli', () => {
-    const mockCommandLineArgs = require('command-line-args') as jest.MockedFunction<any>;
-    const mockGuardDirectoryExists = require('../utils/guard').guardDirectoryExists as jest.MockedFunction<any>;
+    const mockCommandLineArgs =
+        require('command-line-args') as jest.MockedFunction<any>;
+    const mockGuardDirectoryExists = require('../utils/guard')
+        .guardDirectoryExists as jest.MockedFunction<any>;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -26,18 +28,21 @@ describe('compress.cli', () => {
                 'temp-dir': '/test/temp',
                 'remove-source': true,
                 'use-dat-file-name': false,
-                'rename': true,
-                'overwrite': false,
+                rename: true,
+                overwrite: false,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
 
             /* Act */
             const result = parseCompressArguments([
-                '--source-dir', '/test/source',
-                '--output-dir', '/test/output',
-                '--temp-dir', '/test/temp',
+                '--source-dir',
+                '/test/source',
+                '--output-dir',
+                '/test/output',
+                '--temp-dir',
+                '/test/temp',
                 '--remove-source',
-                '--rename'
+                '--rename',
             ]);
 
             /* Assert */
@@ -49,16 +54,22 @@ describe('compress.cli', () => {
                 removeSource: true,
                 overwrite: false,
             });
-            expect(mockCommandLineArgs).toHaveBeenCalledWith(expect.any(Array), {
-                argv: [
-                    '--source-dir', '/test/source',
-                    '--output-dir', '/test/output',
-                    '--temp-dir', '/test/temp',
-                    '--remove-source',
-                    '--rename'
-                ],
-                partial: true,
-            });
+            expect(mockCommandLineArgs).toHaveBeenCalledWith(
+                expect.any(Array),
+                {
+                    argv: [
+                        '--source-dir',
+                        '/test/source',
+                        '--output-dir',
+                        '/test/output',
+                        '--temp-dir',
+                        '/test/temp',
+                        '--remove-source',
+                        '--rename',
+                    ],
+                    partial: true,
+                }
+            );
         });
 
         it('should parse short arguments correctly', () => {
@@ -69,18 +80,21 @@ describe('compress.cli', () => {
                 'temp-dir': '/test/temp',
                 'remove-source': false,
                 'use-dat-file-name': true,
-                'rename': false,
-                'overwrite': true,
+                rename: false,
+                overwrite: true,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
 
             /* Act */
             const result = parseCompressArguments([
-                '-s', '/test/source',
-                '-o', '/test/output',
-                '-t', '/test/temp',
+                '-s',
+                '/test/source',
+                '-o',
+                '/test/output',
+                '-t',
+                '/test/temp',
                 '-u',
-                '-w'
+                '-w',
             ]);
 
             /* Assert */
@@ -104,8 +118,10 @@ describe('compress.cli', () => {
 
             /* Act */
             const result = parseCompressArguments([
-                '--source-dir', '/test/source',
-                '--output-dir', '/test/output'
+                '--source-dir',
+                '/test/source',
+                '--output-dir',
+                '/test/output',
             ]);
 
             /* Assert */
@@ -140,7 +156,9 @@ describe('compress.cli', () => {
             /* Act & Assert */
             expect(() => {
                 parseCompressArguments(['--output-dir', '/test/output']);
-            }).toThrow(/sourceDir: Invalid input: expected string, received undefined/);
+            }).toThrow(
+                /sourceDir: Invalid input: expected string, received undefined/
+            );
         });
 
         it('should throw error for missing output directory', () => {
@@ -153,7 +171,9 @@ describe('compress.cli', () => {
             /* Act & Assert */
             expect(() => {
                 parseCompressArguments(['--source-dir', '/test/source']);
-            }).toThrow(/outputDir: Invalid input: expected string, received undefined/);
+            }).toThrow(
+                /outputDir: Invalid input: expected string, received undefined/
+            );
         });
 
         it('should throw error for non-existent source directory', () => {
@@ -169,8 +189,15 @@ describe('compress.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseCompressArguments(['--source-dir', '/nonexistent/source', '--output-dir', '/test/output']);
-            }).toThrow('sourceDir: Source directory does not exist or is not accessible');
+                parseCompressArguments([
+                    '--source-dir',
+                    '/nonexistent/source',
+                    '--output-dir',
+                    '/test/output',
+                ]);
+            }).toThrow(
+                'sourceDir: Source directory does not exist or is not accessible'
+            );
         });
 
         it('should throw error for non-existent output directory', () => {
@@ -190,8 +217,15 @@ describe('compress.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseCompressArguments(['--source-dir', '/test/source', '--output-dir', '/nonexistent/output']);
-            }).toThrow('outputDir: Output directory does not exist or is not accessible');
+                parseCompressArguments([
+                    '--source-dir',
+                    '/test/source',
+                    '--output-dir',
+                    '/nonexistent/output',
+                ]);
+            }).toThrow(
+                'outputDir: Output directory does not exist or is not accessible'
+            );
         });
 
         it('should handle empty arguments array', () => {
@@ -202,7 +236,9 @@ describe('compress.cli', () => {
             /* Act & Assert */
             expect(() => {
                 parseCompressArguments([]);
-            }).toThrow(/sourceDir: Invalid input: expected string, received undefined/);
+            }).toThrow(
+                /sourceDir: Invalid input: expected string, received undefined/
+            );
         });
 
         it('should handle boolean flags correctly', () => {
@@ -211,16 +247,18 @@ describe('compress.cli', () => {
                 'source-dir': '/test/source',
                 'output-dir': '/test/output',
                 'remove-source': true,
-                'overwrite': true,
+                overwrite: true,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
 
             /* Act */
             const result = parseCompressArguments([
-                '--source-dir', '/test/source',
-                '--output-dir', '/test/output',
+                '--source-dir',
+                '/test/source',
+                '--output-dir',
+                '/test/output',
                 '--remove-source',
-                '--overwrite'
+                '--overwrite',
             ]);
 
             /* Assert */
@@ -234,16 +272,18 @@ describe('compress.cli', () => {
                 'source-dir': '/test/source',
                 'output-dir': '/test/output',
                 'remove-source': true,
-                'overwrite': true,
+                overwrite: true,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
 
             /* Act */
             const result = parseCompressArguments([
-                '-s', '/test/source',
-                '-o', '/test/output',
+                '-s',
+                '/test/source',
+                '-o',
+                '/test/output',
                 '-r',
-                '-w'
+                '-w',
             ]);
 
             /* Assert */
@@ -261,8 +301,10 @@ describe('compress.cli', () => {
 
             /* Act */
             const result = parseCompressArguments([
-                '--source-dir', '/test/source',
-                '--output-dir', '/test/output'
+                '--source-dir',
+                '/test/source',
+                '--output-dir',
+                '/test/output',
             ]);
 
             /* Assert */
@@ -292,7 +334,12 @@ describe('compress.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseCompressArguments(['--source-dir', '', '--output-dir', '']);
+                parseCompressArguments([
+                    '--source-dir',
+                    '',
+                    '--output-dir',
+                    '',
+                ]);
             }).toThrow(/sourceDir: Source directory is required/);
         });
 
@@ -306,7 +353,12 @@ describe('compress.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseCompressArguments(['--source-dir', '', '--output-dir', '']);
+                parseCompressArguments([
+                    '--source-dir',
+                    '',
+                    '--output-dir',
+                    '',
+                ]);
             }).toThrow(/sourceDir: Source directory is required/);
         });
 
@@ -320,8 +372,15 @@ describe('compress.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseCompressArguments(['--source-dir', undefined as any, '--output-dir', undefined as any]);
-            }).toThrow(/sourceDir: Invalid input: expected string, received undefined/);
+                parseCompressArguments([
+                    '--source-dir',
+                    undefined as any,
+                    '--output-dir',
+                    undefined as any,
+                ]);
+            }).toThrow(
+                /sourceDir: Invalid input: expected string, received undefined/
+            );
         });
 
         it('should handle null values', () => {
@@ -334,8 +393,15 @@ describe('compress.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseCompressArguments(['--source-dir', null as any, '--output-dir', null as any]);
-            }).toThrow(/sourceDir: Invalid input: expected string, received null/);
+                parseCompressArguments([
+                    '--source-dir',
+                    null as any,
+                    '--output-dir',
+                    null as any,
+                ]);
+            }).toThrow(
+                /sourceDir: Invalid input: expected string, received null/
+            );
         });
 
         it('should handle whitespace-only values', () => {
@@ -351,8 +417,15 @@ describe('compress.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseCompressArguments(['--source-dir', '   ', '--output-dir', '   ']);
-            }).toThrow(/sourceDir: Source directory does not exist or is not accessible/);
+                parseCompressArguments([
+                    '--source-dir',
+                    '   ',
+                    '--output-dir',
+                    '   ',
+                ]);
+            }).toThrow(
+                /sourceDir: Source directory does not exist or is not accessible/
+            );
         });
 
         it('should handle very long directory paths', () => {
@@ -366,8 +439,10 @@ describe('compress.cli', () => {
 
             /* Act */
             const result = parseCompressArguments([
-                '--source-dir', longPath,
-                '--output-dir', longPath
+                '--source-dir',
+                longPath,
+                '--output-dir',
+                longPath,
             ]);
 
             /* Assert */
@@ -386,8 +461,10 @@ describe('compress.cli', () => {
 
             /* Act */
             const result = parseCompressArguments([
-                '--source-dir', specialPath,
-                '--output-dir', specialPath
+                '--source-dir',
+                specialPath,
+                '--output-dir',
+                specialPath,
             ]);
 
             /* Assert */
@@ -395,4 +472,4 @@ describe('compress.cli', () => {
             expect(result.outputDir).toBe(specialPath);
         });
     });
-}); 
+});

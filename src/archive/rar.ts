@@ -114,7 +114,10 @@ async function _getInstalledCompressCommands(): Promise<string[]> {
 const ERROR_RAR_NOT_INSTALLED = `RAR extraction failed. Please ensure unrar is installed and executable:\n- Windows: Download from https://www.win-rar.com/\n- macOS: brew install unrar (may need to approve in Security & Privacy)\n- Linux: sudo apt install unrar`;
 const ERROR_RAR_COMPRESS_NOT_INSTALLED = `RAR compression failed. Please ensure rar is installed and executable:\n- Windows: Download WinRAR from https://www.win-rar.com/\n- macOS: brew install rar (may need to approve in Security & Privacy)\n- Linux: sudo apt install rar`;
 
-async function _extract(filePath: string, storageInstance: IStorage & { cleanup: () => Promise<void> }): Promise<string> {
+async function _extract(
+    filePath: string,
+    storageInstance: IStorage & { cleanup: () => Promise<void> }
+): Promise<string> {
     guardFileExists(filePath, `file does not exist: ${filePath}`);
 
     const outputDir = await storageInstance.createTemporaryDirectory();
@@ -133,7 +136,10 @@ async function _extract(filePath: string, storageInstance: IStorage & { cleanup:
         const output = await extractCommand(filePath, outputDir);
         guard(output.exitCode === 0, 'Extraction failed');
         log.info(`✓ Successfully extracted using ${primaryCommand}`);
-        guardDirectoryExists(outputDir, `Output directory missing, does not exist: ${outputDir}`);
+        guardDirectoryExists(
+            outputDir,
+            `Output directory missing, does not exist: ${outputDir}`
+        );
         log.info(`Done extracting ${filePath} to ${outputDir}`);
         return outputDir;
     } catch (error) {
@@ -143,7 +149,10 @@ async function _extract(filePath: string, storageInstance: IStorage & { cleanup:
     }
 }
 
-async function _verify(filePath: string, storageInstance: IStorage & { cleanup: () => Promise<void> }): Promise<boolean> {
+async function _verify(
+    filePath: string,
+    storageInstance: IStorage & { cleanup: () => Promise<void> }
+): Promise<boolean> {
     guardFileExists(filePath, `file does not exist: ${filePath}`);
     log.info(`Verifying ${filePath}...`);
 
@@ -163,10 +172,7 @@ async function _verify(filePath: string, storageInstance: IStorage & { cleanup: 
             {
                 name: 'unrar-free',
                 command: (timeoutMs: number = DEFAULT_TIMEOUT_MS) =>
-                    withTimeout(
-                        $`unrar-free t "${filePath}"`,
-                        timeoutMs
-                    ),
+                    withTimeout($`unrar-free t "${filePath}"`, timeoutMs),
             },
             {
                 name: 'rar',
@@ -208,7 +214,10 @@ async function _verify(filePath: string, storageInstance: IStorage & { cleanup: 
     }
 }
 
-async function _compress(filePath: string, contentsDirectory: string): Promise<string> {
+async function _compress(
+    filePath: string,
+    contentsDirectory: string
+): Promise<string> {
     guardDirectoryExists(
         contentsDirectory,
         `Contents directory does not exist: ${contentsDirectory}`
@@ -223,10 +232,7 @@ async function _compress(filePath: string, contentsDirectory: string): Promise<s
         const compressCommand = MAP_COMPRESS_COMMANDS.find(
             command => command.name === primaryCommand
         )?.command;
-        guard(
-            compressCommand !== undefined,
-            ERROR_RAR_COMPRESS_NOT_INSTALLED
-        );
+        guard(compressCommand !== undefined, ERROR_RAR_COMPRESS_NOT_INSTALLED);
         await compressCommand(filePath, contentsDirectory);
         log.info(`✓ Successfully compressed using ${primaryCommand}`);
         log.info(`✓ Successfully compressed to ${filePath}`);
@@ -246,7 +252,7 @@ async function _compress(filePath: string, contentsDirectory: string): Promise<s
 export function createRarArchive(filePath: string): Archive {
     const archive = {
         _storageInstance: storageDecorator.withCleanup(storage()),
-        
+
         archiveFile(): string {
             return filePath;
         },

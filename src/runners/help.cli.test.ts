@@ -128,7 +128,9 @@ describe('help.cli', () => {
             const result = helpText(args);
 
             /* Assert */
-            expect(result).toContain('romorganizer compress - Convert archive files to CHD format');
+            expect(result).toContain(
+                'romorganizer compress - Convert archive files to CHD format'
+            );
             expect(result).toContain('Required Options:');
             expect(result).toContain('-s, --source-dir <path>');
             expect(result).toContain('-o, --output-dir <path>');
@@ -149,7 +151,9 @@ describe('help.cli', () => {
             const result = helpText(args);
 
             /* Assert */
-            expect(result).toContain('romorganizer verify - Verify CHD files against DAT file');
+            expect(result).toContain(
+                'romorganizer verify - Verify CHD files against DAT file'
+            );
             expect(result).toContain('Required Options:');
             expect(result).toContain('-s, --source-dir <path>');
             expect(result).toContain('-d, --dat-file <path>');
@@ -172,7 +176,9 @@ describe('help.cli', () => {
             const result = helpText(args);
 
             /* Assert */
-            expect(result).toContain('romorganizer help - Show help information');
+            expect(result).toContain(
+                'romorganizer help - Show help information'
+            );
             expect(result).toContain('Usage: romorganizer help [command]');
             expect(result).toContain('Commands:');
             expect(result).toContain('compress');
@@ -192,7 +198,9 @@ describe('help.cli', () => {
             const result = helpText(args);
 
             /* Assert */
-            expect(result).toContain('romorganizer - Convert archive files to CHD format with DAT validation');
+            expect(result).toContain(
+                'romorganizer - Convert archive files to CHD format with DAT validation'
+            );
             expect(result).toContain('Usage: romorganizer <command> [options]');
             expect(result).toContain('Commands:');
             expect(result).toContain('compress');
@@ -214,7 +222,9 @@ describe('help.cli', () => {
             const result = helpText(args);
 
             /* Assert */
-            expect(result).toContain('romorganizer - Convert archive files to CHD format with DAT validation');
+            expect(result).toContain(
+                'romorganizer - Convert archive files to CHD format with DAT validation'
+            );
             expect(result).toContain('Usage: romorganizer <command> [options]');
             expect(result).toContain('Commands:');
             expect(result).toContain('compress');
@@ -233,7 +243,9 @@ describe('help.cli', () => {
             const result = helpText(args);
 
             /* Assert */
-            expect(result).toContain('romorganizer - Convert archive files to CHD format with DAT validation');
+            expect(result).toContain(
+                'romorganizer - Convert archive files to CHD format with DAT validation'
+            );
             expect(result).toContain('Usage: romorganizer <command> [options]');
         });
 
@@ -248,7 +260,9 @@ describe('help.cli', () => {
             const result = helpText(args);
 
             /* Assert */
-            expect(result).toContain('romorganizer - Convert archive files to CHD format with DAT validation');
+            expect(result).toContain(
+                'romorganizer - Convert archive files to CHD format with DAT validation'
+            );
             expect(result).toContain('Usage: romorganizer <command> [options]');
         });
 
@@ -282,7 +296,9 @@ describe('help.cli', () => {
             const result = helpText(args);
 
             /* Assert */
-            expect(result).toContain('romorganizer - Convert archive files to CHD format with DAT validation');
+            expect(result).toContain(
+                'romorganizer - Convert archive files to CHD format with DAT validation'
+            );
             expect(result).not.toContain('romorganizer COMPRESS');
         });
     });
@@ -383,7 +399,9 @@ describe('help.cli', () => {
             /* Assert */
             expect(parsed.command).toBe('help');
             expect(parsed.subcommand).toBe('compress');
-            expect(helpTextResult).toContain('romorganizer compress - Convert archive files to CHD format');
+            expect(helpTextResult).toContain(
+                'romorganizer compress - Convert archive files to CHD format'
+            );
         });
 
         it('should parse and generate help text for verify', () => {
@@ -397,7 +415,9 @@ describe('help.cli', () => {
             /* Assert */
             expect(parsed.command).toBe('help');
             expect(parsed.subcommand).toBe('verify');
-            expect(helpTextResult).toContain('romorganizer verify - Verify CHD files against DAT file');
+            expect(helpTextResult).toContain(
+                'romorganizer verify - Verify CHD files against DAT file'
+            );
         });
 
         it('should parse and generate global help text for no subcommand', () => {
@@ -411,7 +431,9 @@ describe('help.cli', () => {
             /* Assert */
             expect(parsed.command).toBe('help');
             expect(parsed.subcommand).toBeUndefined();
-            expect(helpTextResult).toContain('romorganizer - Convert archive files to CHD format with DAT validation');
+            expect(helpTextResult).toContain(
+                'romorganizer - Convert archive files to CHD format with DAT validation'
+            );
         });
     });
-}); 
+});

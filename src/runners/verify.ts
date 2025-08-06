@@ -6,15 +6,18 @@ import { Dat, Game } from '../utils/dat';
 import { CuesheetEntry } from '../utils/cuesheet-loader';
 import hash from '../utils/hash';
 import { IRunner } from './interface';
-import { log } from "../utils/logger";
-import metadata from "../types/metadata";
+import { log } from '../utils/logger';
+import metadata from '../types/metadata';
 import { fileExtension } from './utils';
 
-export class VerifyRunnerFile implements IRunner<{
-    status: 'match' | 'partial' | 'none';
-    message: string;
-    game: Game | undefined;
-}> {
+export class VerifyRunnerFile
+    implements
+        IRunner<{
+            status: 'match' | 'partial' | 'none';
+            message: string;
+            game: Game | undefined;
+        }>
+{
     constructor(
         private readonly sourceFile: string,
         private readonly dat: Dat,
@@ -34,7 +37,6 @@ export class VerifyRunnerFile implements IRunner<{
         if (extension !== 'chd') {
             throw new Error(`Unsupported file extension: ${extension}`);
         }
-
 
         const filePathCue = await chd.extract({
             chdFilePath: compressedFilePath,
@@ -137,7 +139,7 @@ export class VerifyRunnerDirectory implements IRunner<string[]> {
         private readonly dat: Dat,
         private readonly cuesheetEntries: CuesheetEntry[],
         private readonly rename: boolean,
-        private readonly force: boolean,
+        private readonly force: boolean
     ) {
         this.sourceDir = sourceDir;
         this.dat = dat;
@@ -158,7 +160,10 @@ export class VerifyRunnerDirectory implements IRunner<string[]> {
             /* Check if metadata.json already exists for this file */
             const baseFileName = path.basename(file, path.extname(file));
             const metadataFileName = `${baseFileName}.metadata.json`;
-            const metadataFilePath = path.join(this.sourceDir, metadataFileName);
+            const metadataFilePath = path.join(
+                this.sourceDir,
+                metadataFileName
+            );
 
             const metadataExists = await storage().exists(metadataFilePath);
             if (metadataExists && !this.force) {
@@ -168,7 +173,11 @@ export class VerifyRunnerDirectory implements IRunner<string[]> {
                 continue;
             }
 
-            const runner = new VerifyRunnerFile(file, this.dat, this.cuesheetEntries);
+            const runner = new VerifyRunnerFile(
+                file,
+                this.dat,
+                this.cuesheetEntries
+            );
             if (runner instanceof Error) {
                 log.error(
                     `Error creating verify runner for ${file}: ${runner.message}`
@@ -205,21 +214,21 @@ export class VerifyRunnerDirectory implements IRunner<string[]> {
                 {
                     game: result.game
                         ? {
-                                name: result.game.name,
-                                files: result.game.roms.map(rom => ({
-                                    name: rom.name,
-                                    size: rom.size,
-                                    sha1hex: rom.sha1hex,
-                                    ...(rom.crc && { crc: rom.crc }),
-                                    ...(rom.md5 && { md5: rom.md5 }),
-                                })),
-                                ...(result.game.description && {
-                                    description: result.game.description,
-                                }),
-                                ...(result.game.category && {
-                                    category: result.game.category,
-                                }),
-                            }
+                              name: result.game.name,
+                              files: result.game.roms.map(rom => ({
+                                  name: rom.name,
+                                  size: rom.size,
+                                  sha1hex: rom.sha1hex,
+                                  ...(rom.crc && { crc: rom.crc }),
+                                  ...(rom.md5 && { md5: rom.md5 }),
+                              })),
+                              ...(result.game.description && {
+                                  description: result.game.description,
+                              }),
+                              ...(result.game.category && {
+                                  category: result.game.category,
+                              }),
+                          }
                         : undefined,
                     message: result.message,
                     status: result.status,

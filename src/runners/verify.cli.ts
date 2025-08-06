@@ -1,9 +1,11 @@
-import commandLineArgs from "command-line-args";
-import { z } from "zod";
-import { guardDirectoryExists } from "../utils/guard";
+import commandLineArgs from 'command-line-args';
+import { z } from 'zod';
+import { guardDirectoryExists } from '../utils/guard';
 
 /* Static method for argument parsing without creating a full runner instance */
-export function parseVerifyArguments(args: string[]): z.infer<typeof VerifySchema> {
+export function parseVerifyArguments(
+    args: string[]
+): z.infer<typeof VerifySchema> {
     /* Check for help flag */
     if (args.includes('--help') || args.includes('-h')) {
         throw new Error('Help requested');
@@ -23,10 +25,10 @@ export function parseVerifyArguments(args: string[]): z.infer<typeof VerifySchem
         tempDir: parsedOptions['temp-dir'],
         datFile: parsedOptions['dat-file'],
         cuesheetsFile: parsedOptions['cuesheets-file'],
-        removeSource: false, /* verify doesn't use removeSource */
-        useDatFileName: false, /* verify doesn't use useDatFileName */
+        removeSource: false /* verify doesn't use removeSource */,
+        useDatFileName: false /* verify doesn't use useDatFileName */,
         rename: parsedOptions['rename'],
-        overwrite: false, /* verify doesn't use overwrite */
+        overwrite: false /* verify doesn't use overwrite */,
         force: parsedOptions['force'],
     };
 
@@ -83,7 +85,7 @@ const verifyOptionDefinitions: commandLineArgs.OptionDefinition[] = [
         type: Boolean,
         multiple: false,
         defaultValue: false,
-    }
+    },
 ];
 
 /* Zod schema for verify command arguments */

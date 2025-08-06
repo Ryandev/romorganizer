@@ -93,7 +93,7 @@ const EXAMPLE_CUE_FILE = `
 FILE "My Test File.BIN" BINARY
   TRACK 01 MODE2/2352 
     INDEX 01 00:00:00
-`
+`;
 
 describe('CueSheet Generation', () => {
     describe('generateMergedCueSheet', () => {
@@ -554,7 +554,9 @@ describe('CUE File Serialization and Deserialization', () => {
             /* Verify index structure */
             expect(cueSheet.files[0].tracks[0].indexes).toHaveLength(1);
             expect(cueSheet.files[0].tracks[0].indexes[0].id).toBe(1);
-            expect(cueSheet.files[0].tracks[0].indexes[0].timestamp).toBe('00:00:00');
+            expect(cueSheet.files[0].tracks[0].indexes[0].timestamp).toBe(
+                '00:00:00'
+            );
         });
 
         it('should parse CUE file with multiple tracks', () => {
@@ -579,14 +581,20 @@ FILE "game.bin" BINARY
             expect(cueSheet.files[0].tracks[0].number).toBe(1);
             expect(cueSheet.files[0].tracks[0].type).toBe('AUDIO');
             expect(cueSheet.files[0].tracks[0].indexes).toHaveLength(1);
-            expect(cueSheet.files[0].tracks[0].indexes[0].timestamp).toBe('00:00:00');
+            expect(cueSheet.files[0].tracks[0].indexes[0].timestamp).toBe(
+                '00:00:00'
+            );
 
             /* Verify second track with multiple indexes */
             expect(cueSheet.files[0].tracks[1].number).toBe(2);
             expect(cueSheet.files[0].tracks[1].type).toBe('AUDIO');
             expect(cueSheet.files[0].tracks[1].indexes).toHaveLength(2);
-            expect(cueSheet.files[0].tracks[1].indexes[0].timestamp).toBe('00:02:30');
-            expect(cueSheet.files[0].tracks[1].indexes[1].timestamp).toBe('00:04:15');
+            expect(cueSheet.files[0].tracks[1].indexes[0].timestamp).toBe(
+                '00:02:30'
+            );
+            expect(cueSheet.files[0].tracks[1].indexes[1].timestamp).toBe(
+                '00:04:15'
+            );
 
             /* Verify third track */
             expect(cueSheet.files[0].tracks[2].number).toBe(3);
@@ -674,26 +682,32 @@ FILE "test.bin" BINARY
 
         it('should serialize CUE sheet with metadata', () => {
             const cueSheet = {
-                files: [{
-                    filename: 'album.bin',
-                    type: 'BINARY',
-                    tracks: [{
-                        number: 1,
-                        type: 'AUDIO',
-                        indexes: [{
-                            id: 1,
-                            timestamp: '00:00:00'
-                        }]
-                    }]
-                }],
+                files: [
+                    {
+                        filename: 'album.bin',
+                        type: 'BINARY',
+                        tracks: [
+                            {
+                                number: 1,
+                                type: 'AUDIO',
+                                indexes: [
+                                    {
+                                        id: 1,
+                                        timestamp: '00:00:00',
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
                 metadata: {
                     title: 'Test Album',
                     performer: 'Test Artist',
                     songwriter: 'Test Composer',
                     catalog: '1234567890123',
                     isrc: 'ABC123456789',
-                    comment: 'Test comment'
-                }
+                    comment: 'Test comment',
+                },
             };
 
             const serialized = serializeCueSheet(cueSheet);
@@ -711,18 +725,24 @@ FILE "test.bin" BINARY
 
         it('should serialize CUE sheet without metadata', () => {
             const cueSheet = {
-                files: [{
-                    filename: 'game.bin',
-                    type: 'BINARY',
-                    tracks: [{
-                        number: 1,
-                        type: 'MODE1/2352',
-                        indexes: [{
-                            id: 1,
-                            timestamp: '00:00:00'
-                        }]
-                    }]
-                }]
+                files: [
+                    {
+                        filename: 'game.bin',
+                        type: 'BINARY',
+                        tracks: [
+                            {
+                                number: 1,
+                                type: 'MODE1/2352',
+                                indexes: [
+                                    {
+                                        id: 1,
+                                        timestamp: '00:00:00',
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
             };
 
             const serialized = serializeCueSheet(cueSheet);
@@ -736,28 +756,32 @@ FILE "test.bin" BINARY
 
         it('should serialize multiple tracks with proper formatting', () => {
             const cueSheet = {
-                files: [{
-                    filename: 'album.bin',
-                    type: 'BINARY',
-                    tracks: [
-                        {
-                            number: 1,
-                            type: 'AUDIO',
-                            indexes: [{
-                                id: 1,
-                                timestamp: '00:00:00'
-                            }]
-                        },
-                        {
-                            number: 2,
-                            type: 'AUDIO',
-                            indexes: [
-                                { id: 1, timestamp: '00:02:30' },
-                                { id: 2, timestamp: '00:04:15' }
-                            ]
-                        }
-                    ]
-                }]
+                files: [
+                    {
+                        filename: 'album.bin',
+                        type: 'BINARY',
+                        tracks: [
+                            {
+                                number: 1,
+                                type: 'AUDIO',
+                                indexes: [
+                                    {
+                                        id: 1,
+                                        timestamp: '00:00:00',
+                                    },
+                                ],
+                            },
+                            {
+                                number: 2,
+                                type: 'AUDIO',
+                                indexes: [
+                                    { id: 1, timestamp: '00:02:30' },
+                                    { id: 2, timestamp: '00:04:15' },
+                                ],
+                            },
+                        ],
+                    },
+                ],
             };
 
             const serialized = serializeCueSheet(cueSheet);
@@ -787,10 +811,18 @@ FILE "album.bin" BINARY
 
             /* Verify the round-trip preserves the structure */
             expect(roundTripCueSheet.files).toHaveLength(cueSheet.files.length);
-            expect(roundTripCueSheet.files[0].filename).toBe(cueSheet.files[0].filename);
-            expect(roundTripCueSheet.files[0].tracks).toHaveLength(cueSheet.files[0].tracks.length);
-            expect(roundTripCueSheet.metadata?.title).toBe(cueSheet.metadata?.title);
-            expect(roundTripCueSheet.metadata?.performer).toBe(cueSheet.metadata?.performer);
+            expect(roundTripCueSheet.files[0].filename).toBe(
+                cueSheet.files[0].filename
+            );
+            expect(roundTripCueSheet.files[0].tracks).toHaveLength(
+                cueSheet.files[0].tracks.length
+            );
+            expect(roundTripCueSheet.metadata?.title).toBe(
+                cueSheet.metadata?.title
+            );
+            expect(roundTripCueSheet.metadata?.performer).toBe(
+                cueSheet.metadata?.performer
+            );
         });
     });
 });

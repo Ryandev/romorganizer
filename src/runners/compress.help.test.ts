@@ -5,7 +5,9 @@ describe('compress.help.ts', () => {
         it('should contain the help text for compress command', () => {
             /* Assert */
             expect(COMPRESS_HELP_TEXT).toContain('romorganizer compress');
-            expect(COMPRESS_HELP_TEXT).toContain('Usage: romorganizer compress [options]');
+            expect(COMPRESS_HELP_TEXT).toContain(
+                'Usage: romorganizer compress [options]'
+            );
             expect(COMPRESS_HELP_TEXT).toContain('--source-dir');
             expect(COMPRESS_HELP_TEXT).toContain('--output-dir');
             expect(COMPRESS_HELP_TEXT).toContain('--temp-dir');
@@ -19,9 +21,15 @@ describe('compress.help.ts', () => {
         it('should contain examples', () => {
             /* Assert */
             expect(COMPRESS_HELP_TEXT).toContain('Examples:');
-            expect(COMPRESS_HELP_TEXT).toContain('romorganizer compress -s ./input -o ./output');
-            expect(COMPRESS_HELP_TEXT).toContain('romorganizer compress --source-dir ./input --output-dir ./output --remove-source');
-            expect(COMPRESS_HELP_TEXT).toContain('romorganizer compress --source-dir ./input --output-dir ./output --overwrite');
+            expect(COMPRESS_HELP_TEXT).toContain(
+                'romorganizer compress -s ./input -o ./output'
+            );
+            expect(COMPRESS_HELP_TEXT).toContain(
+                'romorganizer compress --source-dir ./input --output-dir ./output --remove-source'
+            );
+            expect(COMPRESS_HELP_TEXT).toContain(
+                'romorganizer compress --source-dir ./input --output-dir ./output --overwrite'
+            );
         });
     });
-}); 
+});

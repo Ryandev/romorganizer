@@ -7,7 +7,11 @@ import { IStorage } from '../utils/storage.interface';
 import { EcmWasm } from '../../deps/ecm/wasm';
 import { guardFileExists, guardDirectoryExists } from '../utils/guard';
 
-async function _extract(filePath: string, ecmWasm: EcmWasm, storageInstance: IStorage & { cleanup: () => Promise<void> }): Promise<string> {
+async function _extract(
+    filePath: string,
+    ecmWasm: EcmWasm,
+    storageInstance: IStorage & { cleanup: () => Promise<void> }
+): Promise<string> {
     guardFileExists(filePath, `file does not exist: ${filePath}`);
 
     const outputDirectory = await storageInstance.createTemporaryDirectory();
@@ -27,7 +31,11 @@ async function _extract(filePath: string, ecmWasm: EcmWasm, storageInstance: ISt
     }
 }
 
-async function _verify(filePath: string, ecmWasm: EcmWasm, storageInstance: IStorage & { cleanup: () => Promise<void> }): Promise<boolean> {
+async function _verify(
+    filePath: string,
+    ecmWasm: EcmWasm,
+    storageInstance: IStorage & { cleanup: () => Promise<void> }
+): Promise<boolean> {
     log.info(`Verifying ${filePath}...`);
 
     try {
@@ -50,7 +58,11 @@ async function _verify(filePath: string, ecmWasm: EcmWasm, storageInstance: ISto
     }
 }
 
-async function _compress(contentsDirectory: string, ecmWasm: EcmWasm, storageInstance: IStorage & { cleanup: () => Promise<void> }): Promise<string> {
+async function _compress(
+    contentsDirectory: string,
+    ecmWasm: EcmWasm,
+    storageInstance: IStorage & { cleanup: () => Promise<void> }
+): Promise<string> {
     guardDirectoryExists(
         contentsDirectory,
         `Contents directory does not exist: ${contentsDirectory}`
@@ -82,7 +94,7 @@ export function createEcmArchive(filePath: string): Archive {
     const archive = {
         _storageInstance: storageDecorator.withCleanup(storage()),
         _ecmWasm: new EcmWasm(),
-        
+
         archiveFile(): string {
             return filePath;
         },
@@ -96,7 +108,11 @@ export function createEcmArchive(filePath: string): Archive {
         },
 
         async compress(contentsDirectory: string): Promise<string> {
-            return _compress(contentsDirectory, this._ecmWasm, this._storageInstance);
+            return _compress(
+                contentsDirectory,
+                this._ecmWasm,
+                this._storageInstance
+            );
         },
     } as const;
 

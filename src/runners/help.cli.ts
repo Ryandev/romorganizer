@@ -90,7 +90,6 @@ export const HelpSchema = z.object({
     subcommand: z.string().optional(),
 });
 
-
 /* Static method for argument parsing without creating a full runner instance */
 export function parseHelpArguments(args: string[]): z.infer<typeof HelpSchema> {
     /* Check for help flag */
@@ -101,7 +100,7 @@ export function parseHelpArguments(args: string[]): z.infer<typeof HelpSchema> {
     /* Transform parsed options to match our schema */
     const transformedArgs = {
         command: 'help' as const,
-        subcommand: args[0], /* First argument after 'help' */
+        subcommand: args[0] /* First argument after 'help' */,
     };
 
     /* Validate using Zod schema */
@@ -120,7 +119,9 @@ export function parseHelpArguments(args: string[]): z.infer<typeof HelpSchema> {
 
 export function helpText(parameters: z.infer<typeof HelpSchema>): string {
     if (parameters.subcommand && parameters.subcommand in HELP_TEXT_MAP) {
-        return HELP_TEXT_MAP[parameters.subcommand as keyof typeof HELP_TEXT_MAP];
+        return HELP_TEXT_MAP[
+            parameters.subcommand as keyof typeof HELP_TEXT_MAP
+        ];
     }
     return HELP_TEXT_MAP.global;
 }

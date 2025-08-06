@@ -87,7 +87,10 @@ const ERROR_7Z_NOT_INSTALLED = new Error(
     `7z extraction failed. Please ensure 7-Zip is installed:\n- Windows: Download from https://7-zip.org/\n- macOS: brew install p7zip\n- Linux: sudo apt install p7zip-full`
 );
 
-async function _extract(filePath: string, storageInstance: IStorage & { cleanup: () => Promise<void> }): Promise<string> {
+async function _extract(
+    filePath: string,
+    storageInstance: IStorage & { cleanup: () => Promise<void> }
+): Promise<string> {
     guardFileExists(filePath, `file does not exist: ${filePath}`);
     const outputDir = await storageInstance.createTemporaryDirectory();
     try {
@@ -110,7 +113,10 @@ async function _extract(filePath: string, storageInstance: IStorage & { cleanup:
     }
 }
 
-async function _verify(filePath: string, storageInstance: IStorage & { cleanup: () => Promise<void> }): Promise<boolean> {
+async function _verify(
+    filePath: string,
+    storageInstance: IStorage & { cleanup: () => Promise<void> }
+): Promise<boolean> {
     guardFileExists(filePath, `file does not exist: ${filePath}`);
     log.info(`Verifying ${filePath}...`);
     try {
@@ -142,7 +148,10 @@ async function _verify(filePath: string, storageInstance: IStorage & { cleanup: 
     }
 }
 
-async function _compress(filePath: string, contentsDirectory: string): Promise<string> {
+async function _compress(
+    filePath: string,
+    contentsDirectory: string
+): Promise<string> {
     guardDirectoryExists(
         contentsDirectory,
         `Contents directory does not exist: ${contentsDirectory}`
@@ -174,8 +183,7 @@ async function _compress(filePath: string, contentsDirectory: string): Promise<s
 export function createSevenZipArchive(filePath: string): Archive {
     const archive = {
         _storageInstance: storageDecorator.withCleanup(storage()),
-        
-        
+
         archiveFile(): string {
             return filePath;
         },

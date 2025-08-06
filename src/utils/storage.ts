@@ -263,15 +263,15 @@ async function _listDirectory(
 
     const items: FilePath[] = [];
 
-    for ( const listingFileName of filteredListings ) {
+    for (const listingFileName of filteredListings) {
         const listingPath = path.join(filePath, listingFileName);
         const isDirectory = await _isDirectory(listingPath);
-        if ( isDirectory ) {
-            if ( options?.includeDirectories ?? true ) {
+        if (isDirectory) {
+            if (options?.includeDirectories ?? true) {
                 items.push(listingPath);
             }
-        /* Listings recursive calls to #_listDirectory */
-        if ( options?.recursive ?? false ) {
+            /* Listings recursive calls to #_listDirectory */
+            if (options?.recursive ?? false) {
                 const recursiveListings = await _listDirectory(listingPath, {
                     recursive: options?.recursive ?? false,
                     removePrefix: false,
@@ -448,7 +448,10 @@ function storage(
                 removePrefix:
                     options?.removePrefix ?? parameters.removePrefix ?? false,
                 avoidHiddenFiles: options?.avoidHiddenFiles ?? false,
-                includeDirectories: options?.includeDirectories ?? parameters.includeDirectories ?? false,
+                includeDirectories:
+                    options?.includeDirectories ??
+                    parameters.includeDirectories ??
+                    false,
             });
 
             const operators: ((item: string) => string)[] = [];

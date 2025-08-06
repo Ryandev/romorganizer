@@ -39,21 +39,23 @@ describe('createEcmArchive', () => {
     const mockLog = log as jest.Mocked<typeof log>;
     const MockEcmWasm = EcmWasm as jest.MockedClass<typeof EcmWasm>;
     const mockStorage = storage as jest.MockedFunction<typeof storage>;
-    const mockGuardFileExists = guardFileExists as jest.MockedFunction<typeof guardFileExists>;
+    const mockGuardFileExists = guardFileExists as jest.MockedFunction<
+        typeof guardFileExists
+    >;
 
     let mockEcmWasmInstance: any;
     let ecmArchive: ReturnType<typeof createEcmArchive>;
 
     beforeEach(() => {
         jest.clearAllMocks();
-        
+
         mockEcmWasmInstance = {
             extract: jest.fn(),
             verify: jest.fn(),
             compress: jest.fn(),
         };
         MockEcmWasm.mockImplementation(() => mockEcmWasmInstance);
-        
+
         ecmArchive = createEcmArchive('/test/file.ecm');
     });
 
@@ -65,7 +67,9 @@ describe('createEcmArchive', () => {
             /* Assert */
             expect(archive).toBeDefined();
             expect(archive.archiveFile()).toBe('/test/file.ecm');
-            expect(MockEcmWasm).toHaveBeenCalledTimes(2); /* Once in factory, once in beforeEach */
+            expect(MockEcmWasm).toHaveBeenCalledTimes(
+                2
+            ); /* Once in factory, once in beforeEach */
         });
 
         it('should create EcmWasm instance', () => {
@@ -87,8 +91,13 @@ describe('createEcmArchive', () => {
 
             /* Assert */
             expect(mockGuardFileExists).toHaveBeenCalledWith('/test/file.ecm');
-            expect(mockEcmWasmInstance.extract).toHaveBeenCalledWith('/test/file.ecm', expect.stringContaining('extracted.bin'));
-            expect(mockLog.info).toHaveBeenCalledWith('Extracted /test/file.ecm');
+            expect(mockEcmWasmInstance.extract).toHaveBeenCalledWith(
+                '/test/file.ecm',
+                expect.stringContaining('extracted.bin')
+            );
+            expect(mockLog.info).toHaveBeenCalledWith(
+                'Extracted /test/file.ecm'
+            );
             expect(result).toMatch(/extracted\.bin$/);
         });
 
@@ -101,7 +110,9 @@ describe('createEcmArchive', () => {
             });
 
             /* Act & Assert */
-            await expect(ecmArchive.extract()).rejects.toThrow('ECM extraction failed: ECM extraction failed');
+            await expect(ecmArchive.extract()).rejects.toThrow(
+                'ECM extraction failed: ECM extraction failed'
+            );
         });
 
         it('should handle non-Error objects in extraction', async () => {
@@ -112,7 +123,9 @@ describe('createEcmArchive', () => {
             });
 
             /* Act & Assert */
-            await expect(ecmArchive.extract()).rejects.toThrow('ECM extraction failed: String error');
+            await expect(ecmArchive.extract()).rejects.toThrow(
+                'ECM extraction failed: String error'
+            );
         });
 
         it('should handle file not found error', async () => {
@@ -122,7 +135,9 @@ describe('createEcmArchive', () => {
             });
 
             /* Act & Assert */
-            await expect(ecmArchive.extract()).rejects.toThrow('File not found');
+            await expect(ecmArchive.extract()).rejects.toThrow(
+                'File not found'
+            );
         });
     });
 
@@ -139,10 +154,18 @@ describe('createEcmArchive', () => {
             const result = await ecmArchive.verify();
 
             /* Assert */
-            expect(mockLog.info).toHaveBeenCalledWith('Verifying /test/file.ecm...');
-            expect(mockStorageInstance.exists).toHaveBeenCalledWith('/test/file.ecm');
-            expect(mockEcmWasmInstance.verify).toHaveBeenCalledWith('/test/file.ecm');
-            expect(mockLog.info).toHaveBeenCalledWith('✓ /test/file.ecm appears to be a valid ECM file');
+            expect(mockLog.info).toHaveBeenCalledWith(
+                'Verifying /test/file.ecm...'
+            );
+            expect(mockStorageInstance.exists).toHaveBeenCalledWith(
+                '/test/file.ecm'
+            );
+            expect(mockEcmWasmInstance.verify).toHaveBeenCalledWith(
+                '/test/file.ecm'
+            );
+            expect(mockLog.info).toHaveBeenCalledWith(
+                '✓ /test/file.ecm appears to be a valid ECM file'
+            );
             expect(result).toBe(true);
         });
 
@@ -157,7 +180,9 @@ describe('createEcmArchive', () => {
             const result = await ecmArchive.verify();
 
             /* Assert */
-            expect(mockLog.warn).toHaveBeenCalledWith('✗ /test/file.ecm does not exist');
+            expect(mockLog.warn).toHaveBeenCalledWith(
+                '✗ /test/file.ecm does not exist'
+            );
             expect(result).toBe(false);
         });
 
@@ -173,7 +198,9 @@ describe('createEcmArchive', () => {
             const result = await ecmArchive.verify();
 
             /* Assert */
-            expect(mockLog.warn).toHaveBeenCalledWith('✗ /test/file.ecm is not a valid ECM file');
+            expect(mockLog.warn).toHaveBeenCalledWith(
+                '✗ /test/file.ecm is not a valid ECM file'
+            );
             expect(result).toBe(false);
         });
 
@@ -186,7 +213,9 @@ describe('createEcmArchive', () => {
             const result = await ecmArchive.verify();
 
             /* Assert */
-            expect(mockLog.warn).toHaveBeenCalledWith('✗ /test/file.ecm is not accessible: Error: Verification failed');
+            expect(mockLog.warn).toHaveBeenCalledWith(
+                '✗ /test/file.ecm is not accessible: Error: Verification failed'
+            );
             expect(result).toBe(false);
         });
 
@@ -198,7 +227,9 @@ describe('createEcmArchive', () => {
             const result = await ecmArchive.verify();
 
             /* Assert */
-            expect(mockLog.warn).toHaveBeenCalledWith('✗ /test/file.ecm is not accessible: String error');
+            expect(mockLog.warn).toHaveBeenCalledWith(
+                '✗ /test/file.ecm is not accessible: String error'
+            );
             expect(result).toBe(false);
         });
     });
@@ -217,8 +248,13 @@ describe('createEcmArchive', () => {
 
             /* Assert */
             expect(mockGuardFileExists).toHaveBeenCalledWith(inputFile);
-            expect(mockEcmWasmInstance.compress).toHaveBeenCalledWith(inputFile, expect.stringContaining('input.bin.ecm'));
-            expect(mockLog.info).toHaveBeenCalledWith('Encoded /test/input.bin');
+            expect(mockEcmWasmInstance.compress).toHaveBeenCalledWith(
+                inputFile,
+                expect.stringContaining('input.bin.ecm')
+            );
+            expect(mockLog.info).toHaveBeenCalledWith(
+                'Encoded /test/input.bin'
+            );
             expect(result).toMatch(/input\.bin\.ecm$/);
         });
 
@@ -232,7 +268,9 @@ describe('createEcmArchive', () => {
             });
 
             /* Act & Assert */
-            await expect(ecmArchive.compress(inputFile)).rejects.toThrow('ECM compression failed: Compression failed');
+            await expect(ecmArchive.compress(inputFile)).rejects.toThrow(
+                'ECM compression failed: Compression failed'
+            );
         });
 
         it('should handle non-Error objects in compression', async () => {
@@ -244,7 +282,9 @@ describe('createEcmArchive', () => {
             });
 
             /* Act & Assert */
-            await expect(ecmArchive.compress(inputFile)).rejects.toThrow('ECM compression failed: String error');
+            await expect(ecmArchive.compress(inputFile)).rejects.toThrow(
+                'ECM compression failed: String error'
+            );
         });
 
         it('should handle file not found error in compression', async () => {
@@ -255,7 +295,9 @@ describe('createEcmArchive', () => {
             });
 
             /* Act & Assert */
-            await expect(ecmArchive.compress(inputFile)).rejects.toThrow('File not found');
+            await expect(ecmArchive.compress(inputFile)).rejects.toThrow(
+                'File not found'
+            );
         });
     });
 });

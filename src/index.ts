@@ -6,8 +6,9 @@ import createCompressRunner from './runners/compress.builder.js';
 async function main(inputArguments: string[]) {
     /* Fallback to help if no arguments are provided */
     /* Check if first argument is a valid command */
-    const [command, ...subArguments] = inputArguments.length === 0 ? ['help'] : inputArguments;
-    
+    const [command, ...subArguments] =
+        inputArguments.length === 0 ? ['help'] : inputArguments;
+
     switch (command) {
         case 'compress': {
             const builder = await createCompressRunner(subArguments);

@@ -14,7 +14,8 @@ jest.mock('./compress.help', () => ({
 }));
 
 describe('compress.builder', () => {
-    const mockParseCompressArguments = require('./compress.cli').parseCompressArguments;
+    const mockParseCompressArguments =
+        require('./compress.cli').parseCompressArguments;
     const MockRunnerDirectory = require('./compress').RunnerDirectory;
 
     beforeEach(() => {
@@ -37,13 +38,23 @@ describe('compress.builder', () => {
             mockParseCompressArguments.mockReturnValue(mockParsedArgs);
 
             /* Act */
-            const result = compressBuilder(['--source-dir', '/test/source', '--output-dir', '/test/output']);
+            const result = compressBuilder([
+                '--source-dir',
+                '/test/source',
+                '--output-dir',
+                '/test/output',
+            ]);
 
             /* Assert */
             expect(result).toBeDefined();
             expect(typeof result.create).toBe('function');
             expect(typeof result.getHelpText).toBe('function');
-            expect(mockParseCompressArguments).toHaveBeenCalledWith(['--source-dir', '/test/source', '--output-dir', '/test/output']);
+            expect(mockParseCompressArguments).toHaveBeenCalledWith([
+                '--source-dir',
+                '/test/source',
+                '--output-dir',
+                '/test/output',
+            ]);
         });
 
         it('should create a RunnerDirectory with correct parameters', async () => {
@@ -58,7 +69,14 @@ describe('compress.builder', () => {
             mockParseCompressArguments.mockReturnValue(mockParsedArgs);
 
             /* Act */
-            const builder = compressBuilder(['--source-dir', '/test/source', '--output-dir', '/test/output', '--overwrite', '--remove-source']);
+            const builder = compressBuilder([
+                '--source-dir',
+                '/test/source',
+                '--output-dir',
+                '/test/output',
+                '--overwrite',
+                '--remove-source',
+            ]);
             const runner = await builder.create();
 
             /* Assert */
@@ -116,21 +134,27 @@ describe('compress.builder', () => {
 
             /* Act */
             const builder = compressBuilder([
-                '--source-dir', '/test/source',
-                '--output-dir', '/test/output',
-                '--temp-dir', '/custom/temp',
+                '--source-dir',
+                '/test/source',
+                '--output-dir',
+                '/test/output',
+                '--temp-dir',
+                '/custom/temp',
                 '--overwrite',
-                '--remove-source'
+                '--remove-source',
             ]);
 
             /* Assert */
             expect(builder).toBeDefined();
             expect(mockParseCompressArguments).toHaveBeenCalledWith([
-                '--source-dir', '/test/source',
-                '--output-dir', '/test/output',
-                '--temp-dir', '/custom/temp',
+                '--source-dir',
+                '/test/source',
+                '--output-dir',
+                '/test/output',
+                '--temp-dir',
+                '/custom/temp',
                 '--overwrite',
-                '--remove-source'
+                '--remove-source',
             ]);
         });
 
@@ -160,7 +184,12 @@ describe('compress.builder', () => {
             });
 
             /* Act */
-            const builder = compressBuilder(['--source-dir', '/test/source', '--output-dir', '/test/output']);
+            const builder = compressBuilder([
+                '--source-dir',
+                '/test/source',
+                '--output-dir',
+                '/test/output',
+            ]);
 
             /* Assert */
             expect(builder).toHaveProperty('create');
@@ -180,11 +209,16 @@ describe('compress.builder', () => {
             });
 
             /* Act */
-            const builder = compressBuilder(['--source-dir', '/test/source', '--output-dir', '/test/output']);
+            const builder = compressBuilder([
+                '--source-dir',
+                '/test/source',
+                '--output-dir',
+                '/test/output',
+            ]);
             const createResult = builder.create();
 
             /* Assert */
             expect(createResult).toBeInstanceOf(Promise);
         });
     });
-}); 
+});

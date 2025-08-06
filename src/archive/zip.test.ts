@@ -21,7 +21,9 @@ describe('createZipArchive', () => {
     describe('factory function', () => {
         it('should create a ZipArchive instance', () => {
             expect(zipArchive).toBeDefined();
-            expect(zipArchive.archiveFile()).toBe(path.join(testDir, 'test.zip'));
+            expect(zipArchive.archiveFile()).toBe(
+                path.join(testDir, 'test.zip')
+            );
         });
     });
 
@@ -31,8 +33,14 @@ describe('createZipArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(path.join(testDir, 'test1.txt'), testBuffer);
-            await storageInstance.write(path.join(testDir, 'test2.txt'), testBuffer);
+            await storageInstance.write(
+                path.join(testDir, 'test1.txt'),
+                testBuffer
+            );
+            await storageInstance.write(
+                path.join(testDir, 'test2.txt'),
+                testBuffer
+            );
 
             const zipPath = path.join(testDir, 'output.zip');
             const zipArchive = createZipArchive(zipPath);
@@ -55,8 +63,14 @@ describe('createZipArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(path.join(testDir, 'test1.txt'), testBuffer);
-            await storageInstance.write(path.join(testDir, 'test2.txt'), testBuffer);
+            await storageInstance.write(
+                path.join(testDir, 'test1.txt'),
+                testBuffer
+            );
+            await storageInstance.write(
+                path.join(testDir, 'test2.txt'),
+                testBuffer
+            );
 
             const zipPath = path.join(testDir, 'test.zip');
             const zipArchive = createZipArchive(zipPath);
@@ -87,7 +101,10 @@ describe('createZipArchive', () => {
             const testContent = 'Hello, World!';
             const testBuffer = new TextEncoder().encode(testContent);
 
-            await storageInstance.write(path.join(testDir, 'test.txt'), testBuffer);
+            await storageInstance.write(
+                path.join(testDir, 'test.txt'),
+                testBuffer
+            );
 
             const zipPath = path.join(testDir, 'test.zip');
             const zipArchive = createZipArchive(zipPath);

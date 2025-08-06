@@ -1,5 +1,5 @@
-import storage from "../utils/storage";
-import path from "node:path";
+import storage from '../utils/storage';
+import path from 'node:path';
 
 /* Group files by basename with different extensions, Each group is a list of files with the same basename */
 export async function groupedFiles(sourceDir: string): Promise<string[][]> {

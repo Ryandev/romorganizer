@@ -68,11 +68,17 @@ describe('help.ts', () => {
             /* Arrange */
             const testCases = [
                 {
-                    schema: { command: 'help' as const, subcommand: 'compress' as const },
+                    schema: {
+                        command: 'help' as const,
+                        subcommand: 'compress' as const,
+                    },
                     expectedText: 'Compress help text',
                 },
                 {
-                    schema: { command: 'help' as const, subcommand: 'verify' as const },
+                    schema: {
+                        command: 'help' as const,
+                        subcommand: 'verify' as const,
+                    },
                     expectedText: 'Verify help text',
                 },
                 {
@@ -94,4 +100,4 @@ describe('help.ts', () => {
             }
         });
     });
-}); 
+});

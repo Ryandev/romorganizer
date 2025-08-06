@@ -1,11 +1,11 @@
-import { 
-    VerificationException, 
-    ConversionException, 
-    CueVerificationResult, 
+import {
+    VerificationException,
+    ConversionException,
+    CueVerificationResult,
     VerificationResult,
     convertChdToNormalizedRedumpDumpFolder,
     verifyChd,
-    stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue
+    stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue,
 } from './dat-verifier';
 import { log } from './logger';
 import storage from './storage';
@@ -58,7 +58,7 @@ describe('datVerifier.ts', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        
+
         /* Setup storage mock with all required methods */
         mockStorage.mockReturnValue({
             createTemporaryDirectory: jest.fn().mockResolvedValue('/temp/dir'),
@@ -90,7 +90,9 @@ describe('datVerifier.ts', () => {
         });
 
         /* Setup hash mock */
-        (mockHash as any).default.calculateFileSha1.mockResolvedValue('a1b2c3d4e5f6');
+        (mockHash as any).default.calculateFileSha1.mockResolvedValue(
+            'a1b2c3d4e5f6'
+        );
     });
 
     describe('VerificationException', () => {
@@ -142,10 +144,18 @@ describe('datVerifier.ts', () => {
         it('should have all expected enum values', () => {
             /* Assert */
             expect(CueVerificationResult.NO_CUE_NEEDED).toBe('NO_CUE_NEEDED');
-            expect(CueVerificationResult.GENERATED_CUE_VERIFIED_EXACTLY).toBe('GENERATED_CUE_VERIFIED_EXACTLY');
-            expect(CueVerificationResult.GENERATED_CUE_MATCHES_ESSENTIALS_FROM_EXTRA_CUE).toBe('GENERATED_CUE_MATCHES_ESSENTIALS_FROM_EXTRA_CUE');
-            expect(CueVerificationResult.GENERATED_CUE_MISMATCH_WITH_NO_EXTRA_CUE_PROVIDED).toBe('GENERATED_CUE_MISMATCH_WITH_NO_EXTRA_CUE_PROVIDED');
-            expect(CueVerificationResult.GENERATED_CUE_DOES_NOT_MATCH_ESSENTIALS_FROM_EXTRA_CUE).toBe('GENERATED_CUE_DOES_NOT_MATCH_ESSENTIALS_FROM_EXTRA_CUE');
+            expect(CueVerificationResult.GENERATED_CUE_VERIFIED_EXACTLY).toBe(
+                'GENERATED_CUE_VERIFIED_EXACTLY'
+            );
+            expect(
+                CueVerificationResult.GENERATED_CUE_MATCHES_ESSENTIALS_FROM_EXTRA_CUE
+            ).toBe('GENERATED_CUE_MATCHES_ESSENTIALS_FROM_EXTRA_CUE');
+            expect(
+                CueVerificationResult.GENERATED_CUE_MISMATCH_WITH_NO_EXTRA_CUE_PROVIDED
+            ).toBe('GENERATED_CUE_MISMATCH_WITH_NO_EXTRA_CUE_PROVIDED');
+            expect(
+                CueVerificationResult.GENERATED_CUE_DOES_NOT_MATCH_ESSENTIALS_FROM_EXTRA_CUE
+            ).toBe('GENERATED_CUE_DOES_NOT_MATCH_ESSENTIALS_FROM_EXTRA_CUE');
         });
     });
 
@@ -165,7 +175,9 @@ describe('datVerifier.ts', () => {
 
             /* Assert */
             expect(result.game).toBe(mockGame);
-            expect(result.cueVerificationResult).toBe(CueVerificationResult.NO_CUE_NEEDED);
+            expect(result.cueVerificationResult).toBe(
+                CueVerificationResult.NO_CUE_NEEDED
+            );
         });
     });
 
@@ -182,10 +194,15 @@ describe('datVerifier.ts', () => {
             `;
 
             /* Act */
-            const result = stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(cueText);
+            const result =
+                stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(
+                    cueText
+                );
 
             /* Assert */
-            expect(result).toBe('FILE "test.bin" BINARY\nTRACK 01 MODE1/2352\nINDEX 01 00:00:00');
+            expect(result).toBe(
+                'FILE "test.bin" BINARY\nTRACK 01 MODE1/2352\nINDEX 01 00:00:00'
+            );
         });
 
         it('should handle empty input', () => {
@@ -193,7 +210,10 @@ describe('datVerifier.ts', () => {
             const cueText = '';
 
             /* Act */
-            const result = stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(cueText);
+            const result =
+                stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(
+                    cueText
+                );
 
             /* Assert */
             expect(result).toBe('');
@@ -208,7 +228,10 @@ describe('datVerifier.ts', () => {
             `;
 
             /* Act */
-            const result = stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(cueText);
+            const result =
+                stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(
+                    cueText
+                );
 
             /* Assert */
             expect(result).toBe('');
@@ -223,10 +246,15 @@ describe('datVerifier.ts', () => {
             `;
 
             /* Act */
-            const result = stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(cueText);
+            const result =
+                stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(
+                    cueText
+                );
 
             /* Assert */
-            expect(result).toBe('file "test.bin" BINARY\ntrack 01 MODE1/2352\nindex 01 00:00:00');
+            expect(result).toBe(
+                'file "test.bin" BINARY\ntrack 01 MODE1/2352\nindex 01 00:00:00'
+            );
         });
 
         it('should handle all supported commands', () => {
@@ -240,10 +268,15 @@ describe('datVerifier.ts', () => {
             `;
 
             /* Act */
-            const result = stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(cueText);
+            const result =
+                stripInsignificantWhitespaceAndChdmanUnsupportedCommandsFromCue(
+                    cueText
+                );
 
             /* Assert */
-            expect(result).toBe('FILE "test.bin" BINARY\nTRACK 01 MODE1/2352\nPREGAP 00:02:00\nINDEX 01 00:00:00\nPOSTGAP 00:02:00');
+            expect(result).toBe(
+                'FILE "test.bin" BINARY\nTRACK 01 MODE1/2352\nPREGAP 00:02:00\nINDEX 01 00:00:00\nPOSTGAP 00:02:00'
+            );
         });
     });
 
@@ -253,11 +286,18 @@ describe('datVerifier.ts', () => {
             const chdPath = '/test/game.chd';
             const redumpDumpFolder = '/test/output';
             const mockExtractedCuePath = '/temp/extracted.cue';
-            
+
             mockChd.extract.mockResolvedValue(mockExtractedCuePath);
             mockStorage.mockReturnValue({
-                createTemporaryDirectory: jest.fn().mockResolvedValue('/temp/dir'),
-                list: jest.fn().mockResolvedValue(['/temp/extracted.cue', '/temp/extracted.bin']),
+                createTemporaryDirectory: jest
+                    .fn()
+                    .mockResolvedValue('/temp/dir'),
+                list: jest
+                    .fn()
+                    .mockResolvedValue([
+                        '/temp/extracted.cue',
+                        '/temp/extracted.bin',
+                    ]),
                 copy: jest.fn().mockResolvedValue(undefined),
                 createDirectory: jest.fn().mockResolvedValue(undefined),
                 exists: jest.fn().mockResolvedValue(true),
@@ -279,14 +319,19 @@ describe('datVerifier.ts', () => {
             } as any);
 
             /* Act */
-            await convertChdToNormalizedRedumpDumpFolder(chdPath, redumpDumpFolder);
+            await convertChdToNormalizedRedumpDumpFolder(
+                chdPath,
+                redumpDumpFolder
+            );
 
             /* Assert */
             expect(mockChd.extract).toHaveBeenCalledWith({
                 chdFilePath: chdPath,
                 format: 'cue',
             });
-            expect(mockLog.info).toHaveBeenCalledWith('Converting "game.chd" to .bin/.cue format');
+            expect(mockLog.info).toHaveBeenCalledWith(
+                'Converting "game.chd" to .bin/.cue format'
+            );
         });
 
         it('should handle conversion errors', async () => {
@@ -294,11 +339,18 @@ describe('datVerifier.ts', () => {
             const chdPath = '/test/game.chd';
             const redumpDumpFolder = '/test/output';
             const error = new Error('CHD extraction failed');
-            
+
             mockChd.extract.mockRejectedValue(error);
 
             /* Act & Assert */
-            await expect(convertChdToNormalizedRedumpDumpFolder(chdPath, redumpDumpFolder)).rejects.toThrow('Failed to convert .chd using existing CHD implementation');
+            await expect(
+                convertChdToNormalizedRedumpDumpFolder(
+                    chdPath,
+                    redumpDumpFolder
+                )
+            ).rejects.toThrow(
+                'Failed to convert .chd using existing CHD implementation'
+            );
         });
     });
 
@@ -326,14 +378,17 @@ describe('datVerifier.ts', () => {
             const mockDat = {
                 games: [mockGame],
                 romsBySha1hex: new Map([
-                    ['a1b2c3d4e5f6', [
-                        {
-                            name: 'extracted.bin',
-                            size: 1024,
-                            sha1hex: 'a1b2c3d4e5f6',
-                            game: mockGame,
-                        }
-                    ]]
+                    [
+                        'a1b2c3d4e5f6',
+                        [
+                            {
+                                name: 'extracted.bin',
+                                size: 1024,
+                                sha1hex: 'a1b2c3d4e5f6',
+                                game: mockGame,
+                            },
+                        ],
+                    ],
                 ]),
             } as any;
             const showCommandOutput = false;
@@ -342,9 +397,22 @@ describe('datVerifier.ts', () => {
             /* Mock the verification process */
             mockChd.extract.mockResolvedValue('/temp/extracted.cue');
             mockStorage.mockReturnValue({
-                createTemporaryDirectory: jest.fn().mockResolvedValue('/temp/dir'),
-                list: jest.fn().mockResolvedValue(['/temp/extracted.cue', '/temp/extracted.bin']),
-                read: jest.fn().mockResolvedValue(new TextEncoder().encode('FILE "game.bin" BINARY\nTRACK 01 MODE1/2352\nINDEX 01 00:00:00')),
+                createTemporaryDirectory: jest
+                    .fn()
+                    .mockResolvedValue('/temp/dir'),
+                list: jest
+                    .fn()
+                    .mockResolvedValue([
+                        '/temp/extracted.cue',
+                        '/temp/extracted.bin',
+                    ]),
+                read: jest
+                    .fn()
+                    .mockResolvedValue(
+                        new TextEncoder().encode(
+                            'FILE "game.bin" BINARY\nTRACK 01 MODE1/2352\nINDEX 01 00:00:00'
+                        )
+                    ),
                 remove: jest.fn().mockResolvedValue(undefined),
                 copy: jest.fn().mockResolvedValue(undefined),
                 exists: jest.fn().mockResolvedValue(true),
@@ -366,7 +434,12 @@ describe('datVerifier.ts', () => {
             } as any);
 
             /* Act */
-            const result = await verifyChd(chdPath, mockDat, showCommandOutput, allowCueMismatches);
+            const result = await verifyChd(
+                chdPath,
+                mockDat,
+                showCommandOutput,
+                allowCueMismatches
+            );
 
             /* Assert */
             expect(result).toBeDefined();
@@ -383,10 +456,12 @@ describe('datVerifier.ts', () => {
                 games: [],
             } as any;
             const error = new Error('Verification failed');
-            
+
             mockChd.extract.mockRejectedValue(error);
             mockStorage.mockReturnValue({
-                createTemporaryDirectory: jest.fn().mockResolvedValue('/temp/dir'),
+                createTemporaryDirectory: jest
+                    .fn()
+                    .mockResolvedValue('/temp/dir'),
                 list: jest.fn().mockResolvedValue([]),
                 copy: jest.fn().mockResolvedValue(undefined),
                 exists: jest.fn().mockResolvedValue(true),
@@ -407,7 +482,11 @@ describe('datVerifier.ts', () => {
             } as any);
 
             /* Act & Assert */
-            await expect(verifyChd(chdPath, mockDat, false, false)).rejects.toThrow('Failed to convert .chd using existing CHD implementation');
+            await expect(
+                verifyChd(chdPath, mockDat, false, false)
+            ).rejects.toThrow(
+                'Failed to convert .chd using existing CHD implementation'
+            );
         });
     });
-}); 
+});

@@ -110,7 +110,9 @@ describe('runners/utils.ts', () => {
             } as any);
 
             /* Act & Assert */
-            await expect(groupedFiles('/test/source')).rejects.toThrow('Storage error');
+            await expect(groupedFiles('/test/source')).rejects.toThrow(
+                'Storage error'
+            );
         });
 
         it('should handle single file in directory', async () => {
@@ -143,7 +145,11 @@ describe('runners/utils.ts', () => {
 
             /* Assert */
             expect(result).toEqual([
-                ['/test/source/subdir1/game.bin', '/test/source/subdir2/game.cue', '/test/source/game.iso'],
+                [
+                    '/test/source/subdir1/game.bin',
+                    '/test/source/subdir2/game.cue',
+                    '/test/source/game.iso',
+                ],
             ]);
         });
     });
@@ -186,4 +192,4 @@ describe('runners/utils.ts', () => {
             expect(fileExtension('.config.txt')).toBe('txt');
         });
     });
-}); 
+});

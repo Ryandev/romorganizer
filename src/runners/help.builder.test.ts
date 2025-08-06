@@ -128,7 +128,11 @@ describe('help.builder', () => {
 
             /* Assert */
             expect(builder).toBeDefined();
-            expect(mockParseHelpArguments).toHaveBeenCalledWith(['verify', '--extra', 'args']);
+            expect(mockParseHelpArguments).toHaveBeenCalledWith([
+                'verify',
+                '--extra',
+                'args',
+            ]);
         });
 
         it('should propagate parsing errors', () => {
@@ -165,14 +169,16 @@ describe('help.builder', () => {
         it('should handle different subcommands correctly', () => {
             /* Arrange */
             const subcommands = ['compress', 'verify', 'help', undefined];
-            
+
             for (const subcommand of subcommands) {
                 const mockParsedArgs = {
                     command: 'help' as const,
                     subcommand,
                 };
                 mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-                mockHelpText.mockReturnValue(`${subcommand || 'global'} help text`);
+                mockHelpText.mockReturnValue(
+                    `${subcommand || 'global'} help text`
+                );
 
                 /* Act */
                 const builder = helpBuilder(subcommand ? [subcommand] : []);
@@ -276,4 +282,4 @@ describe('help.builder', () => {
             expect(helpText).toBe('Long subcommand help text');
         });
     });
-}); 
+});

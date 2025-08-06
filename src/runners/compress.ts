@@ -23,19 +23,35 @@ const EXTRACT_OPERATIONS = new Map<
             const ecmArchive = createArchive(sourceFile);
             let extractedFile = await ecmArchive.extract();
             const extractedFileExtension = fileExtension(extractedFile);
-            guardFileExists(extractedFile, `Extracted file missing, does not exist: ${extractedFile}`);
-            const cueFile = allFiles.find(file => file.toLowerCase().endsWith('.cue'));
-            if ( cueFile ) {
+            guardFileExists(
+                extractedFile,
+                `Extracted file missing, does not exist: ${extractedFile}`
+            );
+            const cueFile = allFiles.find(file =>
+                file.toLowerCase().endsWith('.cue')
+            );
+            if (cueFile) {
                 /* Read the cue file & get the name of the expected bin/img/etc (look based on the extractedFileExtension) file. */
                 /* If the bin filename does not match the cue file. Rename the bin file before returning */
                 const cueContent = await cueSheet.parseFromCueFile(cueFile);
                 const cueData = await cueSheet.deserializeCueSheet(cueContent);
-                const trackFileName = cueData.files.map(file => file.filename).find(filename => filename.toLowerCase().endsWith(extractedFileExtension));
-                log.info(`Found cue file ${cueFile} & data file ${trackFileName}`);
-                if ( trackFileName ) {
-                    const trackFilePath = path.join(path.dirname(cueFile), trackFileName);
-                    if ( trackFilePath !== extractedFile ) {
-                        log.info(`Renaming extracted ecm file ${extractedFile} to ${trackFilePath}`);
+                const trackFileName = cueData.files
+                    .map(file => file.filename)
+                    .find(filename =>
+                        filename.toLowerCase().endsWith(extractedFileExtension)
+                    );
+                log.info(
+                    `Found cue file ${cueFile} & data file ${trackFileName}`
+                );
+                if (trackFileName) {
+                    const trackFilePath = path.join(
+                        path.dirname(cueFile),
+                        trackFileName
+                    );
+                    if (trackFilePath !== extractedFile) {
+                        log.info(
+                            `Renaming extracted ecm file ${extractedFile} to ${trackFilePath}`
+                        );
                         await storage().move(extractedFile, trackFilePath);
                         extractedFile = trackFilePath;
                     }
@@ -50,14 +66,21 @@ const EXTRACT_OPERATIONS = new Map<
             if (!sourceFile.endsWith('.7z')) {
                 return [];
             }
-            const extractedDirectory = await createArchive(sourceFile).extract();
-            guardDirectoryExists(extractedDirectory, `Extracted directory missing, does not exist: ${extractedDirectory}`);
+            const extractedDirectory =
+                await createArchive(sourceFile).extract();
+            guardDirectoryExists(
+                extractedDirectory,
+                `Extracted directory missing, does not exist: ${extractedDirectory}`
+            );
             const contents = await storage().list(extractedDirectory, {
                 recursive: true,
                 avoidHiddenFiles: true,
                 includeDirectories: false,
             });
-            guard(contents.length > 0, `No files found in extracted directory: ${extractedDirectory}`);
+            guard(
+                contents.length > 0,
+                `No files found in extracted directory: ${extractedDirectory}`
+            );
             return contents;
         },
     ],
@@ -71,7 +94,10 @@ const EXTRACT_OPERATIONS = new Map<
                 chdFilePath: sourceFile,
                 format: 'cue',
             });
-            guardFileExists(extractedFile, `Extracted file missing, does not exist: ${extractedFile}`);
+            guardFileExists(
+                extractedFile,
+                `Extracted file missing, does not exist: ${extractedFile}`
+            );
             return [extractedFile];
         },
     ],
@@ -81,14 +107,21 @@ const EXTRACT_OPERATIONS = new Map<
             if (!sourceFile.endsWith('.rar')) {
                 return [];
             }
-            const extractedDirectory = await createArchive(sourceFile).extract();
-            guardDirectoryExists(extractedDirectory, `Extracted directory missing, does not exist: ${extractedDirectory}`);
+            const extractedDirectory =
+                await createArchive(sourceFile).extract();
+            guardDirectoryExists(
+                extractedDirectory,
+                `Extracted directory missing, does not exist: ${extractedDirectory}`
+            );
             const contents = await storage().list(extractedDirectory, {
                 recursive: true,
                 avoidHiddenFiles: true,
                 includeDirectories: false,
             });
-            guard(contents.length > 0, `No files found in extracted directory: ${extractedDirectory}`);
+            guard(
+                contents.length > 0,
+                `No files found in extracted directory: ${extractedDirectory}`
+            );
             return contents;
         },
     ],
@@ -99,13 +132,19 @@ const EXTRACT_OPERATIONS = new Map<
                 return [];
             }
             const outputDirectory = await createArchive(sourceFile).extract();
-            guardDirectoryExists(outputDirectory, `Output directory missing, does not exist: ${outputDirectory}`);
+            guardDirectoryExists(
+                outputDirectory,
+                `Output directory missing, does not exist: ${outputDirectory}`
+            );
             const contents = await storage().list(outputDirectory, {
                 recursive: true,
                 avoidHiddenFiles: true,
                 includeDirectories: false,
             });
-            guard(contents.length > 0, `No files found in extracted directory: ${outputDirectory}`);
+            guard(
+                contents.length > 0,
+                `No files found in extracted directory: ${outputDirectory}`
+            );
             return contents;
         },
     ],
@@ -127,7 +166,10 @@ const EXTRACT_OPERATIONS = new Map<
                 cueFilePath,
                 new TextEncoder().encode(cueContent)
             );
-            guardFileExists(cueFilePath, `CUE file missing, does not exist: ${cueFilePath}`);
+            guardFileExists(
+                cueFilePath,
+                `CUE file missing, does not exist: ${cueFilePath}`
+            );
             return [cueFilePath];
         },
     ],
@@ -139,7 +181,10 @@ const EXTRACT_OPERATIONS = new Map<
             }
             /* Convert MDF to ISO first, then extract ISO to get BIN/CUE */
             const isoFile = await mdf.convertToIso(sourceFile);
-            guardFileExists(isoFile, `ISO file missing, does not exist: ${isoFile}`);
+            guardFileExists(
+                isoFile,
+                `ISO file missing, does not exist: ${isoFile}`
+            );
             return [isoFile];
         },
     ],
@@ -176,7 +221,10 @@ const EXTRACT_OPERATIONS = new Map<
             }
             /* Convert ISO to bin/cue using poweriso */
             const binFile = await iso.convert(sourceFile, 'bin');
-            guardFileExists(binFile, `Bin file missing, does not exist: ${binFile}`);
+            guardFileExists(
+                binFile,
+                `Bin file missing, does not exist: ${binFile}`
+            );
             return [binFile];
         },
     ],
@@ -194,7 +242,7 @@ export class RunnerFile implements IRunner<string[]> {
 
     constructor(
         private readonly sourceFiles: string[],
-        private readonly overwrite: boolean,
+        private readonly overwrite: boolean
     ) {
         this.sourceFiles = sourceFiles;
         this.overwrite = overwrite;
@@ -226,8 +274,13 @@ export class RunnerFile implements IRunner<string[]> {
                         continue;
                     }
 
-                    log.info(`Extracting file ${filePath} with operation ${extractOperation.name}`);
-                    const extractedFiles = await extractOperation(filePath, currentFiles);
+                    log.info(
+                        `Extracting file ${filePath} with operation ${extractOperation.name}`
+                    );
+                    const extractedFiles = await extractOperation(
+                        filePath,
+                        currentFiles
+                    );
                     log.info(`Extracted files: ${extractedFiles}`);
                     /* Move extracted files back to current directory */
                     for (const extractedFile of extractedFiles) {
@@ -235,7 +288,9 @@ export class RunnerFile implements IRunner<string[]> {
                             workingDirectory,
                             path.basename(extractedFile)
                         );
-                        log.info(`Moving extracted file ${extractedFile} to ${newFilePath}`);
+                        log.info(
+                            `Moving extracted file ${extractedFile} to ${newFilePath}`
+                        );
                         await this.storage.move(extractedFile, newFilePath);
                         currentFiles.push(newFilePath);
                     }
@@ -260,7 +315,7 @@ export class RunnerFile implements IRunner<string[]> {
         const outputFile = `${path.basename(this.sourceFiles[0] ?? '')}.chd`;
         const outputDirectory = path.dirname(this.sourceFiles[0] ?? '');
         const outputFilePath = path.join(outputDirectory, outputFile);
-        if (await storage().exists(outputFilePath) && !this.overwrite) {
+        if ((await storage().exists(outputFilePath)) && !this.overwrite) {
             throw new Error(`Output file already exists: ${outputFilePath}`);
         }
 
@@ -327,7 +382,7 @@ export class RunnerDirectory implements IRunner<string[]> {
         private readonly outputDir: string,
         private readonly tempDir: string | undefined,
         private readonly overwrite: boolean,
-        private readonly removeSource: boolean,
+        private readonly removeSource: boolean
     ) {
         this.sourceDir = sourceDir;
         this.outputDir = outputDir;
@@ -350,7 +405,7 @@ export class RunnerDirectory implements IRunner<string[]> {
             'cue',
             'gdi',
         ]); /* Files that can be directly compressed to CHD */
-    
+
         /* Check if any file can be extracted or directly compressed */
         const canExtract = [...supportedExtensions].some(extension =>
             fileExtensions.has(extension)
@@ -358,75 +413,91 @@ export class RunnerDirectory implements IRunner<string[]> {
         const canCompress = [...compressibleExtensions].some(extension =>
             fileExtensions.has(extension)
         );
-    
+
         if (!canExtract && !canCompress) {
             return new Error(
                 `No matching extensions found for ${sourceFiles.join(', ')}`
             );
         }
-   
+
         return new RunnerFile(sourceFiles, overwrite);
     }
-    
 
     async start(): Promise<string[]> {
         if (this.tempDir) {
             setTemporaryDirectory(this.tempDir);
         }
-                    
-            const outputFiles: string[] = [];
-            const fileGroups = await groupedFiles(this.sourceDir);
-            log.info(`Found ${fileGroups.length} files in source directory`);
-        
-            for (const files of fileGroups) {
-                log.info(`Processing files: ${files}`);
-                const runner = this._createRunner(files, this.overwrite);
-                if (runner instanceof Error) {
-                    log.error(`Error creating runner for ${files}: ${runner.message}`);
-                    continue;
-                }
 
-                const sourceFileExtension = fileExtension(files[0] ?? '');
-                const sourceFileNameNoExtension = path.basename(files[0] ?? '', `.${sourceFileExtension}`);
-                const expectedOutputFileName = `${sourceFileNameNoExtension}.chd`;
-                const expectedOutputFilePath = path.join(this.outputDir, expectedOutputFileName);
+        const outputFiles: string[] = [];
+        const fileGroups = await groupedFiles(this.sourceDir);
+        log.info(`Found ${fileGroups.length} files in source directory`);
 
-                if ( await storage().exists(expectedOutputFilePath) && !this.overwrite ) {
-                    log.info(`Skipping ${files} - output file: ${expectedOutputFilePath} already exists in output directory`);
-                    continue;
-                }
+        for (const files of fileGroups) {
+            log.info(`Processing files: ${files}`);
+            const runner = this._createRunner(files, this.overwrite);
+            if (runner instanceof Error) {
+                log.error(
+                    `Error creating runner for ${files}: ${runner.message}`
+                );
+                continue;
+            }
 
-                const outputFilePaths = await runner.start();
+            const sourceFileExtension = fileExtension(files[0] ?? '');
+            const sourceFileNameNoExtension = path.basename(
+                files[0] ?? '',
+                `.${sourceFileExtension}`
+            );
+            const expectedOutputFileName = `${sourceFileNameNoExtension}.chd`;
+            const expectedOutputFilePath = path.join(
+                this.outputDir,
+                expectedOutputFileName
+            );
 
-                for ( const [index, outputFilePath] of Object.entries(outputFilePaths.filter(filePath => filePath.endsWith('.chd'))) ) {
-                    const outputFileExtension = fileExtension(outputFilePath);
-                    /* Attempt to rename the output file to the expected output file name
+            if (
+                (await storage().exists(expectedOutputFilePath)) &&
+                !this.overwrite
+            ) {
+                log.info(
+                    `Skipping ${files} - output file: ${expectedOutputFilePath} already exists in output directory`
+                );
+                continue;
+            }
+
+            const outputFilePaths = await runner.start();
+
+            for (const [index, outputFilePath] of Object.entries(
+                outputFilePaths.filter(filePath => filePath.endsWith('.chd'))
+            )) {
+                const outputFileExtension = fileExtension(outputFilePath);
+                /* Attempt to rename the output file to the expected output file name
                        If there are multiple output files, append the index to the file name */
-                    let targetFileName = `${sourceFileNameNoExtension}.${outputFileExtension}`;
-                    if ( outputFilePaths.length > 1 ) {
-                        targetFileName = `${sourceFileNameNoExtension}.${index}.${outputFileExtension}`;
-                    }
-                    const targetPath = path.join(this.outputDir, targetFileName);
-                    const targetPathExists = await storage().exists(targetPath);
-        
-                    if (targetPathExists && !this.overwrite) {
-                        log.info(
-                            `Skipping ${files} - output file ${targetPath} already exists in output directory`
-                        );
-                        continue;
-                    }
+                let targetFileName = `${sourceFileNameNoExtension}.${outputFileExtension}`;
+                if (outputFilePaths.length > 1) {
+                    targetFileName = `${sourceFileNameNoExtension}.${index}.${outputFileExtension}`;
+                }
+                const targetPath = path.join(this.outputDir, targetFileName);
+                const targetPathExists = await storage().exists(targetPath);
 
-                    await storage().move(outputFilePath, targetPath);
-                    outputFiles.push(targetPath);
+                if (targetPathExists && !this.overwrite) {
+                    log.info(
+                        `Skipping ${files} - output file ${targetPath} already exists in output directory`
+                    );
+                    continue;
+                }
 
-                    if (this.removeSource) {
-                        await Promise.all(files.map(file => storage().remove(file)));
-                        log.info(`Removed source files: ${files.join(', ')}`);
-                    }    
+                await storage().move(outputFilePath, targetPath);
+                outputFiles.push(targetPath);
+
+                if (this.removeSource) {
+                    await Promise.all(
+                        files.map(file => storage().remove(file))
+                    );
+                    log.info(`Removed source files: ${files.join(', ')}`);
                 }
             }
-        
-            log.info(`Output files: ${outputFiles.join(', ')}`);
-            return outputFiles;
+        }
+
+        log.info(`Output files: ${outputFiles.join(', ')}`);
+        return outputFiles;
     }
 }

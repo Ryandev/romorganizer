@@ -1,4 +1,8 @@
-import { IStorageListOptions, StorageOptionListDefaults, IStorage } from './storage.interface';
+import {
+    IStorageListOptions,
+    StorageOptionListDefaults,
+    IStorage,
+} from './storage.interface';
 
 describe('storage.interface.ts', () => {
     describe('IStorageListOptions', () => {
@@ -76,7 +80,9 @@ describe('storage.interface.ts', () => {
             expect(typeof mockStorage.size).toBe('function');
             expect(typeof mockStorage.copy).toBe('function');
             expect(typeof mockStorage.move).toBe('function');
-            expect(typeof mockStorage.createTemporaryDirectory).toBe('function');
+            expect(typeof mockStorage.createTemporaryDirectory).toBe(
+                'function'
+            );
             expect(typeof mockStorage.pathSeparator).toBe('function');
         });
 
@@ -95,23 +101,41 @@ describe('storage.interface.ts', () => {
                 size: jest.fn().mockResolvedValue(1024),
                 copy: jest.fn().mockResolvedValue(undefined),
                 move: jest.fn().mockResolvedValue(undefined),
-                createTemporaryDirectory: jest.fn().mockResolvedValue('/temp/dir'),
+                createTemporaryDirectory: jest
+                    .fn()
+                    .mockResolvedValue('/temp/dir'),
                 pathSeparator: jest.fn().mockReturnValue('/'),
             };
 
             /* Act & Assert */
-            await expect(mockStorage.write('/test/file', new ArrayBuffer(0))).resolves.toBeUndefined();
-            await expect(mockStorage.read('/test/file')).resolves.toBeInstanceOf(ArrayBuffer);
+            await expect(
+                mockStorage.write('/test/file', new ArrayBuffer(0))
+            ).resolves.toBeUndefined();
+            await expect(
+                mockStorage.read('/test/file')
+            ).resolves.toBeInstanceOf(ArrayBuffer);
             await expect(mockStorage.list('/test/dir')).resolves.toEqual([]);
             await expect(mockStorage.exists('/test/file')).resolves.toBe(true);
             await expect(mockStorage.isFile('/test/file')).resolves.toBe(true);
-            await expect(mockStorage.isDirectory('/test/dir')).resolves.toBe(false);
-            await expect(mockStorage.createDirectory('/test/dir')).resolves.toBeUndefined();
-            await expect(mockStorage.remove('/test/file')).resolves.toBeUndefined();
+            await expect(mockStorage.isDirectory('/test/dir')).resolves.toBe(
+                false
+            );
+            await expect(
+                mockStorage.createDirectory('/test/dir')
+            ).resolves.toBeUndefined();
+            await expect(
+                mockStorage.remove('/test/file')
+            ).resolves.toBeUndefined();
             await expect(mockStorage.size('/test/file')).resolves.toBe(1024);
-            await expect(mockStorage.copy('/test/source', '/test/dest')).resolves.toBeUndefined();
-            await expect(mockStorage.move('/test/source', '/test/dest')).resolves.toBeUndefined();
-            await expect(mockStorage.createTemporaryDirectory()).resolves.toBe('/temp/dir');
+            await expect(
+                mockStorage.copy('/test/source', '/test/dest')
+            ).resolves.toBeUndefined();
+            await expect(
+                mockStorage.move('/test/source', '/test/dest')
+            ).resolves.toBeUndefined();
+            await expect(mockStorage.createTemporaryDirectory()).resolves.toBe(
+                '/temp/dir'
+            );
             expect(mockStorage.pathSeparator()).toBe('/');
         });
 
@@ -148,4 +172,4 @@ describe('storage.interface.ts', () => {
             expect(mockStorage.list).toHaveBeenCalledWith('/test/dir', options);
         });
     });
-}); 
+});

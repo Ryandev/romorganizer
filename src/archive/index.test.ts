@@ -22,10 +22,19 @@ jest.mock('./ecm', () => ({
 }));
 
 describe('archive/index.ts', () => {
-    const MockCreateSevenZipArchive = createSevenZipArchive as jest.MockedFunction<typeof createSevenZipArchive>;
-    const MockCreateRarArchive = createRarArchive as jest.MockedFunction<typeof createRarArchive>;
-    const MockCreateZipArchive = createZipArchive as jest.MockedFunction<typeof createZipArchive>;
-    const MockCreateEcmArchive = createEcmArchive as jest.MockedFunction<typeof createEcmArchive>;
+    const MockCreateSevenZipArchive =
+        createSevenZipArchive as jest.MockedFunction<
+            typeof createSevenZipArchive
+        >;
+    const MockCreateRarArchive = createRarArchive as jest.MockedFunction<
+        typeof createRarArchive
+    >;
+    const MockCreateZipArchive = createZipArchive as jest.MockedFunction<
+        typeof createZipArchive
+    >;
+    const MockCreateEcmArchive = createEcmArchive as jest.MockedFunction<
+        typeof createEcmArchive
+    >;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -41,7 +50,9 @@ describe('archive/index.ts', () => {
             const result = createArchive('/test/file.7z');
 
             /* Assert */
-            expect(MockCreateSevenZipArchive).toHaveBeenCalledWith('/test/file.7z');
+            expect(MockCreateSevenZipArchive).toHaveBeenCalledWith(
+                '/test/file.7z'
+            );
             expect(result).toBe(mockInstance);
         });
 
@@ -54,7 +65,9 @@ describe('archive/index.ts', () => {
             const result = createArchive('/test/file.7Z');
 
             /* Assert */
-            expect(MockCreateSevenZipArchive).toHaveBeenCalledWith('/test/file.7Z');
+            expect(MockCreateSevenZipArchive).toHaveBeenCalledWith(
+                '/test/file.7Z'
+            );
             expect(result).toBe(mockInstance);
         });
 
@@ -138,14 +151,22 @@ describe('archive/index.ts', () => {
 
         it('should throw error for unsupported file extensions', () => {
             /* Act & Assert */
-            expect(() => createArchive('/test/file.tar')).toThrow('Unsupported file extension: tar');
-            expect(() => createArchive('/test/file.gz')).toThrow('Unsupported file extension: gz');
-            expect(() => createArchive('/test/file.bz2')).toThrow('Unsupported file extension: bz2');
+            expect(() => createArchive('/test/file.tar')).toThrow(
+                'Unsupported file extension: tar'
+            );
+            expect(() => createArchive('/test/file.gz')).toThrow(
+                'Unsupported file extension: gz'
+            );
+            expect(() => createArchive('/test/file.bz2')).toThrow(
+                'Unsupported file extension: bz2'
+            );
         });
 
         it('should throw error for files without extension', () => {
             /* Act & Assert */
-            expect(() => createArchive('/test/file')).toThrow('Unsupported file extension: ');
+            expect(() => createArchive('/test/file')).toThrow(
+                'Unsupported file extension: '
+            );
         });
 
         it('should handle files with multiple dots correctly', () => {
@@ -157,7 +178,9 @@ describe('archive/index.ts', () => {
             const result = createArchive('/test/file.backup.zip');
 
             /* Assert */
-            expect(MockCreateZipArchive).toHaveBeenCalledWith('/test/file.backup.zip');
+            expect(MockCreateZipArchive).toHaveBeenCalledWith(
+                '/test/file.backup.zip'
+            );
             expect(result).toBe(mockInstance);
         });
 
@@ -170,8 +193,10 @@ describe('archive/index.ts', () => {
             const result = createArchive('/test/path.with.dots/file.zip');
 
             /* Assert */
-            expect(MockCreateZipArchive).toHaveBeenCalledWith('/test/path.with.dots/file.zip');
+            expect(MockCreateZipArchive).toHaveBeenCalledWith(
+                '/test/path.with.dots/file.zip'
+            );
             expect(result).toBe(mockInstance);
         });
     });
-}); 
+});
