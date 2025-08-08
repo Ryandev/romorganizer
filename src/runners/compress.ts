@@ -63,7 +63,7 @@ const EXTRACT_OPERATIONS = new Map<
     [
         '7z',
         async (sourceFile: string) => {
-            if (!sourceFile.endsWith('.7z')) {
+            if (!sourceFile.toLowerCase().endsWith('.7z')) {
                 return [];
             }
             const extractedDirectory =
@@ -104,7 +104,7 @@ const EXTRACT_OPERATIONS = new Map<
     [
         'rar',
         async (sourceFile: string) => {
-            if (!sourceFile.endsWith('.rar')) {
+            if (!sourceFile.toLowerCase().endsWith('.rar')) {
                 return [];
             }
             const extractedDirectory =
@@ -128,7 +128,7 @@ const EXTRACT_OPERATIONS = new Map<
     [
         'zip',
         async (sourceFile: string) => {
-            if (!sourceFile.endsWith('.zip')) {
+            if (!sourceFile.toLowerCase().endsWith('.zip')) {
                 return [];
             }
             const outputDirectory = await createArchive(sourceFile).extract();
@@ -151,15 +151,15 @@ const EXTRACT_OPERATIONS = new Map<
     [
         'ccd',
         async (sourceFile: string) => {
-            if (!sourceFile.endsWith('.ccd')) {
+            if (!sourceFile.toLowerCase().endsWith('.ccd')) {
                 return [];
             }
             /* Convert CCD to CUE */
             const cueContent = await cueSheet.parseFromCCDFile(sourceFile);
-            const baseName = path.basename(sourceFile, '.ccd');
+            const fileNameNoExtension = path.basename(sourceFile, path.extname(sourceFile));
             const cueFilePath = path.join(
                 path.dirname(sourceFile),
-                `${baseName}.cue`
+                `${fileNameNoExtension}.cue`
             );
             const storageInstance = await storage();
             await storageInstance.write(
@@ -176,7 +176,7 @@ const EXTRACT_OPERATIONS = new Map<
     [
         'mdf',
         async (sourceFile: string) => {
-            if (!sourceFile.endsWith('.mdf')) {
+            if (!sourceFile.toLowerCase().endsWith('.mdf')) {
                 return [];
             }
             /* Convert MDF to ISO first, then extract ISO to get BIN/CUE */
@@ -191,15 +191,16 @@ const EXTRACT_OPERATIONS = new Map<
     [
         'iso',
         async (sourceFile: string) => {
-            if (!sourceFile.endsWith('.iso')) {
+            if (!sourceFile.toLowerCase().endsWith('.iso')) {
                 return [];
             }
             /* Convert ISO to bin/cue using poweriso */
             const binFile = await iso.convert(sourceFile, 'bin');
+            const binFileNoExtension = path.basename(binFile, path.extname(binFile));
             /* Generate CUE file */
             const cueFilePath = path.join(
                 path.dirname(binFile),
-                `${path.basename(binFile, '.bin')}.cue`
+                `${binFileNoExtension}.cue`
             );
             await cueSheet.createCueFile(binFile, cueFilePath);
             guardFileExists(
@@ -216,7 +217,7 @@ const EXTRACT_OPERATIONS = new Map<
     [
         'nrg',
         async (sourceFile: string) => {
-            if (!sourceFile.endsWith('.nrg')) {
+            if (!sourceFile.toLowerCase().endsWith('.nrg')) {
                 return [];
             }
             /* Convert ISO to bin/cue using poweriso */
@@ -231,13 +232,14 @@ const EXTRACT_OPERATIONS = new Map<
     [
         'img',
         async (sourceFile: string) => {
-            if (!sourceFile.endsWith('.img')) {
+            if (!sourceFile.toLowerCase().endsWith('.img')) {
                 return [];
             }
+            const fileNameNoExtension = path.basename(sourceFile, path.extname(sourceFile));
             /* rename file to .bin */
             const binFile = path.join(
                 path.dirname(sourceFile),
-                `${path.basename(sourceFile, '.img')}.bin`
+                `${fileNameNoExtension}.bin`
             );
             await storage().move(sourceFile, binFile);
             guardFileExists(
@@ -276,13 +278,15 @@ export class RunnerFile implements IRunner<string[]> {
         const fileListings = await this.storage.list(workingDirectory);
         /* Keep extracting until no more extraction is possible */
         const currentFiles = [...fileListings];
+        /* Keep track of files that have already been extracted */
+        const ignoreList: string[] = [];
         let extractionOccurred = true;
 
         while (extractionOccurred) {
             extractionOccurred = false;
 
             /* Try to extract each file */
-            for (const filePath of currentFiles) {
+            for (const filePath of currentFiles.filter(file => !ignoreList.includes(file))) {
                 try {
                     const extension = fileExtension(filePath);
                     const extractOperation = EXTRACT_OPERATIONS.get(
@@ -314,7 +318,7 @@ export class RunnerFile implements IRunner<string[]> {
                         currentFiles.push(newFilePath);
                     }
                     /* Make sure we don't try to extract the same file again */
-                    currentFiles.splice(currentFiles.indexOf(filePath), 1);
+                    ignoreList.push(filePath);
 
                     extractionOccurred = true;
                 } catch (error) {
@@ -363,6 +367,7 @@ export class RunnerFile implements IRunner<string[]> {
             const binFiles = currentFiles.filter(
                 file => fileExtension(file) === 'bin'
             );
+            log.info(`No .cue files found. Creating from bin files ${binFiles.join(', ')}`);
             for (const binFile of binFiles) {
                 const cueFileName = `${path.basename(binFile, '.bin')}.cue`;
                 const cueFile = path.join(path.dirname(binFile), cueFileName);
