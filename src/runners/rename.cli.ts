@@ -3,37 +3,38 @@ import { z } from 'zod';
 import { guardDirectoryExists } from '../utils/guard';
 
 /* Static method for argument parsing without creating a full runner instance */
-export function parseVerifyArguments(
+export function parseRenameArguments(
     args: string[]
-): z.infer<typeof VerifySchema> {
+): z.infer<typeof RenameSchema> {
     /* Check for help flag */
     if (args.includes('--help') || args.includes('-h')) {
         throw new Error('Help requested');
     }
 
     /* Parse arguments using command-line-args */
-    const parsedOptions = commandLineArgs(verifyOptionDefinitions, {
+    const parsedOptions = commandLineArgs(renameOptionDefinitions, {
         argv: args,
         partial: true,
     });
 
     /* Transform parsed options to match our schema */
     const transformedArgs = {
-        command: 'verify' as const,
+        command: 'rename' as const,
         sourceDir: parsedOptions['source-dir'],
         outputDir: parsedOptions['output-dir'],
         tempDir: parsedOptions['temp-dir'],
         datFile: parsedOptions['dat-file'],
         cuesheetsFile: parsedOptions['cuesheets-file'],
-        removeSource: false /* verify doesn't use removeSource */,
-        useDatFileName: false /* verify doesn't use useDatFileName */,
-        overwrite: false /* verify doesn't use overwrite */,
+        removeSource: false /* rename doesn't use removeSource */,
+        useDatFileName: false /* rename doesn't use useDatFileName */,
+        rename: false /* rename command doesn't need rename flag */,
+        overwrite: false /* rename doesn't use overwrite */,
         force: parsedOptions['force'],
     };
 
     /* Validate using Zod schema */
     try {
-        return VerifySchema.parse(transformedArgs);
+        return RenameSchema.parse(transformedArgs);
     } catch (error) {
         if (error instanceof z.ZodError) {
             const messages = error.issues
@@ -45,8 +46,8 @@ export function parseVerifyArguments(
     }
 }
 
-/* Command line option definitions for verify command */
-const verifyOptionDefinitions: commandLineArgs.OptionDefinition[] = [
+/* Command line option definitions for rename command */
+const renameOptionDefinitions: commandLineArgs.OptionDefinition[] = [
     {
         name: 'source-dir',
         alias: 's',
@@ -80,9 +81,9 @@ const verifyOptionDefinitions: commandLineArgs.OptionDefinition[] = [
     },
 ];
 
-/* Zod schema for verify command arguments */
-const VerifySchema = z.object({
-    command: z.literal('verify'),
+/* Zod schema for rename command arguments */
+const RenameSchema = z.object({
+    command: z.literal('rename'),
     sourceDir: z
         .string()
         .min(1, 'Source directory is required')

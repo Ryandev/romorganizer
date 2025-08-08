@@ -2,88 +2,6 @@ import { z } from 'zod';
 
 const COMMAND_NAME = 'romorganizer';
 
-/* Help text for commands */
-const HELP_TEXT_MAP = {
-    compress: `
-${COMMAND_NAME} compress - Convert archive files to CHD format
-
-Usage: ${COMMAND_NAME} compress [options]
-
-Required Options:
-  -s, --source-dir <path>     Source directory containing files to compress
-  -o, --output-dir <path>     Output directory for compressed CHD files
-
-Optional Options:
-  -t, --temp-dir <path>       Temporary directory for processing (default: system temp)
-  -r, --remove-source         Remove source files after successful compression
-  -u, --use-dat-file-name     Use DAT file name for output files
-  -n, --rename                Rename source files to game name from DAT file
-  -w, --overwrite             Overwrite existing output files
-  -h, --help                  Show this help message
-
-Examples:
-  ${COMMAND_NAME} compress -s ./input -o ./output
-  ${COMMAND_NAME} compress --source-dir ./input --output-dir ./output --remove-source
-  ${COMMAND_NAME} compress --source-dir ./input --output-dir ./output --overwrite
-`,
-    verify: `
-${COMMAND_NAME} verify - Verify CHD files against DAT file
-
-Usage: ${COMMAND_NAME} verify [options]
-
-Required Options:
-  -s, --source-dir <path>     Source directory containing CHD files to verify
-  -d, --dat-file <path>       DAT file for validation (supports .dat and .zip files)
-  -c, --cuesheets-file <path> Cuesheets zip file containing master .cue files
-
-Optional Options:
-  -t, --temp-dir <path>       Temporary directory for processing (default: system temp)
-  -n, --rename                Rename source files to game name from DAT file
-  -f, --force                 Force re-verification even if metadata.json exists
-  -h, --help                  Show this help message
-
-Examples:
-  ${COMMAND_NAME} verify -s ./input -d ./datfile.dat -c ./cuesheets.zip
-  ${COMMAND_NAME} verify --source-dir ./input --dat-file ./datfile.zip --cuesheets-file ./cuesheets.zip --rename
-  ${COMMAND_NAME} verify --source-dir ./input --dat-file ./datfile.dat --cuesheets-file ./cuesheets.zip --force
-`,
-    help: `
-${COMMAND_NAME} help - Show help information
-
-Usage: ${COMMAND_NAME} help [command]
-
-Commands:
-  compress    Convert archive files to CHD format
-  verify      Verify CHD files against DAT file
-  help        Show this help message
-
-Examples:
-  ${COMMAND_NAME} help
-  ${COMMAND_NAME} help compress
-  ${COMMAND_NAME} help verify
-`,
-    global: `
-${COMMAND_NAME} - Convert archive files to CHD format with DAT validation
-
-Usage: ${COMMAND_NAME} <command> [options]
-
-Commands:
-  compress    Convert archive files to CHD format
-  verify      Verify CHD files against DAT file
-  help        Show help information
-
-Global Options:
-  -h, --help                  Show this help message
-
-Examples:
-  ${COMMAND_NAME} compress -s ./input -o ./output
-  ${COMMAND_NAME} verify -s ./input -d ./datfile.dat -c ./cuesheets.zip
-  ${COMMAND_NAME} help compress
-
-Use '${COMMAND_NAME} <command> --help' for command-specific help.
-`,
-} as const;
-
 /* Zod schema for help command arguments */
 export const HelpSchema = z.object({
     command: z.literal('help'),
@@ -117,11 +35,50 @@ export function parseHelpArguments(args: string[]): z.infer<typeof HelpSchema> {
     }
 }
 
-export function helpText(parameters: z.infer<typeof HelpSchema>): string {
-    if (parameters.subcommand && parameters.subcommand in HELP_TEXT_MAP) {
-        return HELP_TEXT_MAP[
-            parameters.subcommand as keyof typeof HELP_TEXT_MAP
-        ];
+/* Available commands and their help file imports */
+const COMMAND_HELP_IMPORTS = {
+    compress: () => import('./compress.help').then(m => m.COMPRESS_HELP_TEXT),
+    verify: () => import('./verify.help').then(m => m.VERIFY_HELP_TEXT),
+    rename: () => import('./rename.help').then(m => m.RENAME_HELP_TEXT),
+} as const;
+
+/* Global help text */
+const GLOBAL_HELP_TEXT = `
+${COMMAND_NAME} - Convert archive files to CHD format with DAT validation
+
+Usage: ${COMMAND_NAME} <command> [options]
+
+Commands:
+  compress    Convert archive files to CHD format
+  verify      Verify CHD files against DAT file
+  rename      Rename CHD files based on DAT file matches
+  help        Show help information
+
+Global Options:
+  -h, --help                  Show this help message
+
+Examples:
+  ${COMMAND_NAME} compress -s ./input -o ./output
+  ${COMMAND_NAME} verify -s ./input -d ./datfile.dat -c ./cuesheets.zip
+  ${COMMAND_NAME} rename -s ./input -d ./datfile.dat -c ./cuesheets.zip
+  ${COMMAND_NAME} help compress
+
+Use '${COMMAND_NAME} <command> --help' for command-specific help.
+`;
+
+export async function helpText(parameters: z.infer<typeof HelpSchema>): Promise<string> {
+    if (parameters.subcommand && parameters.subcommand in COMMAND_HELP_IMPORTS) {
+        try {
+            return await COMMAND_HELP_IMPORTS[parameters.subcommand as keyof typeof COMMAND_HELP_IMPORTS]();
+        } catch (error) {
+            return `Error loading help for command '${parameters.subcommand}': ${error instanceof Error ? error.message : String(error)}`;
+        }
     }
-    return HELP_TEXT_MAP.global;
+    
+    /* If subcommand is provided but not found, show error */
+    if (parameters.subcommand && parameters.subcommand !== '') {
+        return `Error loading help for command '${parameters.subcommand}': Command not found`;
+    }
+    
+    return GLOBAL_HELP_TEXT;
 }

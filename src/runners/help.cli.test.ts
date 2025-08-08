@@ -117,7 +117,7 @@ describe('help.cli', () => {
     });
 
     describe('helpText', () => {
-        it('should return compress help text for compress subcommand', () => {
+        it('should return compress help text for compress subcommand', async () => {
             /* Arrange */
             const args = {
                 command: 'help' as const,
@@ -125,7 +125,7 @@ describe('help.cli', () => {
             };
 
             /* Act */
-            const result = helpText(args);
+            const result = await helpText(args);
 
             /* Assert */
             expect(result).toContain(
@@ -140,7 +140,7 @@ describe('help.cli', () => {
             expect(result).toContain('Examples:');
         });
 
-        it('should return verify help text for verify subcommand', () => {
+        it('should return verify help text for verify subcommand', async () => {
             /* Arrange */
             const args = {
                 command: 'help' as const,
@@ -148,7 +148,7 @@ describe('help.cli', () => {
             };
 
             /* Act */
-            const result = helpText(args);
+            const result = await helpText(args);
 
             /* Assert */
             expect(result).toContain(
@@ -160,34 +160,35 @@ describe('help.cli', () => {
             expect(result).toContain('-c, --cuesheets-file <path>');
             expect(result).toContain('Optional Options:');
             expect(result).toContain('-t, --temp-dir <path>');
-            expect(result).toContain('-n, --rename');
             expect(result).toContain('-f, --force');
             expect(result).toContain('Examples:');
         });
 
-        it('should return help command help text for help subcommand', () => {
+        it('should return rename help text for rename subcommand', async () => {
             /* Arrange */
             const args = {
                 command: 'help' as const,
-                subcommand: 'help',
+                subcommand: 'rename',
             };
 
             /* Act */
-            const result = helpText(args);
+            const result = await helpText(args);
 
             /* Assert */
             expect(result).toContain(
-                'romorganizer help - Show help information'
+                'romorganizer rename - Rename CHD files based on DAT file matches'
             );
-            expect(result).toContain('Usage: romorganizer help [command]');
-            expect(result).toContain('Commands:');
-            expect(result).toContain('compress');
-            expect(result).toContain('verify');
-            expect(result).toContain('help');
+            expect(result).toContain('Required Options:');
+            expect(result).toContain('-s, --source-dir <path>');
+            expect(result).toContain('-d, --dat-file <path>');
+            expect(result).toContain('-c, --cuesheets-file <path>');
+            expect(result).toContain('Optional Options:');
+            expect(result).toContain('-t, --temp-dir <path>');
+            expect(result).toContain('-f, --force');
             expect(result).toContain('Examples:');
         });
 
-        it('should return global help text for undefined subcommand', () => {
+        it('should return global help text for undefined subcommand', async () => {
             /* Arrange */
             const args = {
                 command: 'help' as const,
@@ -195,7 +196,7 @@ describe('help.cli', () => {
             };
 
             /* Act */
-            const result = helpText(args);
+            const result = await helpText(args);
 
             /* Assert */
             expect(result).toContain(
@@ -205,13 +206,14 @@ describe('help.cli', () => {
             expect(result).toContain('Commands:');
             expect(result).toContain('compress');
             expect(result).toContain('verify');
+            expect(result).toContain('rename');
             expect(result).toContain('help');
             expect(result).toContain('Global Options:');
             expect(result).toContain('-h, --help');
             expect(result).toContain('Examples:');
         });
 
-        it('should return global help text for unknown subcommand', () => {
+        it('should return global help text for unknown subcommand', async () => {
             /* Arrange */
             const args = {
                 command: 'help' as const,
@@ -219,20 +221,15 @@ describe('help.cli', () => {
             };
 
             /* Act */
-            const result = helpText(args);
+            const result = await helpText(args);
 
             /* Assert */
-            expect(result).toContain(
-                'romorganizer - Convert archive files to CHD format with DAT validation'
-            );
-            expect(result).toContain('Usage: romorganizer <command> [options]');
-            expect(result).toContain('Commands:');
-            expect(result).toContain('compress');
-            expect(result).toContain('verify');
-            expect(result).toContain('help');
+            expect(result).toContain('Error loading help for command');
+            expect(result).toContain('unknown');
+            expect(result).toContain('Command not found');
         });
 
-        it('should return global help text for empty string subcommand', () => {
+        it('should return global help text for empty string subcommand', async () => {
             /* Arrange */
             const args = {
                 command: 'help' as const,
@@ -240,7 +237,7 @@ describe('help.cli', () => {
             };
 
             /* Act */
-            const result = helpText(args);
+            const result = await helpText(args);
 
             /* Assert */
             expect(result).toContain(
@@ -249,26 +246,9 @@ describe('help.cli', () => {
             expect(result).toContain('Usage: romorganizer <command> [options]');
         });
 
-        it('should return global help text for null subcommand', () => {
+        it('should handle all valid subcommands', async () => {
             /* Arrange */
-            const args = {
-                command: 'help' as const,
-                subcommand: null as any,
-            };
-
-            /* Act */
-            const result = helpText(args);
-
-            /* Assert */
-            expect(result).toContain(
-                'romorganizer - Convert archive files to CHD format with DAT validation'
-            );
-            expect(result).toContain('Usage: romorganizer <command> [options]');
-        });
-
-        it('should handle all valid subcommands', () => {
-            /* Arrange */
-            const validSubcommands = ['compress', 'verify', 'help'];
+            const validSubcommands = ['compress', 'verify', 'rename'];
 
             for (const subcommand of validSubcommands) {
                 const args = {
@@ -277,7 +257,7 @@ describe('help.cli', () => {
                 };
 
                 /* Act */
-                const result = helpText(args);
+                const result = await helpText(args);
 
                 /* Assert */
                 expect(result).toContain(`romorganizer ${subcommand}`);
@@ -285,7 +265,7 @@ describe('help.cli', () => {
             }
         });
 
-        it('should handle case-sensitive subcommands', () => {
+        it('should handle case-sensitive subcommands', async () => {
             /* Arrange */
             const args = {
                 command: 'help' as const,
@@ -293,13 +273,27 @@ describe('help.cli', () => {
             };
 
             /* Act */
-            const result = helpText(args);
+            const result = await helpText(args);
 
             /* Assert */
-            expect(result).toContain(
-                'romorganizer - Convert archive files to CHD format with DAT validation'
-            );
-            expect(result).not.toContain('romorganizer COMPRESS');
+            expect(result).toContain('Error loading help for command');
+            expect(result).toContain('COMPRESS');
+            expect(result).toContain('Command not found');
+        });
+
+        it('should handle error when help file is not found', async () => {
+            /* Arrange */
+            const args = {
+                command: 'help' as const,
+                subcommand: 'nonexistent',
+            };
+
+            /* Act */
+            const result = await helpText(args);
+
+            /* Assert */
+            expect(result).toContain('Error loading help for command');
+            expect(result).toContain('nonexistent');
         });
     });
 
@@ -388,13 +382,13 @@ describe('help.cli', () => {
     });
 
     describe('integration tests', () => {
-        it('should parse and generate help text for compress', () => {
+        it('should parse and generate help text for compress', async () => {
             /* Arrange */
             const args = ['compress'];
 
             /* Act */
             const parsed = parseHelpArguments(args);
-            const helpTextResult = helpText(parsed);
+            const helpTextResult = await helpText(parsed);
 
             /* Assert */
             expect(parsed.command).toBe('help');
@@ -404,13 +398,13 @@ describe('help.cli', () => {
             );
         });
 
-        it('should parse and generate help text for verify', () => {
+        it('should parse and generate help text for verify', async () => {
             /* Arrange */
             const args = ['verify'];
 
             /* Act */
             const parsed = parseHelpArguments(args);
-            const helpTextResult = helpText(parsed);
+            const helpTextResult = await helpText(parsed);
 
             /* Assert */
             expect(parsed.command).toBe('help');
@@ -420,13 +414,29 @@ describe('help.cli', () => {
             );
         });
 
-        it('should parse and generate global help text for no subcommand', () => {
+        it('should parse and generate help text for rename', async () => {
+            /* Arrange */
+            const args = ['rename'];
+
+            /* Act */
+            const parsed = parseHelpArguments(args);
+            const helpTextResult = await helpText(parsed);
+
+            /* Assert */
+            expect(parsed.command).toBe('help');
+            expect(parsed.subcommand).toBe('rename');
+            expect(helpTextResult).toContain(
+                'romorganizer rename - Rename CHD files based on DAT file matches'
+            );
+        });
+
+        it('should parse and generate global help text for no subcommand', async () => {
             /* Arrange */
             const args: string[] = [];
 
             /* Act */
             const parsed = parseHelpArguments(args);
-            const helpTextResult = helpText(parsed);
+            const helpTextResult = await helpText(parsed);
 
             /* Assert */
             expect(parsed.command).toBe('help');

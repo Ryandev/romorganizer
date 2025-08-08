@@ -1,5 +1,4 @@
 import chd from '../utils/chd';
-import { guardValidString } from '../utils/guard';
 import storage from '../utils/storage';
 import path from 'node:path';
 import { Dat, Game } from '../utils/dat';
@@ -7,11 +6,10 @@ import { CuesheetEntry } from '../utils/cuesheet-loader';
 import hash from '../utils/hash';
 import { IRunner } from './interface';
 import { log } from '../utils/logger';
-import metadata from '../types/metadata';
 import { fileExtension } from './utils';
 import storageDecorator from '../utils/storage.decorator';
 
-export class VerifyRunnerFile
+export class RenameRunnerFile
     implements
         IRunner<{
             status: 'match' | 'partial' | 'none';
@@ -84,12 +82,12 @@ export class VerifyRunnerFile
         );
 
         const sizeMatches: Game[] = [];
-
-        /* Attempt to find match by combined bin size */
         for (const game of this.dat.games) {
-            const roms = game.roms.filter(rom => rom.name.endsWith('.bin'));
-            const romSize = roms.reduce((total, rom) => total + rom.size, 0);
-            if (romSize === combinedBinSize) {
+            const gameBinSize = game.roms
+                .filter(rom => rom.name.endsWith('.bin'))
+                .reduce((total, rom) => total + rom.size, 0);
+
+            if (gameBinSize === combinedBinSize) {
                 sizeMatches.push(game);
             }
         }
@@ -102,30 +100,11 @@ export class VerifyRunnerFile
             };
         }
 
-        let closestMatch: Game | undefined = undefined;
-        let closestMatchSizeDiff = Number.MAX_SAFE_INTEGER;
-
-        for (const game of this.dat.games) {
-            const roms = game.roms.filter(rom => rom.name.endsWith('.bin'));
-            const romSize = roms.reduce((acc, rom) => acc + rom.size, 0);
-            const sizeDiff = Math.abs(romSize - combinedBinSize);
-            if (sizeDiff < closestMatchSizeDiff || closestMatch === undefined) {
-                closestMatch = game;
-                closestMatchSizeDiff = sizeDiff;
-            }
-        }
-
-        return closestMatchSizeDiff < 1000
-            ? {
-                  status: 'partial',
-                  message: `No matching game found for ${compressedFilePath}, bytes-delta: ${closestMatchSizeDiff}, percent-delta: ${(1 - closestMatchSizeDiff / combinedBinSize) * 100}%`,
-                  game: closestMatch,
-              }
-            : {
-                  status: 'none',
-                  message: `No match found`,
-                  game: undefined,
-              };
+        return {
+            status: 'none',
+            message: 'No match found in DAT file',
+            game: undefined,
+        };
     }
 
     async start(): Promise<{
@@ -133,13 +112,11 @@ export class VerifyRunnerFile
         message: string;
         game: Game | undefined;
     }> {
-        const result = await this._work(this.sourceFile);
-        guardValidString(result);
-        return result;
+        return await this._work(this.sourceFile);
     }
 }
 
-export class VerifyRunnerDirectory implements IRunner<string[]> {
+export class RenameRunnerDirectory implements IRunner<string[]> {
     constructor(
         private readonly sourceDir: string,
         private readonly dat: Dat,
@@ -172,59 +149,41 @@ export class VerifyRunnerDirectory implements IRunner<string[]> {
             const metadataExists = await storage().exists(metadataFilePath);
             if (metadataExists && !this.force) {
                 log.info(
-                    `Skipping ${file} - metadata.json already exists (use --force to re-verify)`
+                    `Skipping ${file} - metadata.json already exists (use --force to re-rename)`
                 );
                 continue;
             }
 
-            const runner = new VerifyRunnerFile(
+            const runner = new RenameRunnerFile(
                 file,
                 this.dat,
                 this.cuesheetEntries
             );
             if (runner instanceof Error) {
                 log.error(
-                    `Error creating verify runner for ${file}: ${runner.message}`
+                    `Error creating rename runner for ${file}: ${runner.message}`
                 );
                 continue;
             }
 
             const result = await runner.start();
             log.info(
-                `Verification result for ${file}: ${result.status} - ${result.message}`
+                `Rename result for ${file}: ${result.status} - ${result.message}`
             );
 
-            const finalMetadataFileName = `${path.basename(file, path.extname(file))}.metadata.json`;
-            const finalMetadataFilePath = path.join(
-                this.sourceDir,
-                finalMetadataFileName
-            );
-            await metadata.writeFile(
-                {
-                    game: result.game
-                        ? {
-                              name: result.game.name,
-                              files: result.game.roms.map(rom => ({
-                                  name: rom.name,
-                                  size: rom.size,
-                                  sha1hex: rom.sha1hex,
-                                  ...(rom.crc && { crc: rom.crc }),
-                                  ...(rom.md5 && { md5: rom.md5 }),
-                              })),
-                              ...(result.game.description && {
-                                  description: result.game.description,
-                              }),
-                              ...(result.game.category && {
-                                  category: result.game.category,
-                              }),
-                          }
-                        : undefined,
-                    message: result.message,
-                    status: result.status,
-                    timestamp: new Date().toISOString(),
-                },
-                finalMetadataFilePath
-            );
+            let finalFileName = path.basename(file);
+
+            /* Rename file if we have a game match */
+            if (result.game && result.status !== 'none') {
+                const gameName = result.game.name;
+                const fileExtension = path.extname(file);
+                const newFileName = `${gameName}${fileExtension}`;
+                const newFilePath = path.join(this.sourceDir, newFileName);
+
+                await storage().move(file, newFilePath);
+                log.info(`Renamed ${finalFileName} to ${newFileName}`);
+                finalFileName = newFileName;
+            }
 
             outputFiles.push(file);
         }

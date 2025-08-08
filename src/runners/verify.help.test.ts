@@ -12,7 +12,6 @@ describe('verify.help.ts', () => {
             expect(VERIFY_HELP_TEXT).toContain('--dat-file');
             expect(VERIFY_HELP_TEXT).toContain('--cuesheets-file');
             expect(VERIFY_HELP_TEXT).toContain('--temp-dir');
-            expect(VERIFY_HELP_TEXT).toContain('--rename');
             expect(VERIFY_HELP_TEXT).toContain('--force');
             expect(VERIFY_HELP_TEXT).toContain('--help');
         });
@@ -24,7 +23,7 @@ describe('verify.help.ts', () => {
                 'romorganizer verify -s ./input -d ./datfile.dat -c ./cuesheets.zip'
             );
             expect(VERIFY_HELP_TEXT).toContain(
-                'romorganizer verify --source-dir ./input --dat-file ./datfile.zip --cuesheets-file ./cuesheets.zip --rename'
+                'romorganizer verify --source-dir ./input --dat-file ./datfile.zip --cuesheets-file ./cuesheets.zip'
             );
             expect(VERIFY_HELP_TEXT).toContain(
                 'romorganizer verify --source-dir ./input --dat-file ./datfile.dat --cuesheets-file ./cuesheets.zip --force'

@@ -28,24 +28,6 @@ describe('help.ts', () => {
             expect(runner).toBeInstanceOf(Runner);
         });
 
-        it('should return help text from getHelpText method', () => {
-            /* Arrange */
-            const schema = {
-                command: 'help' as const,
-                subcommand: 'compress' as const,
-            };
-            const expectedHelpText = 'Compress command help text';
-            mockHelpText.mockReturnValue(expectedHelpText);
-            const runner = new Runner(schema);
-
-            /* Act */
-            const result = runner.getHelpText();
-
-            /* Assert */
-            expect(result).toBe(expectedHelpText);
-            expect(mockHelpText).toHaveBeenCalledWith(schema);
-        });
-
         it('should return help text from start method', async () => {
             /* Arrange */
             const schema = {
@@ -53,7 +35,7 @@ describe('help.ts', () => {
                 subcommand: undefined,
             };
             const expectedHelpText = 'Global help text';
-            mockHelpText.mockReturnValue(expectedHelpText);
+            mockHelpText.mockResolvedValue(expectedHelpText);
             const runner = new Runner(schema);
 
             /* Act */
@@ -88,7 +70,7 @@ describe('help.ts', () => {
             ];
 
             for (const testCase of testCases) {
-                mockHelpText.mockReturnValue(testCase.expectedText);
+                mockHelpText.mockResolvedValue(testCase.expectedText);
                 const runner = new Runner(testCase.schema);
 
                 /* Act */

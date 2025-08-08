@@ -27,7 +27,6 @@ describe('verify.cli', () => {
                 'dat-file': '/test/datfile.dat',
                 'cuesheets-file': '/test/cuesheets.zip',
                 'temp-dir': '/test/temp',
-                rename: true,
                 force: false,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
@@ -42,7 +41,6 @@ describe('verify.cli', () => {
                 '/test/cuesheets.zip',
                 '--temp-dir',
                 '/test/temp',
-                '--rename',
             ]);
 
             /* Assert */
@@ -55,7 +53,7 @@ describe('verify.cli', () => {
                 cuesheetsFile: '/test/cuesheets.zip',
                 removeSource: false,
                 useDatFileName: false,
-                rename: true,
+                rename: false,
                 overwrite: false,
                 force: false,
             });
@@ -71,7 +69,6 @@ describe('verify.cli', () => {
                         '/test/cuesheets.zip',
                         '--temp-dir',
                         '/test/temp',
-                        '--rename',
                     ],
                     partial: true,
                 }
@@ -84,7 +81,6 @@ describe('verify.cli', () => {
                 'source-dir': '/test/source',
                 'dat-file': '/test/datfile.dat',
                 'cuesheets-file': '/test/cuesheets.zip',
-                rename: false,
                 force: true,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
@@ -271,7 +267,6 @@ describe('verify.cli', () => {
                 'source-dir': '/test/source',
                 'dat-file': '/test/datfile.dat',
                 'cuesheets-file': '/test/cuesheets.zip',
-                rename: true,
                 force: true,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
@@ -284,12 +279,10 @@ describe('verify.cli', () => {
                 '/test/datfile.dat',
                 '--cuesheets-file',
                 '/test/cuesheets.zip',
-                '--rename',
                 '--force',
             ]);
 
             /* Assert */
-            expect(result.rename).toBe(true);
             expect(result.force).toBe(true);
         });
 
@@ -299,7 +292,6 @@ describe('verify.cli', () => {
                 'source-dir': '/test/source',
                 'dat-file': '/test/datfile.dat',
                 'cuesheets-file': '/test/cuesheets.zip',
-                rename: true,
                 force: true,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
@@ -312,12 +304,10 @@ describe('verify.cli', () => {
                 '/test/datfile.dat',
                 '-c',
                 '/test/cuesheets.zip',
-                '-n',
                 '-f',
             ]);
 
             /* Assert */
-            expect(result.rename).toBe(true);
             expect(result.force).toBe(true);
         });
 
@@ -343,7 +333,6 @@ describe('verify.cli', () => {
             /* Assert */
             expect(result.removeSource).toBe(false);
             expect(result.useDatFileName).toBe(false);
-            expect(result.rename).toBe(false);
             expect(result.overwrite).toBe(false);
             expect(result.force).toBe(false);
         });

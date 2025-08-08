@@ -19,7 +19,6 @@ describe('help.builder', () => {
         jest.clearAllMocks();
         MockRunner.mockImplementation(() => ({
             start: jest.fn().mockResolvedValue('Help text displayed'),
-            getHelpText: jest.fn().mockReturnValue('Mock help text'),
         }));
     });
 
@@ -31,7 +30,7 @@ describe('help.builder', () => {
                 subcommand: undefined,
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockReturnValue('Global help text');
+            mockHelpText.mockResolvedValue('Global help text');
 
             /* Act */
             const result = helpBuilder([]);
@@ -50,7 +49,7 @@ describe('help.builder', () => {
                 subcommand: 'compress',
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockReturnValue('Compress help text');
+            mockHelpText.mockResolvedValue('Compress help text');
 
             /* Act */
             const builder = helpBuilder(['compress']);
@@ -62,18 +61,18 @@ describe('help.builder', () => {
             expect(typeof runner.start).toBe('function');
         });
 
-        it('should return the correct help text', () => {
+        it('should return the correct help text', async () => {
             /* Arrange */
             const mockParsedArgs = {
                 command: 'help' as const,
                 subcommand: 'verify',
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockReturnValue('Verify help text');
+            mockHelpText.mockResolvedValue('Verify help text');
 
             /* Act */
             const builder = helpBuilder(['verify']);
-            const helpText = builder.getHelpText();
+            const helpText = await builder.getHelpText();
 
             /* Assert */
             expect(helpText).toBe('Verify help text');
@@ -87,7 +86,7 @@ describe('help.builder', () => {
                 subcommand: undefined,
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockReturnValue('Global help text');
+            mockHelpText.mockResolvedValue('Global help text');
 
             /* Act */
             const result = helpBuilder([]);
@@ -104,7 +103,7 @@ describe('help.builder', () => {
                 subcommand: 'compress',
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockReturnValue('Compress help text');
+            mockHelpText.mockResolvedValue('Compress help text');
 
             /* Act */
             const builder = helpBuilder(['compress']);
@@ -121,7 +120,7 @@ describe('help.builder', () => {
                 subcommand: 'verify',
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockReturnValue('Verify help text');
+            mockHelpText.mockResolvedValue('Verify help text');
 
             /* Act */
             const builder = helpBuilder(['verify', '--extra', 'args']);
@@ -148,27 +147,23 @@ describe('help.builder', () => {
             }).toThrow('Invalid arguments');
         });
 
-        it('should handle help text generation errors', () => {
+        it('should handle help text generation errors', async () => {
             /* Arrange */
             const mockParsedArgs = {
                 command: 'help' as const,
                 subcommand: 'unknown',
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockImplementation(() => {
-                throw new Error('Help text generation failed');
-            });
+            mockHelpText.mockRejectedValue(new Error('Help text generation failed'));
 
             /* Act & Assert */
             const builder = helpBuilder(['unknown']);
-            expect(() => {
-                builder.getHelpText();
-            }).toThrow('Help text generation failed');
+            await expect(builder.getHelpText()).rejects.toThrow('Help text generation failed');
         });
 
-        it('should handle different subcommands correctly', () => {
+        it('should handle different subcommands correctly', async () => {
             /* Arrange */
-            const subcommands = ['compress', 'verify', 'help', undefined];
+            const subcommands = ['compress', 'verify', 'rename', undefined];
 
             for (const subcommand of subcommands) {
                 const mockParsedArgs = {
@@ -176,13 +171,13 @@ describe('help.builder', () => {
                     subcommand,
                 };
                 mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-                mockHelpText.mockReturnValue(
+                mockHelpText.mockResolvedValue(
                     `${subcommand || 'global'} help text`
                 );
 
                 /* Act */
                 const builder = helpBuilder(subcommand ? [subcommand] : []);
-                const helpText = builder.getHelpText();
+                const helpText = await builder.getHelpText();
 
                 /* Assert */
                 expect(helpText).toBe(`${subcommand || 'global'} help text`);
@@ -199,7 +194,7 @@ describe('help.builder', () => {
                 subcommand: undefined,
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockReturnValue('Global help text');
+            mockHelpText.mockResolvedValue('Global help text');
 
             /* Act */
             const builder = helpBuilder([]);
@@ -218,7 +213,7 @@ describe('help.builder', () => {
                 subcommand: undefined,
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockReturnValue('Global help text');
+            mockHelpText.mockResolvedValue('Global help text');
 
             /* Act */
             const builder = helpBuilder([]);
@@ -230,41 +225,41 @@ describe('help.builder', () => {
     });
 
     describe('edge cases', () => {
-        it('should handle null subcommand', () => {
+        it('should handle null subcommand', async () => {
             /* Arrange */
             const mockParsedArgs = {
                 command: 'help' as const,
                 subcommand: null,
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockReturnValue('Global help text');
+            mockHelpText.mockResolvedValue('Global help text');
 
             /* Act */
             const builder = helpBuilder([]);
-            const helpText = builder.getHelpText();
+            const helpText = await builder.getHelpText();
 
             /* Assert */
             expect(helpText).toBe('Global help text');
         });
 
-        it('should handle empty string subcommand', () => {
+        it('should handle empty string subcommand', async () => {
             /* Arrange */
             const mockParsedArgs = {
                 command: 'help' as const,
                 subcommand: '',
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockReturnValue('Global help text');
+            mockHelpText.mockResolvedValue('Global help text');
 
             /* Act */
             const builder = helpBuilder(['']);
-            const helpText = builder.getHelpText();
+            const helpText = await builder.getHelpText();
 
             /* Assert */
             expect(helpText).toBe('Global help text');
         });
 
-        it('should handle very long subcommand', () => {
+        it('should handle very long subcommand', async () => {
             /* Arrange */
             const longSubcommand = 'a'.repeat(1000);
             const mockParsedArgs = {
@@ -272,11 +267,11 @@ describe('help.builder', () => {
                 subcommand: longSubcommand,
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockReturnValue('Long subcommand help text');
+            mockHelpText.mockResolvedValue('Long subcommand help text');
 
             /* Act */
             const builder = helpBuilder([longSubcommand]);
-            const helpText = builder.getHelpText();
+            const helpText = await builder.getHelpText();
 
             /* Assert */
             expect(helpText).toBe('Long subcommand help text');

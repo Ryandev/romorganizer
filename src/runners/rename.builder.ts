@@ -1,7 +1,7 @@
 import { IRunner, RunnerBuilder } from './interface';
-import { VerifyRunnerDirectory } from './verify';
-import { parseVerifyArguments } from './verify.cli';
-import { VERIFY_HELP_TEXT } from './verify.help';
+import { RenameRunnerDirectory } from './rename';
+import { parseRenameArguments } from './rename.cli';
+import { RENAME_HELP_TEXT } from './rename.help';
 import { loadDatFromPath } from '../utils/dat-loader';
 import { loadCuesheetsPath } from '../utils/cuesheet-loader';
 import { log } from '../utils/logger';
@@ -9,7 +9,7 @@ import storage from '../utils/storage';
 import { guard } from '../utils/guard';
 
 export default function builder(parameters: string[]): RunnerBuilder<string[]> {
-    const parsedArguments = parseVerifyArguments(parameters);
+    const parsedArguments = parseRenameArguments(parameters);
 
     return {
         create: async (): Promise<IRunner<string[]>> => {
@@ -29,7 +29,7 @@ export default function builder(parameters: string[]): RunnerBuilder<string[]> {
             );
             log.info(`Loaded ${cuesheetEntries.length} cuesheet entries`);
 
-            const runner = new VerifyRunnerDirectory(
+            const runner = new RenameRunnerDirectory(
                 parsedArguments.sourceDir,
                 dat,
                 cuesheetEntries,
@@ -37,6 +37,6 @@ export default function builder(parameters: string[]): RunnerBuilder<string[]> {
             );
             return runner;
         },
-        getHelpText: () => VERIFY_HELP_TEXT,
+        getHelpText: () => RENAME_HELP_TEXT,
     };
 }

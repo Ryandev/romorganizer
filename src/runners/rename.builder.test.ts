@@ -1,16 +1,16 @@
-import verifyBuilder from './verify.builder';
+import renameBuilder from './rename.builder';
 
 /* Mock dependencies */
-jest.mock('./verify.cli', () => ({
-    parseVerifyArguments: jest.fn(),
+jest.mock('./rename.cli', () => ({
+    parseRenameArguments: jest.fn(),
 }));
 
-jest.mock('./verify', () => ({
-    VerifyRunnerDirectory: jest.fn(),
+jest.mock('./rename', () => ({
+    RenameRunnerDirectory: jest.fn(),
 }));
 
-jest.mock('./verify.help', () => ({
-    VERIFY_HELP_TEXT: 'Mock verify help text',
+jest.mock('./rename.help', () => ({
+    RENAME_HELP_TEXT: 'Mock rename help text',
 }));
 
 jest.mock('../utils/dat-loader', () => ({
@@ -43,10 +43,10 @@ jest.mock('../utils/storage', () => ({
     }),
 }));
 
-describe('verify.builder', () => {
-    const mockParseVerifyArguments =
-        require('./verify.cli').parseVerifyArguments;
-    const MockVerifyRunnerDirectory = require('./verify').VerifyRunnerDirectory;
+describe('rename.builder', () => {
+    const mockParseRenameArguments =
+        require('./rename.cli').parseRenameArguments;
+    const MockRenameRunnerDirectory = require('./rename').RenameRunnerDirectory;
     const mockLoadDatFromPath = require('../utils/dat-loader').loadDatFromPath;
     const mockLoadCuesheetsPath =
         require('../utils/cuesheet-loader').loadCuesheetsPath;
@@ -54,10 +54,10 @@ describe('verify.builder', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        MockVerifyRunnerDirectory.mockImplementation(() => ({
+        MockRenameRunnerDirectory.mockImplementation(() => ({
             start: jest
                 .fn()
-                .mockResolvedValue(['verified1.chd', 'verified2.chd']),
+                .mockResolvedValue(['renamed1.chd', 'renamed2.chd']),
         }));
         mockLoadDatFromPath.mockResolvedValue({
             system: 'Test System',
@@ -78,13 +78,12 @@ describe('verify.builder', () => {
                 datFile: '/test/datfile.dat',
                 cuesheetsFile: '/test/cuesheets.zip',
                 tempDir: '/test/temp',
-                rename: false,
                 force: false,
             };
-            mockParseVerifyArguments.mockReturnValue(mockParsedArgs);
+            mockParseRenameArguments.mockReturnValue(mockParsedArgs);
 
             /* Act */
-            const result = verifyBuilder([
+            const result = renameBuilder([
                 '--source-dir',
                 '/test/source',
                 '--dat-file',
@@ -97,7 +96,7 @@ describe('verify.builder', () => {
             expect(result).toBeDefined();
             expect(typeof result.create).toBe('function');
             expect(typeof result.getHelpText).toBe('function');
-            expect(mockParseVerifyArguments).toHaveBeenCalledWith([
+            expect(mockParseRenameArguments).toHaveBeenCalledWith([
                 '--source-dir',
                 '/test/source',
                 '--dat-file',
@@ -107,7 +106,7 @@ describe('verify.builder', () => {
             ]);
         });
 
-        it('should create a VerifyRunnerDirectory with correct parameters', async () => {
+        it('should create a RenameRunnerDirectory with correct parameters', async () => {
             /* Arrange */
             const mockParsedArgs = {
                 sourceDir: '/test/source',
@@ -116,7 +115,7 @@ describe('verify.builder', () => {
                 tempDir: '/test/temp',
                 force: true,
             };
-            mockParseVerifyArguments.mockReturnValue(mockParsedArgs);
+            mockParseRenameArguments.mockReturnValue(mockParsedArgs);
 
             const mockDat = {
                 system: 'Test System',
@@ -131,7 +130,7 @@ describe('verify.builder', () => {
             mockLoadCuesheetsPath.mockResolvedValue(mockCuesheets);
 
             /* Act */
-            const builder = verifyBuilder([
+            const builder = renameBuilder([
                 '--source-dir',
                 '/test/source',
                 '--dat-file',
@@ -149,7 +148,7 @@ describe('verify.builder', () => {
             expect(mockLoadCuesheetsPath).toHaveBeenCalledWith(
                 '/test/cuesheets.zip'
             );
-            expect(MockVerifyRunnerDirectory).toHaveBeenCalledWith(
+            expect(MockRenameRunnerDirectory).toHaveBeenCalledWith(
                 '/test/source',
                 mockDat,
                 mockCuesheets,
@@ -168,7 +167,7 @@ describe('verify.builder', () => {
                 tempDir: undefined,
                 force: false,
             };
-            mockParseVerifyArguments.mockReturnValue(mockParsedArgs);
+            mockParseRenameArguments.mockReturnValue(mockParsedArgs);
 
             const mockDat = {
                 system: 'Test System',
@@ -183,7 +182,7 @@ describe('verify.builder', () => {
             mockLoadCuesheetsPath.mockResolvedValue(mockCuesheets);
 
             /* Act */
-            const builder = verifyBuilder([
+            const builder = renameBuilder([
                 '--source-dir',
                 '/test/source',
                 '--dat-file',
@@ -210,49 +209,47 @@ describe('verify.builder', () => {
 
         it('should return the correct help text', () => {
             /* Arrange */
-            mockParseVerifyArguments.mockReturnValue({});
+            mockParseRenameArguments.mockReturnValue({});
 
             /* Act */
-            const builder = verifyBuilder([]);
+            const builder = renameBuilder([]);
             const helpText = builder.getHelpText();
 
             /* Assert */
-            expect(helpText).toBe('Mock verify help text');
+            expect(helpText).toBe('Mock rename help text');
         });
 
         it('should handle empty parameters array', () => {
             /* Arrange */
-            mockParseVerifyArguments.mockReturnValue({
+            mockParseRenameArguments.mockReturnValue({
                 sourceDir: '/default/source',
                 datFile: '/default/datfile.dat',
                 cuesheetsFile: '/default/cuesheets.zip',
                 tempDir: undefined,
-                rename: false,
                 force: false,
             });
 
             /* Act */
-            const result = verifyBuilder([]);
+            const builder = renameBuilder([]);
 
             /* Assert */
-            expect(result).toBeDefined();
-            expect(mockParseVerifyArguments).toHaveBeenCalledWith([]);
+            expect(builder).toBeDefined();
+            expect(typeof builder.create).toBe('function');
+            expect(typeof builder.getHelpText).toBe('function');
         });
 
         it('should handle parameters with all optional flags', () => {
             /* Arrange */
-            const mockParsedArgs = {
+            mockParseRenameArguments.mockReturnValue({
                 sourceDir: '/test/source',
                 datFile: '/test/datfile.dat',
                 cuesheetsFile: '/test/cuesheets.zip',
-                tempDir: '/custom/temp',
-                rename: true,
+                tempDir: '/test/temp',
                 force: true,
-            };
-            mockParseVerifyArguments.mockReturnValue(mockParsedArgs);
+            });
 
             /* Act */
-            const builder = verifyBuilder([
+            const builder = renameBuilder([
                 '--source-dir',
                 '/test/source',
                 '--dat-file',
@@ -260,37 +257,26 @@ describe('verify.builder', () => {
                 '--cuesheets-file',
                 '/test/cuesheets.zip',
                 '--temp-dir',
-                '/custom/temp',
-                '--rename',
+                '/test/temp',
                 '--force',
             ]);
 
             /* Assert */
             expect(builder).toBeDefined();
-            expect(mockParseVerifyArguments).toHaveBeenCalledWith([
-                '--source-dir',
-                '/test/source',
-                '--dat-file',
-                '/test/datfile.dat',
-                '--cuesheets-file',
-                '/test/cuesheets.zip',
-                '--temp-dir',
-                '/custom/temp',
-                '--rename',
-                '--force',
-            ]);
+            expect(typeof builder.create).toBe('function');
+            expect(typeof builder.getHelpText).toBe('function');
         });
 
         it('should propagate parsing errors', () => {
             /* Arrange */
-            const parseError = new Error('Invalid arguments');
-            mockParseVerifyArguments.mockImplementation(() => {
-                throw parseError;
+            const mockError = new Error('Invalid arguments');
+            mockParseRenameArguments.mockImplementation(() => {
+                throw mockError;
             });
 
             /* Act & Assert */
             expect(() => {
-                verifyBuilder(['--invalid-flag']);
+                renameBuilder(['--invalid-flag']);
             }).toThrow('Invalid arguments');
         });
 
@@ -301,16 +287,15 @@ describe('verify.builder', () => {
                 datFile: '/test/datfile.dat',
                 cuesheetsFile: '/test/cuesheets.zip',
                 tempDir: undefined,
-                rename: false,
                 force: false,
             };
-            mockParseVerifyArguments.mockReturnValue(mockParsedArgs);
+            mockParseRenameArguments.mockReturnValue(mockParsedArgs);
             mockLoadDatFromPath.mockRejectedValue(
                 new Error('DAT file not found')
             );
 
             /* Act & Assert */
-            const builder = verifyBuilder([
+            const builder = renameBuilder([
                 '--source-dir',
                 '/test/source',
                 '--dat-file',
@@ -330,10 +315,9 @@ describe('verify.builder', () => {
                 datFile: '/test/datfile.dat',
                 cuesheetsFile: '/test/cuesheets.zip',
                 tempDir: undefined,
-                rename: false,
                 force: false,
             };
-            mockParseVerifyArguments.mockReturnValue(mockParsedArgs);
+            mockParseRenameArguments.mockReturnValue(mockParsedArgs);
             mockLoadDatFromPath.mockResolvedValue({
                 system: 'Test System',
                 games: [],
@@ -344,7 +328,7 @@ describe('verify.builder', () => {
             );
 
             /* Act & Assert */
-            const builder = verifyBuilder([
+            const builder = renameBuilder([
                 '--source-dir',
                 '/test/source',
                 '--dat-file',
@@ -361,17 +345,16 @@ describe('verify.builder', () => {
     describe('RunnerBuilder interface compliance', () => {
         it('should implement RunnerBuilder interface correctly', () => {
             /* Arrange */
-            mockParseVerifyArguments.mockReturnValue({
+            mockParseRenameArguments.mockReturnValue({
                 sourceDir: '/test/source',
                 datFile: '/test/datfile.dat',
                 cuesheetsFile: '/test/cuesheets.zip',
                 tempDir: undefined,
-                rename: false,
                 force: false,
             });
 
             /* Act */
-            const builder = verifyBuilder([
+            const builder = renameBuilder([
                 '--source-dir',
                 '/test/source',
                 '--dat-file',
@@ -389,17 +372,16 @@ describe('verify.builder', () => {
 
         it('should return a Promise from create method', () => {
             /* Arrange */
-            mockParseVerifyArguments.mockReturnValue({
+            mockParseRenameArguments.mockReturnValue({
                 sourceDir: '/test/source',
                 datFile: '/test/datfile.dat',
                 cuesheetsFile: '/test/cuesheets.zip',
                 tempDir: undefined,
-                rename: false,
                 force: false,
             });
 
             /* Act */
-            const builder = verifyBuilder([
+            const builder = renameBuilder([
                 '--source-dir',
                 '/test/source',
                 '--dat-file',

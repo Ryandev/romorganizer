@@ -2,6 +2,7 @@ import { log } from './utils/logger.js';
 import createHelpRunner from './runners/help.builder.js';
 import createVerifyRunner from './runners/verify.builder.js';
 import createCompressRunner from './runners/compress.builder.js';
+import createRenameRunner from './runners/rename.builder.js';
 
 async function main(inputArguments: string[]) {
     /* Fallback to help if no arguments are provided */
@@ -29,6 +30,17 @@ async function main(inputArguments: string[]) {
             );
             break;
         }
+
+        case 'rename': {
+            const builder = await createRenameRunner(subArguments);
+            const runner = await builder.create();
+            const outputFiles = await runner.start();
+            log.info(
+                `Rename completed successfully, renamed files:\n ${outputFiles.join('\n ')}`
+            );
+            break;
+        }
+
         /* Handle help flags - these will be caught by the switch statement in index.ts */
         /* help, -h, --help */
         default: {
