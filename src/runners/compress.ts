@@ -228,6 +228,19 @@ const EXTRACT_OPERATIONS = new Map<
             return [binFile];
         },
     ],
+    ['img', async (sourceFile: string) => {
+        if (!sourceFile.endsWith('.img')) {
+            return [];
+        }
+        /* rename file to .bin */
+        const binFile = path.join(path.dirname(sourceFile), `${path.basename(sourceFile, '.img')}.bin`);
+        await storage().move(sourceFile, binFile);
+        guardFileExists(
+            binFile,
+            `Bin file missing, does not exist: ${binFile}`
+        );
+        return [binFile];
+    }],
 ]);
 
 const _findMatchingFiles = (
@@ -335,30 +348,35 @@ export class RunnerFile implements IRunner<string[]> {
         const currentFiles =
             await this._performAllExtractionOperations(workingDirectory);
 
-        /* Now attempt compression on the remaining files */
-        const compressionResults: string[] = [];
+        const chdCandidates = currentFiles.filter(file => fileExtension(file) === 'chd');
 
-        for (const filePath of currentFiles) {
-            try {
-                const extension = fileExtension(filePath);
-
-                /* Only compress files that can be converted to CHD */
-                if (['cue', 'gdi'].includes(extension)) {
-                    const chdResult = await chd.create({
-                        inputFilePath: filePath,
-                    });
-                    if (chdResult) {
-                        compressionResults.push(chdResult);
-                    }
-                }
-            } catch (error) {
-                log.warn(`Failed to compress file ${filePath}: ${error}`);
-            }
+        if (chdCandidates.length > 0) {
+            /* No .cue files found. See if we have any .bin files & create a cue file for them */
+            const binFiles = currentFiles.filter(file => fileExtension(file) === 'bin');
+            for (const binFile of binFiles) {
+                const cueFileName = `${path.basename(binFile, '.bin')}.cue`;
+                const cueFile = path.join(path.dirname(binFile), cueFileName);
+                await cueSheet.createCueFile(binFile, cueFile);
+                guardFileExists(
+                    cueFile,
+                    `CUE file missing, does not exist: ${cueFile}`
+                );
+                chdCandidates.push(cueFile);
+            };
         }
 
+        guard(chdCandidates.length > 0, `No suitable files found for compression`);
+
+        const compressedOutputFiles = await Promise.all(chdCandidates.map(async (filePath) => {
+            const chdResult = await chd.create({
+                inputFilePath: filePath,
+            });
+            return chdResult;
+        }));
+
         /* If we have compression results, return them */
-        if (compressionResults.length > 0) {
-            return compressionResults;
+        if (compressedOutputFiles.length > 0) {
+            return compressedOutputFiles;
         }
 
         /* If no compression occurred and no extraction occurred, we're stuck */
