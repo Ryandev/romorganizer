@@ -10,7 +10,6 @@ import { log } from '../utils/logger';
 import metadata from '../types/metadata';
 import { fileExtension } from './utils';
 import storageDecorator from '../utils/storage.decorator';
-import { IStorage } from 'src/utils/storage.interface';
 
 export class VerifyRunnerFile
     implements

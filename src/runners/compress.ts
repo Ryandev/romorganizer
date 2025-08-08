@@ -299,7 +299,12 @@ export class RunnerFile implements IRunner<string[]> {
 
                     extractionOccurred = true;
                 } catch (error) {
-                    log.warn(`Failed to extract file ${filePath}: ${error}`);
+                    log.warn(
+                        `Failed to extract file ${filePath}: ${JSON.stringify(
+                            error
+                        )}`
+                    );
+                    throw error;
                 }
             }
         }

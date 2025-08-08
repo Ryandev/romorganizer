@@ -18,7 +18,7 @@ jest.mock('../utils/dat-loader', () => ({
 }));
 
 jest.mock('../utils/cuesheet-loader', () => ({
-    loadCuesheetsFromZip: jest.fn(),
+    loadCuesheetsPath: jest.fn(),
 }));
 
 jest.mock('../utils/logger', () => ({
@@ -29,13 +29,27 @@ jest.mock('../utils/logger', () => ({
     },
 }));
 
+jest.mock('../utils/storage', () => ({
+    __esModule: true,
+    default: jest.fn().mockReturnValue({
+        exists: jest.fn().mockResolvedValue(true),
+        createTemporaryDirectory: jest.fn().mockResolvedValue('/tmp/test'),
+        remove: jest.fn().mockResolvedValue(undefined),
+        copy: jest.fn().mockResolvedValue(undefined),
+        move: jest.fn().mockResolvedValue(undefined),
+        write: jest.fn().mockResolvedValue(undefined),
+        read: jest.fn().mockResolvedValue(new Uint8Array()),
+        list: jest.fn().mockResolvedValue([]),
+    }),
+}));
+
 describe('verify.builder', () => {
     const mockParseVerifyArguments =
         require('./verify.cli').parseVerifyArguments;
     const MockVerifyRunnerDirectory = require('./verify').VerifyRunnerDirectory;
     const mockLoadDatFromPath = require('../utils/dat-loader').loadDatFromPath;
-    const mockLoadCuesheetsFromZip =
-        require('../utils/cuesheet-loader').loadCuesheetsFromZip;
+    const mockLoadCuesheetsPath =
+        require('../utils/cuesheet-loader').loadCuesheetsPath;
     const mockLog = require('../utils/logger').log;
 
     beforeEach(() => {
@@ -50,7 +64,7 @@ describe('verify.builder', () => {
             games: [{ name: 'Test Game', roms: [] }],
             romsBySha1hex: new Map(),
         });
-        mockLoadCuesheetsFromZip.mockResolvedValue([
+        mockLoadCuesheetsPath.mockResolvedValue([
             { name: 'test1.cue', content: 'test content 1' },
             { name: 'test2.cue', content: 'test content 2' },
         ]);
@@ -115,7 +129,7 @@ describe('verify.builder', () => {
                 { name: 'test2.cue', content: 'test content 2' },
             ];
             mockLoadDatFromPath.mockResolvedValue(mockDat);
-            mockLoadCuesheetsFromZip.mockResolvedValue(mockCuesheets);
+            mockLoadCuesheetsPath.mockResolvedValue(mockCuesheets);
 
             /* Act */
             const builder = verifyBuilder([
@@ -134,7 +148,7 @@ describe('verify.builder', () => {
             expect(mockLoadDatFromPath).toHaveBeenCalledWith(
                 '/test/datfile.dat'
             );
-            expect(mockLoadCuesheetsFromZip).toHaveBeenCalledWith(
+            expect(mockLoadCuesheetsPath).toHaveBeenCalledWith(
                 '/test/cuesheets.zip'
             );
             expect(MockVerifyRunnerDirectory).toHaveBeenCalledWith(
@@ -170,7 +184,7 @@ describe('verify.builder', () => {
                 { name: 'test2.cue', content: 'content 2' },
             ];
             mockLoadDatFromPath.mockResolvedValue(mockDat);
-            mockLoadCuesheetsFromZip.mockResolvedValue(mockCuesheets);
+            mockLoadCuesheetsPath.mockResolvedValue(mockCuesheets);
 
             /* Act */
             const builder = verifyBuilder([
@@ -329,7 +343,7 @@ describe('verify.builder', () => {
                 games: [],
                 romsBySha1hex: new Map(),
             });
-            mockLoadCuesheetsFromZip.mockRejectedValue(
+            mockLoadCuesheetsPath.mockRejectedValue(
                 new Error('Cuesheets file not found')
             );
 

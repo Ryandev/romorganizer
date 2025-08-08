@@ -123,7 +123,7 @@ export async function loadCuesheetsPath(
         }
 
         throw new CuesheetLoaderException(
-            `Failed to load cuesheets from zip ${zipPath}: ${error instanceof Error ? error.message : String(error)}`
+            `Failed to load cuesheets from zip ${cueSheetPath}: ${error instanceof Error ? error.message : String(error)}`
         );
     }
 }

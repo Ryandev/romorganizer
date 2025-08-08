@@ -21,8 +21,9 @@ IAT conversion failed. Please ensure iat is installed and executable:\n
  * @returns Promise resolving to the path of the converted ISO file
  */
 export async function convertToIso(filePath: string): Promise<string> {
-    try {
+    guardFileExists(filePath, `MDF file missing, does not exist: ${filePath}`);
 
+    try {
         /* Check if iat is available */
         const command = 'iat';
         const commandExists = await doesCommandExist(command);
@@ -32,6 +33,7 @@ export async function convertToIso(filePath: string): Promise<string> {
         log.info(`Converting ${filePath} to ISO format with ${command}`);
 
         const outputDir = await storage().createTemporaryDirectory();
+
         const sourceFileName = path.basename(filePath)
 
         await storage().copy(filePath, path.join(outputDir, sourceFileName));
@@ -43,24 +45,37 @@ export async function convertToIso(filePath: string): Promise<string> {
 
         /* Iat does not work will full paths, so move file to temporary directory & work from there */
         log.info(`Using ${command} to convert ${filePath} to ${isoFilePath}`);
-        const output = await withTimeout(
-            $({ cwd: outputDir })`iat ${sourceFileName} ${isoFileName}`,
-            DEFAULT_TIMEOUT_MS
-        ).catch(() => ({
-            exitCode: 1
-        }))
 
-        await storage().remove(path.join(outputDir, sourceFileName)).catch(() => {
-            /* Ignore */
-        })
+        /* iat expects --input & --output flags, Linux, does not have them  */
+        if (process.platform === 'darwin') {
+            const output = await withTimeout(
+                $`iat --input=${filePath} --output=${isoFilePath} --iso`,
+                DEFAULT_TIMEOUT_MS
+            );
+            guard(output.exitCode === 0, `MDF to ISO conversion failed, code: ${output.exitCode}`);
 
-        guard(output.exitCode === 0, `MDF to ISO conversion failed, code: ${output.exitCode}`);
+        } else {
+            const output = await withTimeout(
+                $({ cwd: outputDir })`iat ${sourceFileName} ${isoFileName}`,
+                DEFAULT_TIMEOUT_MS
+            );
+            guard(output.exitCode === 0, `MDF to ISO conversion failed, code: ${output.exitCode}`);
+
+        }
+
+        await storage()
+            .remove(path.join(outputDir, sourceFileName))
+            .catch(() => {
+                /* Ignore */
+            });
 
         guardFileExists(isoFilePath);
 
         return isoFilePath;
     } catch (error) {
-        throw new Error(`Failed to convert ${filePath} to ISO: ${error}`);
+        throw new Error(
+            `IAT conversion failed: ${JSON.stringify(error)}`
+        );
     }
 }
 
