@@ -22,7 +22,6 @@ IAT conversion failed. Please ensure iat is installed and executable:\n
  */
 export async function convertToIso(filePath: string): Promise<string> {
     try {
-        log.info(`Converting ${filePath} to ISO format`);
 
         /* Check if iat is available */
         const command = 'iat';
@@ -30,19 +29,32 @@ export async function convertToIso(filePath: string): Promise<string> {
         const commandExecutable = await isCommandExecutable(command);
         guard(commandExists && commandExecutable, ERROR_IAT_NOT_INSTALLED);
 
+        log.info(`Converting ${filePath} to ISO format with ${command}`);
+
         const outputDir = await storage().createTemporaryDirectory();
+        const sourceFileName = path.basename(filePath)
+
+        await storage().copy(filePath, path.join(outputDir, sourceFileName));
 
         /* Generate output ISO filename */
         const baseName = path.basename(filePath, path.extname(filePath));
         const isoFileName = `${baseName}.iso`;
         const isoFilePath = path.join(outputDir, isoFileName);
 
+        /* Iat does not work will full paths, so move file to temporary directory & work from there */
         log.info(`Using ${command} to convert ${filePath} to ${isoFilePath}`);
         const output = await withTimeout(
-            $`iat --iso --input "${filePath}" --output "${isoFilePath}"`,
+            $({ cwd: outputDir })`iat ${sourceFileName} ${isoFileName}`,
             DEFAULT_TIMEOUT_MS
-        );
-        guard(output.exitCode === 0, 'MDF to ISO conversion failed');
+        ).catch(() => ({
+            exitCode: 1
+        }))
+
+        await storage().remove(path.join(outputDir, sourceFileName)).catch(() => {
+            /* Ignore */
+        })
+
+        guard(output.exitCode === 0, `MDF to ISO conversion failed, code: ${output.exitCode}`);
 
         guardFileExists(isoFilePath);
 

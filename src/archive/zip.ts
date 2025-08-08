@@ -16,17 +16,17 @@ async function _extract(
 
     const outputDir = await storageInstance.createTemporaryDirectory();
     try {
-        log.info(`Extracting ${filePath} to ${outputDir}`);
+        log.info(`Extracting zip ${filePath} to ${outputDir}`);
 
         const zip = new AdmZip(filePath);
         zip.extractAllTo(outputDir, true); /* true = overwrite existing files */
 
         await moveContentsFromSubdirectories(outputDir, filePath);
-        log.info(`Done extracting ${filePath} to ${outputDir}`);
+        log.info(`Extracted ${filePath} to ${outputDir}`);
         return outputDir;
     } catch (error) {
         throw new Error(
-            `Failed to extract ${filePath} to ${outputDir}: ${error}`
+            `Failed to extract ${filePath} to ${outputDir}: ${JSON.stringify(error)}`
         );
     }
 }

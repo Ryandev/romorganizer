@@ -9,6 +9,8 @@ import { IRunner } from './interface';
 import { log } from '../utils/logger';
 import metadata from '../types/metadata';
 import { fileExtension } from './utils';
+import storageDecorator from '../utils/storage.decorator';
+import { IStorage } from 'src/utils/storage.interface';
 
 export class VerifyRunnerFile
     implements
@@ -18,6 +20,8 @@ export class VerifyRunnerFile
             game: Game | undefined;
         }>
 {
+    private readonly storage = storageDecorator.withCleanup(storage());
+
     constructor(
         private readonly sourceFile: string,
         private readonly dat: Dat,
@@ -43,12 +47,15 @@ export class VerifyRunnerFile
             format: 'cue',
         });
         const outputDirectory = path.dirname(filePathCue);
-        const fileListings = await storage().list(outputDirectory);
+        const fileListings = await this.storage.list(outputDirectory);
+
+        log.info(`Searching ${fileListings} for matches`)
 
         /* Attempt to search dat file for all fileListings by sha1 */
         const matchingGames: Game[] = [];
         for (const filePath of fileListings) {
             const sha1 = await hash.calculateFileSha1(filePath);
+            log.info(`Calculated hash ${sha1} for ${filePath}, searching dat file for matches`)
             const matchingGame = this.dat.games.find(game =>
                 game.roms.some(rom => rom.sha1hex === sha1)
             );
@@ -70,10 +77,10 @@ export class VerifyRunnerFile
             filePath.endsWith('.bin')
         );
         const allBinSizes = await Promise.all(
-            allBinFiles.map(filePath => storage().size(filePath))
+            allBinFiles.map(filePath => this.storage.size(filePath))
         );
         const combinedBinSize = allBinSizes.reduce(
-            (acc, size) => acc + size,
+            (total, size) => total + size,
             0
         );
 
@@ -82,7 +89,7 @@ export class VerifyRunnerFile
         /* Attempt to find match by combined bin size */
         for (const game of this.dat.games) {
             const roms = game.roms.filter(rom => rom.name.endsWith('.bin'));
-            const romSize = roms.reduce((acc, rom) => acc + rom.size, 0);
+            const romSize = roms.reduce((total, rom) => total + rom.size, 0);
             if (romSize === combinedBinSize) {
                 sizeMatches.push(game);
             }
@@ -156,7 +163,7 @@ export class VerifyRunnerDirectory implements IRunner<string[]> {
         });
         log.info(`Found ${files.length} files in source directory`);
 
-        for (const file of files) {
+        for (const file of files.filter(fileName => fileName.endsWith('.chd'))) {
             /* Check if metadata.json already exists for this file */
             const baseFileName = path.basename(file, path.extname(file));
             const metadataFileName = `${baseFileName}.metadata.json`;

@@ -25,18 +25,18 @@ export interface CuesheetEntry {
 /**
  * Loads cuesheets from a zip file containing master copies of .cue files
  * Returns an array of cuesheet entries with lazy loading promises
- * @param zipPath Path to the zip file containing cuesheets
+ * @param cueSheetPath Path to the zip file containing cuesheets or the directory of cuesheets
  * @returns Promise<CuesheetEntry[]> Array of cuesheet entries with lazy loading
  */
-export async function loadCuesheetsFromZip(
-    zipPath: string
+export async function loadCuesheetsPath(
+    cueSheetPath: string
 ): Promise<CuesheetEntry[]> {
-    log.info(`Loading cuesheets from zip file: ${zipPath}`);
+    log.info(`Loading cuesheets from zip file: ${cueSheetPath}`);
 
     /* Verify the zip file exists */
-    if (!(await storage().exists(zipPath))) {
+    if (!(await storage().exists(cueSheetPath))) {
         throw new CuesheetLoaderException(
-            `Cuesheets zip file does not exist: ${zipPath}`
+            `Cuesheets zip file does not exist: ${cueSheetPath}`
         );
     }
 
@@ -44,10 +44,16 @@ export async function loadCuesheetsFromZip(
     const tempDir = await storage().createTemporaryDirectory();
 
     try {
-        /* Extract the zip file */
-        const zipArchive = createArchive(zipPath);
-        const extractedDir = await zipArchive.extract();
+        let extractedDir = cueSheetPath;
 
+        if ( await storage().isFile(cueSheetPath) ) {
+            /* Extract the zip file */
+            const zipArchive = createArchive(cueSheetPath);
+            log.info('Extracting zip')
+            extractedDir = await zipArchive.extract();
+        }
+
+        log.info('Listing files')
         /* Find all .cue files in the extracted directory */
         const allFiles = await storage().list(extractedDir, {
             recursive: true,
@@ -58,7 +64,7 @@ export async function loadCuesheetsFromZip(
 
         if (cueFiles.length === 0) {
             throw new CuesheetLoaderException(
-                `No .cue files found in zip: ${zipPath}`
+                `No .cue files found in zip: ${cueSheetPath}`
             );
         }
 

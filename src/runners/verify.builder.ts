@@ -3,8 +3,10 @@ import { VerifyRunnerDirectory } from './verify';
 import { parseVerifyArguments } from './verify.cli';
 import { VERIFY_HELP_TEXT } from './verify.help';
 import { loadDatFromPath } from '../utils/dat-loader';
-import { loadCuesheetsFromZip } from '../utils/cuesheet-loader';
+import { loadCuesheetsPath } from '../utils/cuesheet-loader';
 import { log } from '../utils/logger';
+import storage from '../utils/storage';
+import { guard } from '../utils/guard';
 
 export default function builder(parameters: string[]): RunnerBuilder<string[]> {
     const parsedArguments = parseVerifyArguments(parameters);
@@ -20,7 +22,9 @@ export default function builder(parameters: string[]): RunnerBuilder<string[]> {
             log.info(
                 `Loading cuesheets from: ${parsedArguments.cuesheetsFile}`
             );
-            const cuesheetEntries = await loadCuesheetsFromZip(
+            const exists = await storage().exists(parsedArguments.cuesheetsFile);
+            guard(exists, `Cuefile missing ${parsedArguments.cuesheetsFile}`);
+            const cuesheetEntries = await loadCuesheetsPath(
                 parsedArguments.cuesheetsFile
             );
             log.info(`Loaded ${cuesheetEntries.length} cuesheet entries`);
