@@ -53,9 +53,9 @@ async function convert(
         const binFileName = `${baseName}.bin`;
         const binPath = path.join(outputDir, binFileName);
 
-        /* PowerISO convert command: poweriso convert "input.iso" "output.bin" "output.cue" */
+        /* Do not quote arguments to poweriso. Poweriso cannot find files with single/double quotes around arguments */
         const output = await withTimeout(
-            $`${command} convert "${filePath}" -o "${binPath}"`,
+            $`${command} convert ${filePath} -o ${binPath} -ot ${format}`,
             DEFAULT_TIMEOUT_MS
         );
         guard(output.exitCode === 0, `Conversion failed for ${filePath}`);

@@ -77,10 +77,11 @@ describe('ISO Utilities', () => {
                 mockStorageInstance.createTemporaryDirectory
             ).toHaveBeenCalled();
             expect(mockZx.$).toHaveBeenCalledWith(
-                ['', ' convert "', '" -o "', '"'],
+                ['', ' convert ', ' -o ', ' -ot ', ''],
                 'poweriso',
                 '/path/to/test.iso',
-                expect.stringContaining('.bin')
+                expect.stringContaining('.bin'),
+                'bin'
             );
         });
 
