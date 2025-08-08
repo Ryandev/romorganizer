@@ -235,13 +235,14 @@ const EXTRACT_OPERATIONS = new Map<
             if (!sourceFile.toLowerCase().endsWith('.img')) {
                 return [];
             }
+            const temporaryDirectory = await storage().createTemporaryDirectory();
             const fileNameNoExtension = path.basename(sourceFile, path.extname(sourceFile));
             /* rename file to .bin */
             const binFile = path.join(
-                path.dirname(sourceFile),
+                temporaryDirectory,
                 `${fileNameNoExtension}.bin`
             );
-            await storage().move(sourceFile, binFile);
+            await storage().copy(sourceFile, binFile);
             guardFileExists(
                 binFile,
                 `Bin file missing, does not exist: ${binFile}`
@@ -359,17 +360,17 @@ export class RunnerFile implements IRunner<string[]> {
             await this._performAllExtractionOperations(workingDirectory);
 
         const chdCandidates = currentFiles.filter(
-            file => fileExtension(file) === 'chd'
+            file => fileExtension(file).toLowerCase() === 'chd'
         );
 
         if (chdCandidates.length > 0) {
             /* No .cue files found. See if we have any .bin files & create a cue file for them */
             const binFiles = currentFiles.filter(
-                file => fileExtension(file) === 'bin'
+                file => fileExtension(file).toLowerCase() === 'bin'
             );
             log.info(`No .cue files found. Creating from bin files ${binFiles.join(', ')}`);
             for (const binFile of binFiles) {
-                const cueFileName = `${path.basename(binFile, '.bin')}.cue`;
+                const cueFileName = `${path.basename(binFile, path.extname(binFile))}.cue`;
                 const cueFile = path.join(path.dirname(binFile), cueFileName);
                 await cueSheet.createCueFile(binFile, cueFile);
                 guardFileExists(
