@@ -176,14 +176,11 @@ describe('help.cli', () => {
 
             /* Assert */
             expect(result).toContain(
-                'romorganizer rename - Rename CHD files based on DAT file matches'
+                'romorganizer rename - Rename CHD files based on metadata.json files'
             );
             expect(result).toContain('Required Options:');
             expect(result).toContain('-s, --source-dir <path>');
-            expect(result).toContain('-d, --dat-file <path>');
-            expect(result).toContain('-c, --cuesheets-file <path>');
             expect(result).toContain('Optional Options:');
-            expect(result).toContain('-t, --temp-dir <path>');
             expect(result).toContain('-f, --force');
             expect(result).toContain('Examples:');
         });
@@ -426,7 +423,7 @@ describe('help.cli', () => {
             expect(parsed.command).toBe('help');
             expect(parsed.subcommand).toBe('rename');
             expect(helpTextResult).toContain(
-                'romorganizer rename - Rename CHD files based on DAT file matches'
+                'romorganizer rename - Rename CHD files based on metadata.json files'
             );
         });
 

@@ -24,9 +24,6 @@ describe('rename.cli', () => {
             /* Arrange */
             const mockParsedOptions = {
                 'source-dir': '/test/source',
-                'dat-file': '/test/datfile.dat',
-                'cuesheets-file': '/test/cuesheets.zip',
-                'temp-dir': '/test/temp',
                 force: false,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
@@ -35,12 +32,6 @@ describe('rename.cli', () => {
             const result = parseRenameArguments([
                 '--source-dir',
                 '/test/source',
-                '--dat-file',
-                '/test/datfile.dat',
-                '--cuesheets-file',
-                '/test/cuesheets.zip',
-                '--temp-dir',
-                '/test/temp',
             ]);
 
             /* Assert */
@@ -48,9 +39,9 @@ describe('rename.cli', () => {
                 command: 'rename',
                 sourceDir: '/test/source',
                 outputDir: undefined,
-                tempDir: '/test/temp',
-                datFile: '/test/datfile.dat',
-                cuesheetsFile: '/test/cuesheets.zip',
+                tempDir: undefined,
+                datFile: undefined,
+                cuesheetsFile: undefined,
                 removeSource: false,
                 useDatFileName: false,
                 rename: false,
@@ -63,12 +54,6 @@ describe('rename.cli', () => {
                     argv: [
                         '--source-dir',
                         '/test/source',
-                        '--dat-file',
-                        '/test/datfile.dat',
-                        '--cuesheets-file',
-                        '/test/cuesheets.zip',
-                        '--temp-dir',
-                        '/test/temp',
                     ],
                     partial: true,
                 }
@@ -79,8 +64,6 @@ describe('rename.cli', () => {
             /* Arrange */
             const mockParsedOptions = {
                 'source-dir': '/test/source',
-                'dat-file': '/test/datfile.dat',
-                'cuesheets-file': '/test/cuesheets.zip',
                 force: true,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
@@ -89,10 +72,6 @@ describe('rename.cli', () => {
             const result = parseRenameArguments([
                 '-s',
                 '/test/source',
-                '-d',
-                '/test/datfile.dat',
-                '-c',
-                '/test/cuesheets.zip',
                 '-f',
             ]);
 
@@ -102,8 +81,8 @@ describe('rename.cli', () => {
                 sourceDir: '/test/source',
                 outputDir: undefined,
                 tempDir: undefined,
-                datFile: '/test/datfile.dat',
-                cuesheetsFile: '/test/cuesheets.zip',
+                datFile: undefined,
+                cuesheetsFile: undefined,
                 removeSource: false,
                 useDatFileName: false,
                 rename: false,
@@ -116,8 +95,6 @@ describe('rename.cli', () => {
             /* Arrange */
             const mockParsedOptions = {
                 'source-dir': '/test/source',
-                'dat-file': '/test/datfile.dat',
-                'cuesheets-file': '/test/cuesheets.zip',
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
 
@@ -125,10 +102,6 @@ describe('rename.cli', () => {
             const result = parseRenameArguments([
                 '--source-dir',
                 '/test/source',
-                '--dat-file',
-                '/test/datfile.dat',
-                '--cuesheets-file',
-                '/test/cuesheets.zip',
             ]);
 
             /* Assert */
@@ -137,8 +110,8 @@ describe('rename.cli', () => {
                 sourceDir: '/test/source',
                 outputDir: undefined,
                 tempDir: undefined,
-                datFile: '/test/datfile.dat',
-                cuesheetsFile: '/test/cuesheets.zip',
+                datFile: undefined,
+                cuesheetsFile: undefined,
                 removeSource: false,
                 useDatFileName: false,
                 rename: false,
@@ -151,8 +124,6 @@ describe('rename.cli', () => {
             /* Arrange */
             const mockParsedOptions = {
                 'source-dir': '/test/source',
-                'dat-file': '/test/datfile.dat',
-                'cuesheets-file': '/test/cuesheets.zip',
                 force: true,
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
@@ -161,10 +132,6 @@ describe('rename.cli', () => {
             const result = parseRenameArguments([
                 '--source-dir',
                 '/test/source',
-                '--dat-file',
-                '/test/datfile.dat',
-                '--cuesheets-file',
-                '/test/cuesheets.zip',
                 '--force',
             ]);
 
@@ -175,23 +142,20 @@ describe('rename.cli', () => {
         it('should throw error for missing required arguments', () => {
             /* Arrange */
             const mockParsedOptions = {
-                'source-dir': '/test/source',
-                /* Missing dat-file and cuesheets-file */
+                /* Missing source-dir */
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
 
             /* Act & Assert */
             expect(() => {
-                parseRenameArguments(['--source-dir', '/test/source']);
-            }).toThrow(/datFile: Invalid input/);
+                parseRenameArguments([]);
+            }).toThrow(/sourceDir: Invalid input/);
         });
 
         it('should throw error for invalid source directory', () => {
             /* Arrange */
             const mockParsedOptions = {
                 'source-dir': '/invalid/directory',
-                'dat-file': '/test/datfile.dat',
-                'cuesheets-file': '/test/cuesheets.zip',
             };
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
             mockGuardDirectoryExists.mockImplementation(() => {
@@ -203,10 +167,6 @@ describe('rename.cli', () => {
                 parseRenameArguments([
                     '--source-dir',
                     '/invalid/directory',
-                    '--dat-file',
-                    '/test/datfile.dat',
-                    '--cuesheets-file',
-                    '/test/cuesheets.zip',
                 ]);
             }).toThrow(/Source directory does not exist/);
         });

@@ -9,9 +9,6 @@ describe('rename.help.ts', () => {
                 'Usage: romorganizer rename [options]'
             );
             expect(RENAME_HELP_TEXT).toContain('--source-dir');
-            expect(RENAME_HELP_TEXT).toContain('--dat-file');
-            expect(RENAME_HELP_TEXT).toContain('--cuesheets-file');
-            expect(RENAME_HELP_TEXT).toContain('--temp-dir');
             expect(RENAME_HELP_TEXT).toContain('--force');
             expect(RENAME_HELP_TEXT).toContain('--help');
         });
@@ -20,14 +17,18 @@ describe('rename.help.ts', () => {
             /* Assert */
             expect(RENAME_HELP_TEXT).toContain('Examples:');
             expect(RENAME_HELP_TEXT).toContain(
-                'romorganizer rename -s ./input -d ./datfile.dat -c ./cuesheets.zip'
+                'romorganizer rename -s ./input'
             );
             expect(RENAME_HELP_TEXT).toContain(
-                'romorganizer rename --source-dir ./input --dat-file ./datfile.zip --cuesheets-file ./cuesheets.zip'
+                'romorganizer rename --source-dir ./input --force'
             );
-            expect(RENAME_HELP_TEXT).toContain(
-                'romorganizer rename --source-dir ./input --dat-file ./datfile.dat --cuesheets-file ./cuesheets.zip --force'
-            );
+        });
+
+        it('should contain note about metadata.json requirement', () => {
+            /* Assert */
+            expect(RENAME_HELP_TEXT).toContain('Note:');
+            expect(RENAME_HELP_TEXT).toContain('metadata.json');
+            expect(RENAME_HELP_TEXT).toContain('verify command');
         });
     });
 });

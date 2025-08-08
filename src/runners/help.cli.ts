@@ -51,7 +51,7 @@ Usage: ${COMMAND_NAME} <command> [options]
 Commands:
   compress    Convert archive files to CHD format
   verify      Verify CHD files against DAT file
-  rename      Rename CHD files based on DAT file matches
+  rename      Rename CHD files based on metadata.json files
   help        Show help information
 
 Global Options:
@@ -60,7 +60,7 @@ Global Options:
 Examples:
   ${COMMAND_NAME} compress -s ./input -o ./output
   ${COMMAND_NAME} verify -s ./input -d ./datfile.dat -c ./cuesheets.zip
-  ${COMMAND_NAME} rename -s ./input -d ./datfile.dat -c ./cuesheets.zip
+  ${COMMAND_NAME} rename -s ./input
   ${COMMAND_NAME} help compress
 
 Use '${COMMAND_NAME} <command> --help' for command-specific help.
