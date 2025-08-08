@@ -46,10 +46,7 @@ describe('rename.builder', () => {
             mockParseRenameArguments.mockReturnValue(mockParsedArgs);
 
             /* Act */
-            const result = renameBuilder([
-                '--source-dir',
-                '/test/source',
-            ]);
+            const result = renameBuilder(['--source-dir', '/test/source']);
 
             /* Assert */
             expect(result).toBeDefined();
@@ -95,10 +92,7 @@ describe('rename.builder', () => {
             mockParseRenameArguments.mockReturnValue(mockParsedArgs);
 
             /* Act */
-            const builder = renameBuilder([
-                '--source-dir',
-                '/test/source',
-            ]);
+            const builder = renameBuilder(['--source-dir', '/test/source']);
             await builder.create();
 
             /* Assert */
@@ -178,10 +172,7 @@ describe('rename.builder', () => {
             });
 
             /* Act */
-            const builder = renameBuilder([
-                '--source-dir',
-                '/test/source',
-            ]);
+            const builder = renameBuilder(['--source-dir', '/test/source']);
 
             /* Assert */
             expect(builder).toHaveProperty('create');
@@ -198,10 +189,7 @@ describe('rename.builder', () => {
             });
 
             /* Act */
-            const builder = renameBuilder([
-                '--source-dir',
-                '/test/source',
-            ]);
+            const builder = renameBuilder(['--source-dir', '/test/source']);
             const createResult = builder.create();
 
             /* Assert */

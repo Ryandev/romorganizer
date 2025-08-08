@@ -66,19 +66,26 @@ Examples:
 Use '${COMMAND_NAME} <command> --help' for command-specific help.
 `;
 
-export async function helpText(parameters: z.infer<typeof HelpSchema>): Promise<string> {
-    if (parameters.subcommand && parameters.subcommand in COMMAND_HELP_IMPORTS) {
+export async function helpText(
+    parameters: z.infer<typeof HelpSchema>
+): Promise<string> {
+    if (
+        parameters.subcommand &&
+        parameters.subcommand in COMMAND_HELP_IMPORTS
+    ) {
         try {
-            return await COMMAND_HELP_IMPORTS[parameters.subcommand as keyof typeof COMMAND_HELP_IMPORTS]();
+            return await COMMAND_HELP_IMPORTS[
+                parameters.subcommand as keyof typeof COMMAND_HELP_IMPORTS
+            ]();
         } catch (error) {
             return `Error loading help for command '${parameters.subcommand}': ${error instanceof Error ? error.message : String(error)}`;
         }
     }
-    
+
     /* If subcommand is provided but not found, show error */
     if (parameters.subcommand && parameters.subcommand !== '') {
         return `Error loading help for command '${parameters.subcommand}': Command not found`;
     }
-    
+
     return GLOBAL_HELP_TEXT;
 }

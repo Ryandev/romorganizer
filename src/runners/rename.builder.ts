@@ -9,7 +9,9 @@ export default function builder(parameters: string[]): RunnerBuilder<string[]> {
 
     return {
         create: async (): Promise<IRunner<string[]>> => {
-            log.info(`Starting rename process for directory: ${parsedArguments.sourceDir}`);
+            log.info(
+                `Starting rename process for directory: ${parsedArguments.sourceDir}`
+            );
 
             const runner = new RenameRunnerDirectory(
                 parsedArguments.sourceDir,

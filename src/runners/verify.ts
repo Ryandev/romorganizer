@@ -48,13 +48,15 @@ export class VerifyRunnerFile
         const outputDirectory = path.dirname(filePathCue);
         const fileListings = await this.storage.list(outputDirectory);
 
-        log.info(`Searching ${fileListings} for matches`)
+        log.info(`Searching ${fileListings} for matches`);
 
         /* Attempt to search dat file for all fileListings by sha1 */
         const matchingGames: Game[] = [];
         for (const filePath of fileListings) {
             const sha1 = await hash.calculateFileSha1(filePath);
-            log.info(`Calculated hash ${sha1} for ${filePath}, searching dat file for matches`)
+            log.info(
+                `Calculated hash ${sha1} for ${filePath}, searching dat file for matches`
+            );
             const matchingGame = this.dat.games.find(game =>
                 game.roms.some(rom => rom.sha1hex === sha1)
             );
@@ -160,7 +162,9 @@ export class VerifyRunnerDirectory implements IRunner<string[]> {
         });
         log.info(`Found ${files.length} files in source directory`);
 
-        for (const file of files.filter(fileName => fileName.endsWith('.chd'))) {
+        for (const file of files.filter(fileName =>
+            fileName.endsWith('.chd')
+        )) {
             /* Check if metadata.json already exists for this file */
             const baseFileName = path.basename(file, path.extname(file));
             const metadataFileName = `${baseFileName}.metadata.json`;

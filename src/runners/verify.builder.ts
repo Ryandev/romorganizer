@@ -22,8 +22,13 @@ export default function builder(parameters: string[]): RunnerBuilder<string[]> {
             log.info(
                 `Loading cuesheets from: ${parsedArguments.cuesheetsFile}`
             );
-            const exists = await storage().exists(parsedArguments.cuesheetsFile);
-            guard(exists, `Cuesheets file not found: ${parsedArguments.cuesheetsFile}`);
+            const exists = await storage().exists(
+                parsedArguments.cuesheetsFile
+            );
+            guard(
+                exists,
+                `Cuesheets file not found: ${parsedArguments.cuesheetsFile}`
+            );
             const cuesheetEntries = await loadCuesheetsPath(
                 parsedArguments.cuesheetsFile
             );

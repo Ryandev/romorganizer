@@ -51,10 +51,7 @@ describe('rename.cli', () => {
             expect(mockCommandLineArgs).toHaveBeenCalledWith(
                 expect.any(Array),
                 {
-                    argv: [
-                        '--source-dir',
-                        '/test/source',
-                    ],
+                    argv: ['--source-dir', '/test/source'],
                     partial: true,
                 }
             );
@@ -69,11 +66,7 @@ describe('rename.cli', () => {
             mockCommandLineArgs.mockReturnValue(mockParsedOptions);
 
             /* Act */
-            const result = parseRenameArguments([
-                '-s',
-                '/test/source',
-                '-f',
-            ]);
+            const result = parseRenameArguments(['-s', '/test/source', '-f']);
 
             /* Assert */
             expect(result).toEqual({
@@ -164,10 +157,7 @@ describe('rename.cli', () => {
 
             /* Act & Assert */
             expect(() => {
-                parseRenameArguments([
-                    '--source-dir',
-                    '/invalid/directory',
-                ]);
+                parseRenameArguments(['--source-dir', '/invalid/directory']);
             }).toThrow(/Source directory does not exist/);
         });
 

@@ -154,11 +154,15 @@ describe('help.builder', () => {
                 subcommand: 'unknown',
             };
             mockParseHelpArguments.mockReturnValue(mockParsedArgs);
-            mockHelpText.mockRejectedValue(new Error('Help text generation failed'));
+            mockHelpText.mockRejectedValue(
+                new Error('Help text generation failed')
+            );
 
             /* Act & Assert */
             const builder = helpBuilder(['unknown']);
-            await expect(builder.getHelpText()).rejects.toThrow('Help text generation failed');
+            await expect(builder.getHelpText()).rejects.toThrow(
+                'Help text generation failed'
+            );
         });
 
         it('should handle different subcommands correctly', async () => {

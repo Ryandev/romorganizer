@@ -34,7 +34,7 @@ export async function convertToIso(filePath: string): Promise<string> {
 
         const outputDir = await storage().createTemporaryDirectory();
 
-        const sourceFileName = path.basename(filePath)
+        const sourceFileName = path.basename(filePath);
 
         await storage().copy(filePath, path.join(outputDir, sourceFileName));
 
@@ -52,15 +52,19 @@ export async function convertToIso(filePath: string): Promise<string> {
                 $`iat --input=${filePath} --output=${isoFilePath} --iso`,
                 DEFAULT_TIMEOUT_MS
             );
-            guard(output.exitCode === 0, `MDF to ISO conversion failed, code: ${output.exitCode}`);
-
+            guard(
+                output.exitCode === 0,
+                `MDF to ISO conversion failed, code: ${output.exitCode}`
+            );
         } else {
             const output = await withTimeout(
                 $({ cwd: outputDir })`iat ${sourceFileName} ${isoFileName}`,
                 DEFAULT_TIMEOUT_MS
             );
-            guard(output.exitCode === 0, `MDF to ISO conversion failed, code: ${output.exitCode}`);
-
+            guard(
+                output.exitCode === 0,
+                `MDF to ISO conversion failed, code: ${output.exitCode}`
+            );
         }
 
         await storage()
@@ -73,9 +77,7 @@ export async function convertToIso(filePath: string): Promise<string> {
 
         return isoFilePath;
     } catch (error) {
-        throw new Error(
-            `IAT conversion failed: ${JSON.stringify(error)}`
-        );
+        throw new Error(`IAT conversion failed: ${JSON.stringify(error)}`);
     }
 }
 

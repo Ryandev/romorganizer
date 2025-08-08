@@ -228,19 +228,25 @@ const EXTRACT_OPERATIONS = new Map<
             return [binFile];
         },
     ],
-    ['img', async (sourceFile: string) => {
-        if (!sourceFile.endsWith('.img')) {
-            return [];
-        }
-        /* rename file to .bin */
-        const binFile = path.join(path.dirname(sourceFile), `${path.basename(sourceFile, '.img')}.bin`);
-        await storage().move(sourceFile, binFile);
-        guardFileExists(
-            binFile,
-            `Bin file missing, does not exist: ${binFile}`
-        );
-        return [binFile];
-    }],
+    [
+        'img',
+        async (sourceFile: string) => {
+            if (!sourceFile.endsWith('.img')) {
+                return [];
+            }
+            /* rename file to .bin */
+            const binFile = path.join(
+                path.dirname(sourceFile),
+                `${path.basename(sourceFile, '.img')}.bin`
+            );
+            await storage().move(sourceFile, binFile);
+            guardFileExists(
+                binFile,
+                `Bin file missing, does not exist: ${binFile}`
+            );
+            return [binFile];
+        },
+    ],
 ]);
 
 const _findMatchingFiles = (
@@ -348,11 +354,15 @@ export class RunnerFile implements IRunner<string[]> {
         const currentFiles =
             await this._performAllExtractionOperations(workingDirectory);
 
-        const chdCandidates = currentFiles.filter(file => fileExtension(file) === 'chd');
+        const chdCandidates = currentFiles.filter(
+            file => fileExtension(file) === 'chd'
+        );
 
         if (chdCandidates.length > 0) {
             /* No .cue files found. See if we have any .bin files & create a cue file for them */
-            const binFiles = currentFiles.filter(file => fileExtension(file) === 'bin');
+            const binFiles = currentFiles.filter(
+                file => fileExtension(file) === 'bin'
+            );
             for (const binFile of binFiles) {
                 const cueFileName = `${path.basename(binFile, '.bin')}.cue`;
                 const cueFile = path.join(path.dirname(binFile), cueFileName);
@@ -362,17 +372,22 @@ export class RunnerFile implements IRunner<string[]> {
                     `CUE file missing, does not exist: ${cueFile}`
                 );
                 chdCandidates.push(cueFile);
-            };
+            }
         }
 
-        guard(chdCandidates.length > 0, `No suitable files found for compression`);
+        guard(
+            chdCandidates.length > 0,
+            `No suitable files found for compression`
+        );
 
-        const compressedOutputFiles = await Promise.all(chdCandidates.map(async (filePath) => {
-            const chdResult = await chd.create({
-                inputFilePath: filePath,
-            });
-            return chdResult;
-        }));
+        const compressedOutputFiles = await Promise.all(
+            chdCandidates.map(async filePath => {
+                const chdResult = await chd.create({
+                    inputFilePath: filePath,
+                });
+                return chdResult;
+            })
+        );
 
         /* If we have compression results, return them */
         if (compressedOutputFiles.length > 0) {

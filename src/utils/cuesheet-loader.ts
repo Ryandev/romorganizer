@@ -46,14 +46,14 @@ export async function loadCuesheetsPath(
     try {
         let extractedDir = cueSheetPath;
 
-        if ( await storage().isFile(cueSheetPath) ) {
+        if (await storage().isFile(cueSheetPath)) {
             /* Extract the zip file */
             const zipArchive = createArchive(cueSheetPath);
-            log.info('Extracting zip')
+            log.info('Extracting zip');
             extractedDir = await zipArchive.extract();
         }
 
-        log.info('Listing files')
+        log.info('Listing files');
         /* Find all .cue files in the extracted directory */
         const allFiles = await storage().list(extractedDir, {
             recursive: true,

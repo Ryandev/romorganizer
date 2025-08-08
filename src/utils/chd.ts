@@ -51,7 +51,7 @@ async function createChdFile(options: {
         case 'img':
         case 'iso': {
             const { exitCode: code } =
-            await $`chdman createcd --force --input ${inputFilePath} --output ${outputFilePath}`;
+                await $`chdman createcd --force --input ${inputFilePath} --output ${outputFilePath}`;
             exitCode = code ?? 1;
             break;
         }
@@ -77,13 +77,14 @@ async function createChdFile(options: {
 async function extractChdFile(options: {
     chdFilePath: string;
     format: ChdFormat;
-    outputDirectory?: string
+    outputDirectory?: string;
 }): Promise<string> {
     guardCommandExists('chdman');
 
     const { chdFilePath, format } = options;
     guardFileExists(chdFilePath, `CHD file does not exist: ${chdFilePath}`);
-    const outputDirectory = options.outputDirectory ?? await storage().createTemporaryDirectory();
+    const outputDirectory =
+        options.outputDirectory ?? (await storage().createTemporaryDirectory());
 
     const outputFileName =
         path.basename(chdFilePath, '.chd') + `.${options.format}`;

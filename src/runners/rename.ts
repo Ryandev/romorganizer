@@ -21,7 +21,9 @@ export class RenameRunnerDirectory implements IRunner<string[]> {
         });
         log.info(`Found ${files.length} files in source directory`);
 
-        for (const file of files.filter(fileName => fileName.endsWith('.chd'))) {
+        for (const file of files.filter(fileName =>
+            fileName.endsWith('.chd')
+        )) {
             /* Check if metadata.json exists for this file */
             const baseFileName = path.basename(file, path.extname(file));
             const metadataFileName = `${baseFileName}.metadata.json`;
@@ -40,8 +42,9 @@ export class RenameRunnerDirectory implements IRunner<string[]> {
 
             try {
                 /* Read metadata file */
-                const metadataContent: MetadataFile = await metadata.readFile(metadataFilePath);
-                
+                const metadataContent: MetadataFile =
+                    await metadata.readFile(metadataFilePath);
+
                 /* Check if we have a game match in metadata */
                 if (metadataContent.game && metadataContent.status !== 'none') {
                     const gameName = metadataContent.game.name;
@@ -60,11 +63,16 @@ export class RenameRunnerDirectory implements IRunner<string[]> {
 
                     /* Rename the file */
                     await storage().move(file, newFilePath);
-                    log.info(`Renamed ${path.basename(file)} to ${newFileName}`);
-                    
+                    log.info(
+                        `Renamed ${path.basename(file)} to ${newFileName}`
+                    );
+
                     /* Also rename the metadata file to match */
                     const newMetadataFileName = `${gameName}.metadata.json`;
-                    const newMetadataFilePath = path.join(this.sourceDir, newMetadataFileName);
+                    const newMetadataFilePath = path.join(
+                        this.sourceDir,
+                        newMetadataFileName
+                    );
                     await storage().move(metadataFilePath, newMetadataFilePath);
                     log.info(`Renamed metadata file to ${newMetadataFileName}`);
                 } else {
