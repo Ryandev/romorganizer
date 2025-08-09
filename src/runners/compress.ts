@@ -388,6 +388,7 @@ export class RunnerFile implements IRunner<string[]> {
             `No suitable files found for compression, ${compressionCandidates.join(', ')}, ${binFiles.join(', ')}`
         );
 
+        log.info(`Compressing candidates: ${compressionCandidates.join(', ')}`);
         const compressedOutputFiles = await Promise.all(
             compressionCandidates.map(async filePath => {
                 const chdResult = await chd.create({

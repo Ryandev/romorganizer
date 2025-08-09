@@ -1,6 +1,6 @@
 import { $ } from 'zx';
 import { log } from './logger';
-import { guard, guardFileExists, guardCommandExists } from './guard';
+import { guardFileExists, guardCommandExists } from './guard';
 import storage from './storage';
 import path from 'node:path';
 
@@ -29,40 +29,32 @@ async function createChdFile(options: {
     );
 
     /* check input file path format */
-    const inputFileExtension = path.extname(inputFilePath).slice(1);
-    if (!CHD_FORMATS.includes(inputFileExtension as ChdFormat)) {
+    const inputFileType = path.extname(inputFilePath).slice(1).toLowerCase();
+    if (!CHD_FORMATS.includes(inputFileType as ChdFormat)) {
         throw new Error(
-            `Input file extension does not match format: ${inputFileExtension} !== ${CHD_FORMATS.join(', ')}`
+            `Input file extension does not match format: ${inputFileType} !== ${CHD_FORMATS.join(', ')}`
         );
     }
 
     const temporaryDirectory = await storage().createTemporaryDirectory();
 
     const outputFileName =
-        path.basename(inputFilePath, `.${inputFileExtension}`) + '.chd';
+        path.basename(inputFilePath, path.extname(inputFilePath)) + '.chd';
 
     const outputFilePath = path.join(temporaryDirectory, outputFileName);
 
-    let exitCode: number;
-
-    switch (inputFileExtension) {
+    switch (inputFileType) {
         case 'cue':
         case 'gdi':
         case 'img':
         case 'iso': {
-            const { exitCode: code } =
-                await $`chdman createcd --force --input ${inputFilePath} --output ${outputFilePath}`;
-            exitCode = code ?? 1;
+            await $`chdman createcd --force --input "${inputFilePath}" --output "${outputFilePath}"`;
             break;
         }
         default: {
-            throw new Error(`No command found for ${inputFileExtension}`);
+            throw new Error(`No command found for ${inputFileType}`);
         }
     }
-    guard(
-        exitCode === 0,
-        `Failed to create CHD file for ${inputFilePath}, status code: ${exitCode}`
-    );
 
     guardFileExists(
         outputFilePath,
@@ -94,11 +86,11 @@ async function extractChdFile(options: {
         case 'cue':
         case 'gdi':
         case 'iso': {
-            await $`chdman extractcd --force --input ${chdFilePath} --output ${outputFilePath}`;
+            await $`chdman extractcd --force --input "${chdFilePath}" --output "${outputFilePath}"`;
             break;
         }
         case 'img': {
-            await $`chdman extractraw --force --input ${chdFilePath} --output ${outputFilePath}`;
+            await $`chdman extractraw --force --input "${chdFilePath}" --output "${outputFilePath}"`;
             break;
         }
         default: {
