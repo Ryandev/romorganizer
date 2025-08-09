@@ -333,7 +333,7 @@ async function createCueFile(
  * @returns Promise<string> - The generated CUE content
  */
 async function parseFromCCDFile(filePath: string): Promise<string> {
-    /* Verify extension is .ccd */
+    /* Verify extension is .ccd (case insensitive) */
     guard(
         filePath.toLowerCase().endsWith('.ccd'),
         `File must have .ccd extension: ${filePath}`
@@ -351,8 +351,8 @@ async function parseFromCCDFile(filePath: string): Promise<string> {
 
     /* Find the image file */
     const dir = filePath.slice(0, filePath.lastIndexOf('/') + 1);
-    const baseName = path.basename(filePath, '.ccd');
-    const imageExtensions = ['.img', '.bin', '.iso'];
+    const baseName = path.basename(filePath, path.extname(filePath));
+    const imageExtensions = ['.img', '.bin', '.iso', '.IMG', '.BIN', '.ISO'];
     let imageFile = '';
 
     for (const ext of imageExtensions) {
