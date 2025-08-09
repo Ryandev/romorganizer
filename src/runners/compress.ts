@@ -388,6 +388,39 @@ export class RunnerFile implements IRunner<string[]> {
             `No suitable files found for compression, ${compressionCandidates.join(', ')}, ${binFiles.join(', ')}`
         );
 
+        for (const compressionCandidate of compressionCandidates.filter(file => file.toLowerCase().endsWith('.cue'))) {
+            /* read the contents of the cue file */
+            const cueContent = await cueSheet.parseFromCueFile(compressionCandidate);
+            const cueData = await cueSheet.deserializeCueSheet(cueContent);
+            
+            /* check the contents of the cue file & ensure the bin file is referenced */
+            const expectedBinFiles = cueData.files.map(file => file.filename);
+            log.info(`CUE file ${compressionCandidate} references BIN files: ${expectedBinFiles.join(', ')}`);
+            
+            /* if there is only 1 bin file but it doesn't match our filename, rename the bin file to match the cue file */
+            if (binFiles.length === 1 && expectedBinFiles.length === 1) {
+                const actualBinFile = binFiles[0];
+                const expectedBinFile = expectedBinFiles[0];
+                
+                guard(actualBinFile !== undefined, `BIN file missing from array`);
+                guard(expectedBinFile !== undefined, `Expected BIN file missing from CUE data`);
+                
+                const expectedBinFilePath = path.join(path.dirname(compressionCandidate), expectedBinFile);
+                
+                if (actualBinFile !== expectedBinFilePath) {
+                    log.info(`Renaming BIN file ${actualBinFile} to match CUE file reference: ${expectedBinFilePath}`);
+                    await this.storage.move(actualBinFile, expectedBinFilePath);
+                    
+                    /* Update the binFiles array to reflect the rename */
+                    const binFileIndex = binFiles.indexOf(actualBinFile);
+                    if (binFileIndex !== -1) {
+                        binFiles[binFileIndex] = expectedBinFilePath;
+                    }
+                }
+            }
+        }
+
+
         log.info(`Compressing candidates: ${compressionCandidates.join(', ')}`);
         const compressedOutputFiles = await Promise.all(
             compressionCandidates.map(async filePath => {
