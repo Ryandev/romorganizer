@@ -350,28 +350,26 @@ async function parseFromCCDFile(filePath: string): Promise<string> {
     >;
 
     /* Find the image file */
-    const dir = filePath.slice(0, filePath.lastIndexOf('/') + 1);
-    const baseName = path.basename(filePath, path.extname(filePath));
-    const imageExtensions = ['.img', '.bin', '.iso', '.IMG', '.BIN', '.ISO'];
-    let imageFile = '';
-
-    for (const ext of imageExtensions) {
-        const testPath = dir + baseName + ext;
-        try {
-            await guardFileExists(testPath, '');
-            imageFile = baseName + ext;
-            break;
-        } catch {
-            /* Continue to next extension */
-        }
-    }
-
-    if (!imageFile) {
+    const dir = path.dirname(filePath);
+    
+    /* Find the image file by checking each possible extension */
+    const filesInDir = await storageInstance.list(dir, {
+        recursive: false,
+        avoidHiddenFiles: true,
+    });
+    const imageFileCandidates = filesInDir.filter(file => {
+        const extension = path.extname(file).slice(1).toLowerCase();
+        return ['img', 'bin', 'iso'].includes(extension);
+    });
+    if (imageFileCandidates.length === 0) {
         throw new Error(`No image file found for CCD: ${filePath}`);
     }
+    const imageFilePath = imageFileCandidates[0];
+    guard(imageFilePath !== undefined, `No image file found for CCD: ${filePath}`);
+    const imageFileName = path.basename(imageFilePath);
 
     /* Generate CUE content */
-    let cueContent = `FILE "${imageFile}" BINARY\n`;
+    let cueContent = `FILE "${imageFileName}" BINARY\n`;
     let trackCounter = 0;
     let begin = false;
 
