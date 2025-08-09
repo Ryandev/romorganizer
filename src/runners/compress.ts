@@ -296,10 +296,14 @@ export class RunnerFile implements IRunner<string[]> {
         while (extractionOccurred) {
             extractionOccurred = false;
 
-            /* Try to extract each file */
-            for (const filePath of currentFiles.filter(
+            const searchFiles = currentFiles.filter(
                 file => !ignoreList.includes(file)
-            )) {
+            );
+
+            log.info(`Searching for files to extract: ${searchFiles.join(', ')}`);
+
+            /* Try to extract each file */
+            for (const filePath of searchFiles) {
                 try {
                     const extension = path.extname(filePath).slice(1);
                     const extractOperation = EXTRACT_OPERATIONS.get(
@@ -311,7 +315,7 @@ export class RunnerFile implements IRunner<string[]> {
                     }
 
                     log.info(
-                        `Extracting file ${filePath} with operation ${extractOperation.name}`
+                        `Extracting file ${filePath} with operation ${extractOperation.name}, extension: ${extension}`
                     );
                     const extractedFiles = await extractOperation(
                         filePath,
