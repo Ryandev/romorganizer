@@ -444,12 +444,10 @@ export class RunnerFile implements IRunner<string[]> {
                         `Renaming BIN file ${actualBinFile} to match CUE file reference: ${expectedBinFilePath}`
                     );
                     await this.storage.move(actualBinFile, expectedBinFilePath);
-
-                    /* Update the binFiles array to reflect the rename */
-                    const binFileIndex = binFiles.indexOf(actualBinFile);
-                    if (binFileIndex !== -1) {
-                        binFiles[binFileIndex] = expectedBinFilePath;
-                    }
+                    guardFileExists(
+                        expectedBinFilePath,
+                        `Expected BIN file missing, does not exist: ${expectedBinFilePath}`
+                    );
                 }
             }
         }

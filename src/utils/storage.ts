@@ -162,9 +162,10 @@ async function _createDirectory(directoryPath: FilePath): Promise<void> {
     }
 }
 
-async function _remove(filePath: FilePath): Promise<void> {
+async function _remove(filePath: FilePath | FilePath[]): Promise<void> {
+    const paths = Array.isArray(filePath) ? filePath : [filePath];
     try {
-        await rm(filePath, { recursive: true });
+        await Promise.all(paths.map(path => rm(path, { recursive: true })));
     } catch (error) {
         _logException(error);
         throw error;
@@ -218,18 +219,31 @@ async function _move(source: FilePath, destination: FilePath): Promise<void> {
     const fileNameCaseChangeOnly = path.basename(source).toLowerCase() === path.basename(destination).toLowerCase();
 
     if (fileNameCaseChangeOnly) {
-        /* Move the source file to a temporary directory, Remove the destination file, then move the source file to the destination with the correct casing */
+        log.info(`Moving ${source} to ${destination} (case change only)`);
+        /* Windows case-insensitive filesystem workaround:
+           1. Copy source to temp directory
+           2. Remove original source file
+           3. Copy from temp to final destination
+           4. Clean up temp directory */
         const tempDir = await _createTemporaryDirectory('move-temp');
         const tempFile = path.join(tempDir, path.basename(source));
-        await _copyFile(source, tempFile);
-        /* Remove the destination file if it exists */
-        await _remove(destination).catch(() => {
-            /* Ignore */
-        });
-        /* Use copyFile instead of recursive _move to avoid infinite recursion */
-        await _copyFile(tempFile, destination);
-        await _remove(source);
-        await _remove(tempDir);
+        
+        try {
+            await _copyFile(source, tempFile);
+            
+            await _remove(source).catch(() => {
+                /* Ignore errors */
+            });
+            
+            await _copyFile(tempFile, destination);
+            
+            await _remove(tempDir);
+        } catch (error) {
+            await _remove(tempDir).catch(() => {
+                /* Ignore errors */
+            });
+            throw error;
+        }
     } else {
         /* If we attempt to copy across partitions, we need to use the copy command otherwise we will get EXDEV: cross-device link not permitted error */
         /* Remove the destination file if it exists */
@@ -238,6 +252,12 @@ async function _move(source: FilePath, destination: FilePath): Promise<void> {
         });
         await _copyFile(source, destination);
         await _remove(source);
+    }
+
+    /* Verify the move operation was successful */
+    const destinationExists = await _exists(destination);
+    if (!destinationExists) {
+        throw new Error(`Move operation failed: destination file does not exist: ${destination}`);
     }
 }
 
