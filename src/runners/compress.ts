@@ -360,7 +360,7 @@ export class RunnerFile implements IRunner<string[]> {
             await this._performAllExtractionOperations(workingDirectory);
 
         const compressionCandidates = currentFiles.filter(
-            file => fileExtension(file).toLowerCase() === 'chd'
+            file => ['gdi', 'cue'].includes(fileExtension(file).toLowerCase())
         );
         const binFiles = currentFiles.filter(
             file => fileExtension(file).toLowerCase() === 'bin'

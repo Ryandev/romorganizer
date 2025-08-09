@@ -306,7 +306,7 @@ async function createCueFile(
     /* Check if BIN file exists */
     guardFileExists(binFilePath, `Bin file does not exist: ${binFilePath}`);
     guard(
-        binFilePath.endsWith('.bin'),
+        binFilePath.toLowerCase().endsWith('.bin'),
         `Bin file must end with .bin: ${binFilePath}`
     );
 
@@ -335,7 +335,7 @@ async function createCueFile(
 async function parseFromCCDFile(filePath: string): Promise<string> {
     /* Verify extension is .ccd */
     guard(
-        filePath.endsWith('.ccd'),
+        filePath.toLowerCase().endsWith('.ccd'),
         `File must have .ccd extension: ${filePath}`
     );
     guardFileExists(filePath, `CCD file does not exist: ${filePath}`);
@@ -567,7 +567,7 @@ async function processDirectory(
 async function parseFromCueFile(filePath: string): Promise<string> {
     /* Verify extension is .cue */
     guard(
-        filePath.endsWith('.cue'),
+        filePath.toLowerCase().endsWith('.cue'),
         `File must have .cue extension: ${filePath}`
     );
     guardFileExists(filePath, `CUE file does not exist: ${filePath}`);
