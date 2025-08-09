@@ -56,10 +56,7 @@ const MAP_COMPRESS_COMMANDS = [
             contentsDirectory: string,
             timeoutMs: number = DEFAULT_TIMEOUT_MS
         ) =>
-            withTimeout(
-                $`rar a ${filePath} ${contentsDirectory}/*`,
-                timeoutMs
-            ),
+            withTimeout($`rar a ${filePath} ${contentsDirectory}/*`, timeoutMs),
     },
     {
         name: 'winrar',

@@ -1,6 +1,10 @@
 import { $ } from 'zx';
 import { log } from './logger';
-import { guardFileExists, guardCommandExists, guardDirectoryExists } from './guard';
+import {
+    guardFileExists,
+    guardCommandExists,
+    guardDirectoryExists,
+} from './guard';
 import storage from './storage';
 import path from 'node:path';
 import { withTimeout } from './promise';
@@ -38,7 +42,10 @@ async function createChdFile(options: {
     }
 
     const temporaryDirectory = await storage().createTemporaryDirectory();
-    guardDirectoryExists(temporaryDirectory, `Temporary directory does not exist: ${temporaryDirectory}`);
+    guardDirectoryExists(
+        temporaryDirectory,
+        `Temporary directory does not exist: ${temporaryDirectory}`
+    );
 
     const outputFileName =
         path.basename(inputFilePath, path.extname(inputFilePath)) + '.chd';
@@ -50,7 +57,9 @@ async function createChdFile(options: {
         case 'gdi':
         case 'img':
         case 'iso': {
-            await withTimeout($`chdman createcd --force --input ${inputFilePath} --output ${outputFilePath}`);
+            await withTimeout(
+                $`chdman createcd --force --input ${inputFilePath} --output ${outputFilePath}`
+            );
             break;
         }
         default: {
@@ -88,11 +97,15 @@ async function extractChdFile(options: {
         case 'cue':
         case 'gdi':
         case 'iso': {
-            await withTimeout($`chdman extractcd --force --input ${chdFilePath} --output ${outputFilePath}`);
+            await withTimeout(
+                $`chdman extractcd --force --input ${chdFilePath} --output ${outputFilePath}`
+            );
             break;
         }
         case 'img': {
-            await withTimeout($`chdman extractraw --force --input ${chdFilePath} --output ${outputFilePath}`);
+            await withTimeout(
+                $`chdman extractraw --force --input ${chdFilePath} --output ${outputFilePath}`
+            );
             break;
         }
         default: {
@@ -117,7 +130,7 @@ async function verifyChdFile(options: { chdFilePath: string }): Promise<void> {
 
     log.info(`Verifying ${chdFilePath}`);
 
-            await $`chdman verify --input ${chdFilePath}`;
+    await $`chdman verify --input ${chdFilePath}`;
 
     log.info(`Successfully verified ${chdFilePath}`);
 }

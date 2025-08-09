@@ -40,7 +40,12 @@ export const baseConfig: UserConfig = {
         'node:timers',
         'node:url',
         'node:crypto',
-        'node:zlib'
+        'node:zlib',
+        /* These are required by adm-zip */
+        'fs',
+        'path',
+        'zlib',
+        'crypto'
       ],
       output: {
         entryFileNames: '[name].js',

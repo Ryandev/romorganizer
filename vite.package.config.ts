@@ -24,7 +24,7 @@ const packageConfig = {
     outDir: 'dist/package',
     sourcemap: false,
     minify: false
-  }
+  },
 };
 
 /* Merge base config with package-specific overrides */
