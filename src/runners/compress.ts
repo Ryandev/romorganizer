@@ -359,35 +359,37 @@ export class RunnerFile implements IRunner<string[]> {
         const currentFiles =
             await this._performAllExtractionOperations(workingDirectory);
 
-        const chdCandidates = currentFiles.filter(
+        const compressionCandidates = currentFiles.filter(
             file => fileExtension(file).toLowerCase() === 'chd'
         );
+        const binFiles = currentFiles.filter(
+            file => fileExtension(file).toLowerCase() === 'bin'
+        );
 
-        if (chdCandidates.length > 0) {
+        /* If we don't have any cue files & we have exactly one bin file, create a cue file for it */
+        if (compressionCandidates.length === 0 && binFiles.length === 1) {
             /* No .cue files found. See if we have any .bin files & create a cue file for them */
-            const binFiles = currentFiles.filter(
-                file => fileExtension(file).toLowerCase() === 'bin'
+            const binFile = binFiles[0];
+            guard(binFile !== undefined, `Bin file missing, does not exist: ${binFile}`);
+            guardFileExists(binFile, `Bin file missing, does not exist: ${binFile}`);
+            log.info(`No .cue files found. Creating from bin files ${binFile}`);
+            const cueFileName = `${path.basename(binFile, path.extname(binFile))}.cue`;
+            const cueFile = path.join(path.dirname(binFile), cueFileName);
+            await cueSheet.createCueFile(binFile, cueFile);
+            guardFileExists(
+                cueFile,
+                `CUE file missing, does not exist: ${cueFile}`
             );
-            log.info(`No .cue files found. Creating from bin files ${binFiles.join(', ')}`);
-            for (const binFile of binFiles) {
-                const cueFileName = `${path.basename(binFile, path.extname(binFile))}.cue`;
-                const cueFile = path.join(path.dirname(binFile), cueFileName);
-                await cueSheet.createCueFile(binFile, cueFile);
-                guardFileExists(
-                    cueFile,
-                    `CUE file missing, does not exist: ${cueFile}`
-                );
-                chdCandidates.push(cueFile);
-            }
+            compressionCandidates.push(cueFile);
         }
 
         guard(
-            chdCandidates.length > 0,
-            `No suitable files found for compression`
+            compressionCandidates.length > 0,
+            `No suitable files found for compression, ${compressionCandidates.join(', ')}, ${binFiles.join(', ')}`
         );
 
         const compressedOutputFiles = await Promise.all(
-            chdCandidates.map(async filePath => {
+            compressionCandidates.map(async filePath => {
                 const chdResult = await chd.create({
                     inputFilePath: filePath,
                 });
