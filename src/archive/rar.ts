@@ -57,7 +57,7 @@ const MAP_COMPRESS_COMMANDS = [
             timeoutMs: number = DEFAULT_TIMEOUT_MS
         ) =>
             withTimeout(
-                $`rar a "${filePath}" "${contentsDirectory}/*"`,
+                $`rar a ${filePath} ${contentsDirectory}/*`,
                 timeoutMs
             ),
     },
@@ -69,7 +69,7 @@ const MAP_COMPRESS_COMMANDS = [
             timeoutMs: number = DEFAULT_TIMEOUT_MS
         ) =>
             withTimeout(
-                $`winrar a "${filePath}" "${contentsDirectory}/*"`,
+                $`winrar a ${filePath} ${contentsDirectory}/*`,
                 timeoutMs
             ),
     },
@@ -81,7 +81,7 @@ const MAP_COMPRESS_COMMANDS = [
             timeoutMs: number = DEFAULT_TIMEOUT_MS
         ) =>
             withTimeout(
-                $`tar -cvf "${filePath}" "${contentsDirectory}/*"`,
+                $`tar -cvf ${filePath} ${contentsDirectory}/*`,
                 timeoutMs
             ),
     },
@@ -167,17 +167,17 @@ async function _verify(
             {
                 name: 'unrar',
                 command: (timeoutMs: number = DEFAULT_TIMEOUT_MS) =>
-                    withTimeout($`unrar t "${filePath}"`, timeoutMs),
+                    withTimeout($`unrar t ${filePath}`, timeoutMs),
             },
             {
                 name: 'unrar-free',
                 command: (timeoutMs: number = DEFAULT_TIMEOUT_MS) =>
-                    withTimeout($`unrar-free t "${filePath}"`, timeoutMs),
+                    withTimeout($`unrar-free t ${filePath}`, timeoutMs),
             },
             {
                 name: 'rar',
                 command: (timeoutMs: number = DEFAULT_TIMEOUT_MS) =>
-                    withTimeout($`rar t "${filePath}"`, timeoutMs),
+                    withTimeout($`rar t ${filePath}`, timeoutMs),
             },
         ];
         const viableCommands = [];

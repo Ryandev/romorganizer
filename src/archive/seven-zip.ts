@@ -10,26 +10,26 @@ import { guardFileExists, guardDirectoryExists } from '../utils/guard';
 
 const MAP_EXTRACT_COMMANDS = {
     '7z': (filePath: string, outputDir: string) =>
-        $`7z x "${filePath}" -o"${outputDir}" -y`,
+        $`7z x ${filePath} -o${outputDir} -y`,
     '7za': (filePath: string, outputDir: string) =>
-        $`7za x "${filePath}" -o"${outputDir}" -y`,
+        $`7za x ${filePath} -o${outputDir} -y`,
     p7zip: (filePath: string, outputDir: string) =>
-        $`p7zip -d "${filePath}" -o"${outputDir}"`,
+        $`p7zip -d ${filePath} -o${outputDir}`,
 } as const;
 
 const MAP_VERIFY_COMMANDS = {
-    '7z': (filePath: string) => $`7z t "${filePath}"`,
-    '7za': (filePath: string) => $`7za t "${filePath}"`,
-    p7zip: (filePath: string) => $`p7zip -t "${filePath}"`,
+    '7z': (filePath: string) => $`7z t ${filePath}`,
+    '7za': (filePath: string) => $`7za t ${filePath}`,
+    p7zip: (filePath: string) => $`p7zip -t ${filePath}`,
 } as const;
 
 const MAP_COMPRESS_COMMANDS = {
     '7z': (filePath: string, contentsDirectory: string) =>
-        $`7z a "${filePath}" "${contentsDirectory}/*" -y`,
+        $`7z a ${filePath} ${contentsDirectory}/* -y`,
     '7za': (filePath: string, contentsDirectory: string) =>
-        $`7za a "${filePath}" "${contentsDirectory}/*" -y`,
+        $`7za a ${filePath} ${contentsDirectory}/* -y`,
     p7zip: (filePath: string, contentsDirectory: string) =>
-        $`p7zip -a "${filePath}" "${contentsDirectory}/*"`,
+        $`p7zip -a ${filePath} ${contentsDirectory}/*`,
 } as const;
 
 async function _getInstalledCommands(): Promise<

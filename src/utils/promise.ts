@@ -1,5 +1,7 @@
 import { setTimeout } from 'node:timers';
 
+const DEFAULT_TIMEOUT_MS = 60_000;
+
 /**
  * Adds a timeout to any promise
  * @param promise - The promise to add timeout to
@@ -8,7 +10,7 @@ import { setTimeout } from 'node:timers';
  */
 export async function withTimeout<T>(
     promise: Promise<T>,
-    timeoutMs: number
+    timeoutMs: number = DEFAULT_TIMEOUT_MS
 ): Promise<T> {
     return Promise.race([
         promise,
