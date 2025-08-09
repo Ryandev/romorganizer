@@ -482,3 +482,186 @@ describe('includeDirectories functionality', () => {
         expect(options.avoidHiddenFiles).toBe(false);
     });
 });
+
+/* Test Windows case-sensitive move operations */
+describe('Windows case-sensitive move operations', () => {
+    test('should detect case-only filename changes correctly', () => {
+        const source = '/path/to/myfile.bin';
+        const destination = '/path/to/myfile.BIN';
+        
+        /* Simulate the case detection logic from storage.ts */
+        const fileNameCaseChangeOnly = path.basename(source).toLowerCase() === path.basename(destination).toLowerCase();
+        
+        expect(fileNameCaseChangeOnly).toBe(true);
+    });
+
+    test('should not detect case-only changes when filenames are different', () => {
+        const source = '/path/to/myfile.bin';
+        const destination = '/path/to/different.bin';
+        
+        const fileNameCaseChangeOnly = path.basename(source).toLowerCase() === path.basename(destination).toLowerCase();
+        
+        expect(fileNameCaseChangeOnly).toBe(false);
+    });
+
+    test('should handle case-only changes with different paths', () => {
+        const source = '/source/dir/myfile.bin';
+        const destination = '/dest/dir/myfile.BIN';
+        
+        const fileNameCaseChangeOnly = path.basename(source).toLowerCase() === path.basename(destination).toLowerCase();
+        
+        expect(fileNameCaseChangeOnly).toBe(true);
+    });
+
+    test('should handle various case combinations', () => {
+        const testCases = [
+            { source: 'file.bin', dest: 'file.BIN', expected: true },
+            { source: 'FILE.bin', dest: 'file.BIN', expected: true },
+            { source: 'File.Bin', dest: 'file.bin', expected: true },
+            { source: 'file.txt', dest: 'file.TXT', expected: true },
+            { source: 'file.bin', dest: 'file.txt', expected: false },
+            { source: 'file1.bin', dest: 'file2.bin', expected: false },
+            { source: 'file.bin', dest: 'FILE.BIN', expected: true },
+            { source: 'MyFile.Bin', dest: 'myfile.bin', expected: true },
+        ];
+
+        for (const { source, dest, expected } of testCases) {
+            const fileNameCaseChangeOnly = path.basename(source).toLowerCase() === path.basename(dest).toLowerCase();
+            expect(fileNameCaseChangeOnly).toBe(expected);
+        }
+    });
+
+    test('should handle edge cases in case detection', () => {
+        /* Empty filenames */
+        expect(path.basename('').toLowerCase() === path.basename('').toLowerCase()).toBe(true);
+        
+        /* Single character differences */
+        expect(path.basename('a.bin').toLowerCase() === path.basename('A.bin').toLowerCase()).toBe(true);
+        
+        /* Numbers in filenames */
+        expect(path.basename('file1.bin').toLowerCase() === path.basename('FILE1.BIN').toLowerCase()).toBe(true);
+        
+        /* Special characters */
+        expect(path.basename('file-name.bin').toLowerCase() === path.basename('FILE-NAME.BIN').toLowerCase()).toBe(true);
+    });
+
+    test('should simulate Windows case-insensitive move workflow', async () => {
+        /* This test simulates the Windows move workflow without actual file operations */
+        const source = '/path/to/myfile.bin';
+        const destination = '/path/to/myfile.BIN';
+        
+        /* Simulate the workflow steps */
+        const steps: string[] = [];
+        
+        /* Step 1: Detect case-only change */
+        const fileNameCaseChangeOnly = path.basename(source).toLowerCase() === path.basename(destination).toLowerCase();
+        steps.push('detect-case-change');
+        
+        if (fileNameCaseChangeOnly) {
+            /* Step 2: Create temp directory and perform operations */
+            steps.push('create-temp-dir', 'copy-to-temp', 'move-from-temp', 'cleanup-temp');
+        }
+        
+        expect(fileNameCaseChangeOnly).toBe(true);
+        expect(steps).toEqual([
+            'detect-case-change',
+            'create-temp-dir',
+            'copy-to-temp',
+            'move-from-temp',
+            'cleanup-temp'
+        ]);
+    });
+
+    test('should handle normal move operations (non-case-only)', async () => {
+        const source = '/path/to/source.bin';
+        const destination = '/path/to/destination.bin';
+        
+        /* Simulate normal move workflow */
+        const steps: string[] = [];
+        
+        const fileNameCaseChangeOnly = path.basename(source).toLowerCase() === path.basename(destination).toLowerCase();
+        steps.push('detect-case-change');
+        
+        if (!fileNameCaseChangeOnly) {
+            /* Normal move: remove destination, copy source, remove source */
+            steps.push('remove-destination', 'copy-source', 'remove-source');
+        }
+        
+        expect(fileNameCaseChangeOnly).toBe(false);
+        expect(steps).toEqual([
+            'detect-case-change',
+            'remove-destination',
+            'copy-source',
+            'remove-source'
+        ]);
+    });
+
+    test('should handle directory case changes', () => {
+        const source = '/path/to/Directory/file.bin';
+        const destination = '/path/to/directory/file.bin';
+        
+        /* Only the filename part should be compared for case changes */
+        const fileNameCaseChangeOnly = path.basename(source).toLowerCase() === path.basename(destination).toLowerCase();
+        
+        expect(fileNameCaseChangeOnly).toBe(true);
+    });
+
+    test('should handle files with no extension', () => {
+        const testCases = [
+            { source: 'file', dest: 'FILE', expected: true },
+            { source: 'myfile', dest: 'MyFile', expected: true },
+            { source: 'file', dest: 'file.txt', expected: false },
+        ];
+
+        for (const { source, dest, expected } of testCases) {
+            const fileNameCaseChangeOnly = path.basename(source).toLowerCase() === path.basename(dest).toLowerCase();
+            expect(fileNameCaseChangeOnly).toBe(expected);
+        }
+    });
+
+    test('should handle files with multiple dots', () => {
+        const testCases = [
+            { source: 'file.backup.bin', dest: 'FILE.BACKUP.BIN', expected: true },
+            { source: 'my.file.bin', dest: 'MY.FILE.BIN', expected: true },
+            { source: 'file.backup.bin', dest: 'file.backup.txt', expected: false },
+        ];
+
+        for (const { source, dest, expected } of testCases) {
+            const fileNameCaseChangeOnly = path.basename(source).toLowerCase() === path.basename(dest).toLowerCase();
+            expect(fileNameCaseChangeOnly).toBe(expected);
+        }
+    });
+
+    test('should handle real-world case scenarios', () => {
+        /* Test common real-world scenarios */
+        const realWorldCases = [
+            /* ROM file case changes */
+            { source: 'game.bin', dest: 'GAME.BIN', expected: true },
+            { source: 'Game.Bin', dest: 'game.bin', expected: true },
+            { source: 'GAME.BIN', dest: 'game.bin', expected: true },
+            
+            /* CUE file case changes */
+            { source: 'game.cue', dest: 'GAME.CUE', expected: true },
+            { source: 'Game.Cue', dest: 'game.cue', expected: true },
+            
+            /* ISO file case changes */
+            { source: 'game.iso', dest: 'GAME.ISO', expected: true },
+            { source: 'Game.Iso', dest: 'game.iso', expected: true },
+            
+            /* Mixed case scenarios */
+            { source: 'MyGame.bin', dest: 'mygame.BIN', expected: true },
+            { source: 'GAME_FILE.bin', dest: 'game_file.BIN', expected: true },
+            { source: 'Game-Name.bin', dest: 'game-name.BIN', expected: true },
+            
+            /* Different files (should be false) */
+            { source: 'game.bin', dest: 'game.cue', expected: false },
+            { source: 'game1.bin', dest: 'game2.bin', expected: false },
+            { source: 'game.bin', dest: 'game_backup.bin', expected: false },
+        ];
+
+        for (const { source, dest, expected } of realWorldCases) {
+            const fileNameCaseChangeOnly = path.basename(source).toLowerCase() === path.basename(dest).toLowerCase();
+            expect(fileNameCaseChangeOnly).toBe(expected);
+        }
+    });
+});

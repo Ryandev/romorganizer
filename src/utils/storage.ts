@@ -213,9 +213,32 @@ async function _move(source: FilePath, destination: FilePath): Promise<void> {
     /* Ensure destination directory exists */
     await _createDirectory(path.dirname(destination));
 
-    /* If we attempt to copy across partitions, we need to use the copy command otherwise we will get EXDEV: cross-device link not permitted error */
-    await _copyFile(source, destination);
-    await _remove(source);
+    /* Add Windows support for when source & destination are only different in casing.
+       Windows is case-insensitive, so we need to ensure the destination is the same as the source. */
+    const fileNameCaseChangeOnly = path.basename(source).toLowerCase() === path.basename(destination).toLowerCase();
+
+    if (fileNameCaseChangeOnly) {
+        /* Move the source file to a temporary directory, Remove the destination file, then move the source file to the destination with the correct casing */
+        const tempDir = await _createTemporaryDirectory('move-temp');
+        const tempFile = path.join(tempDir, path.basename(source));
+        await _copyFile(source, tempFile);
+        /* Remove the destination file if it exists */
+        await _remove(destination).catch(() => {
+            /* Ignore */
+        });
+        /* Use copyFile instead of recursive _move to avoid infinite recursion */
+        await _copyFile(tempFile, destination);
+        await _remove(source);
+        await _remove(tempDir);
+    } else {
+        /* If we attempt to copy across partitions, we need to use the copy command otherwise we will get EXDEV: cross-device link not permitted error */
+        /* Remove the destination file if it exists */
+        await _remove(destination).catch(() => {
+            /* Ignore */
+        });
+        await _copyFile(source, destination);
+        await _remove(source);
+    }
 }
 
 async function _copyRecursiveSync(
