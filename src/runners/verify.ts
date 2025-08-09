@@ -8,7 +8,6 @@ import hash from '../utils/hash';
 import { IRunner } from './interface';
 import { log } from '../utils/logger';
 import metadata from '../types/metadata';
-import { fileExtension } from './utils';
 import storageDecorator from '../utils/storage.decorator';
 
 export class VerifyRunnerFile
@@ -36,7 +35,7 @@ export class VerifyRunnerFile
         message: string;
         game: Game | undefined;
     }> {
-        const extension = fileExtension(compressedFilePath);
+        const extension = path.extname(compressedFilePath).slice(1);
         if (extension !== 'chd') {
             throw new Error(`Unsupported file extension: ${extension}`);
         }

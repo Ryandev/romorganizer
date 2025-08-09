@@ -11,7 +11,7 @@ import { IStorage } from '../utils/storage.interface';
 import storageDecorator from '../utils/storage.decorator';
 import { IRunner } from './interface';
 import { setTemporaryDirectory } from '../utils/environment';
-import { fileExtension, groupedFiles } from './utils';
+import { groupedFiles } from './utils';
 
 const EXTRACT_OPERATIONS = new Map<
     string,
@@ -22,7 +22,7 @@ const EXTRACT_OPERATIONS = new Map<
         async (sourceFile: string, allFiles: string[]) => {
             const ecmArchive = createArchive(sourceFile);
             let extractedFile = await ecmArchive.extract();
-            const extractedFileExtension = fileExtension(extractedFile);
+            const extractedFileExtension = path.extname(extractedFile).slice(1);
             guardFileExists(
                 extractedFile,
                 `Extracted file missing, does not exist: ${extractedFile}`
@@ -266,7 +266,7 @@ const _findMatchingFiles = (
     fileListings: string[],
     extension: string
 ): string[] => {
-    return fileListings.filter(file => fileExtension(file) === extension);
+    return fileListings.filter(file => path.extname(file).slice(1) === extension);
 };
 
 export class RunnerFile implements IRunner<string[]> {
@@ -301,7 +301,7 @@ export class RunnerFile implements IRunner<string[]> {
                 file => !ignoreList.includes(file)
             )) {
                 try {
-                    const extension = fileExtension(filePath);
+                    const extension = path.extname(filePath).slice(1);
                     const extractOperation = EXTRACT_OPERATIONS.get(
                         extension.toLowerCase()
                     );
@@ -372,10 +372,10 @@ export class RunnerFile implements IRunner<string[]> {
             await this._performAllExtractionOperations(workingDirectory);
 
         const compressionCandidates = currentFiles.filter(file =>
-            ['gdi', 'cue'].includes(fileExtension(file).toLowerCase())
+            ['gdi', 'cue'].includes(path.extname(file).slice(1).toLowerCase())
         );
         const binFiles = currentFiles.filter(
-            file => fileExtension(file).toLowerCase() === 'bin'
+            file => path.extname(file).slice(1).toLowerCase() === 'bin'
         );
 
         /* If we don't have any cue files & we have exactly one bin file, create a cue file for it */
@@ -507,7 +507,7 @@ export class RunnerDirectory implements IRunner<string[]> {
         overwrite: boolean
     ): RunnerFile | Error {
         const fileExtensions = new Set(
-            sourceFiles.map(file => fileExtension(file).toLowerCase())
+            sourceFiles.map(file => path.extname(file).slice(1).toLowerCase())
         );
         const supportedExtensions = new Set(
             [...EXTRACT_OPERATIONS.keys()].map(ext => ext.toLowerCase())
@@ -553,7 +553,7 @@ export class RunnerDirectory implements IRunner<string[]> {
                 continue;
             }
 
-            const sourceFileExtension = fileExtension(files[0] ?? '');
+            const sourceFileExtension = path.extname(files[0] ?? '').slice(1);
             const sourceFileNameNoExtension = path.basename(
                 files[0] ?? '',
                 `.${sourceFileExtension}`
@@ -579,7 +579,7 @@ export class RunnerDirectory implements IRunner<string[]> {
             for (const [index, outputFilePath] of Object.entries(
                 outputFilePaths.filter(filePath => filePath.endsWith('.chd'))
             )) {
-                const outputFileExtension = fileExtension(outputFilePath);
+                const outputFileExtension = path.extname(outputFilePath).slice(1);
                 /* Attempt to rename the output file to the expected output file name
                        If there are multiple output files, append the index to the file name */
                 let targetFileName = `${sourceFileNameNoExtension}.${outputFileExtension}`;

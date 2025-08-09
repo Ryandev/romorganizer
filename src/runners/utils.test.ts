@@ -1,4 +1,5 @@
-import { groupedFiles, fileExtension } from './utils';
+import { groupedFiles } from './utils';
+import path from 'node:path';
 import storage from '../utils/storage';
 
 /* Mock dependencies */
@@ -154,42 +155,42 @@ describe('runners/utils.ts', () => {
         });
     });
 
-    describe('fileExtension', () => {
+    describe('path.extname().slice(1)', () => {
         it('should extract file extension correctly', () => {
             /* Act & Assert */
-            expect(fileExtension('file.txt')).toBe('txt');
-            expect(fileExtension('file.bin')).toBe('bin');
-            expect(fileExtension('file.cue')).toBe('cue');
-            expect(fileExtension('file.iso')).toBe('iso');
+            expect(path.extname('file.txt').slice(1)).toBe('txt');
+            expect(path.extname('file.bin').slice(1)).toBe('bin');
+            expect(path.extname('file.cue').slice(1)).toBe('cue');
+            expect(path.extname('file.iso').slice(1)).toBe('iso');
         });
 
         it('should handle files without extension', () => {
             /* Act & Assert */
-            expect(fileExtension('file')).toBe('file');
-            expect(fileExtension('file.')).toBe('');
+            expect(path.extname('file').slice(1)).toBe('');
+            expect(path.extname('file.').slice(1)).toBe('');
         });
 
         it('should handle files with multiple dots', () => {
             /* Act & Assert */
-            expect(fileExtension('file.v1.0.txt')).toBe('txt');
-            expect(fileExtension('file.backup.old')).toBe('old');
+            expect(path.extname('file.v1.0.txt').slice(1)).toBe('txt');
+            expect(path.extname('file.backup.old').slice(1)).toBe('old');
         });
 
         it('should handle empty string', () => {
             /* Act & Assert */
-            expect(fileExtension('')).toBe('');
+            expect(path.extname('').slice(1)).toBe('');
         });
 
         it('should handle paths with directories', () => {
             /* Act & Assert */
-            expect(fileExtension('/path/to/file.txt')).toBe('txt');
-            expect(fileExtension(String.raw`C:\path\to\file.bin`)).toBe('bin');
+            expect(path.extname('/path/to/file.txt').slice(1)).toBe('txt');
+            expect(path.extname(String.raw`C:\path\to\file.bin`).slice(1)).toBe('bin');
         });
 
         it('should handle hidden files', () => {
             /* Act & Assert */
-            expect(fileExtension('.hidden')).toBe('hidden');
-            expect(fileExtension('.config.txt')).toBe('txt');
+            expect(path.extname('.hidden').slice(1)).toBe('');
+            expect(path.extname('.config.txt').slice(1)).toBe('txt');
         });
     });
 });

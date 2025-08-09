@@ -18,6 +18,4 @@ export async function groupedFiles(sourceDir: string): Promise<string[][]> {
     return Object.values(groups);
 }
 
-export function fileExtension(filePath: string): string {
-    return filePath.split('.').pop() ?? '';
-}
+
