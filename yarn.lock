@@ -6085,7 +6085,7 @@ __metadata:
     typescript: "npm:^5.3.0"
     vite: "npm:^7.0.6"
     zod: "npm:^4.0.14"
-    zx: "npm:^8.1.1"
+    zx: "npm:^8.8.0"
   bin:
     romorganizer: ./dist/build/index.js
   languageName: unknown
@@ -7148,11 +7148,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zx@npm:^8.1.1":
-  version: 8.7.2
-  resolution: "zx@npm:8.7.2"
+"zx@npm:^8.8.0":
+  version: 8.8.0
+  resolution: "zx@npm:8.8.0"
   bin:
     zx: build/cli.js
-  checksum: 10c0/62106cf7dd28428c2b6a30952d3f4e1df0021fdb6be1a1f69417d6a0d1b874fa8e1c4ffbef59b6634dafd037ae697b4ef7ef574d1c31389c8b4376e07522fb00
+  checksum: 10c0/e183a6ab5a3b6645f05fc0f5174c420b25a826a1be6e337dbf4032074d63379cd2f8025ed28362514cf24cf03f0736786f09b59e3ef09fefd7b128ccffdcbeb7
   languageName: node
   linkType: hard
