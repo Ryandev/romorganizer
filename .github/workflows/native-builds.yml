@@ -68,7 +68,7 @@ jobs:
         fi
 
     - name: Upload native build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: native-builds-${{ matrix.platform }}
         path: |
@@ -87,7 +87,7 @@ jobs:
         fi
 
     - name: Upload platform archives
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: native-archives-${{ matrix.platform }}
         path: |
